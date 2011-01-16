@@ -1,89 +1,182 @@
+;;; nimrod-mode.el --- A major mode for the Nimrod programming language
+;; 
+;; Filename: nimrod-mode.el
+;; Description: A major mode for the Nimrod programming language
+;; Author: James H. Fisher <jameshfisher@gmail.com>
+;; Maintainer: James H. Fisher <jameshfisher@gmail.com>
+;; Created: Sun Jan 16 2011
+;; Version: 0.0.1
+;; Last-Updated: Sun Jan 16 2011
+;;           By: James H. Fisher <jameshfisher@gmail.com>
+;;     Update #: 1
+;; Keywords: nimrod
+;; Compatibility: GNU Emacs 23
+;; 
+;; Features that might be required by this library:
+;;
+;;   None
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Installation: Place this file on your load path, and put this in
+;; your init file (`.emacs'):
+;;
+;; (require 'nimrod-mode)
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 
+;;; Change log:
+;;
+;; 2011/01/16
+;;     Initial release of nimrod-mode.el.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation; either version 2, or (at your option)
+;; any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this program; see the file COPYING.  If not, write to
+;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth
+;; Floor, Boston, MA 02110-1301, USA.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Todo:
+;;
+;; -- Make things non-case-sensitive
+;; -- Indent to previous # character if we're on a commented line
+;; -- Indent to previous start-of-string if line starts with string
+;; -- Identifier following "proc" gets font-lock-function-name-face
+;; -- Treat parameter lists separately
+;; -- Treat pragmas inside "{." and ".}" separately
+;; -- Make double-# comments get font-lock-doc-face
+;; -- Highlight tabs as syntax error
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 
+;;; Code:
 
-;; Simple keywords
-;; ---------------
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 								             Simple keywords                                ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;; Define keywords, etc.
+;; ---------------------
 
 (defvar nimrod-keywords
-
 	'("import" "type" "proc" "when" "include" "object" "of" "ptr" "ref"
 		"template" "const" "var" "iterator" "else" "while" "elif" "return"
-		"break" "for" "in" "yield" "magic" "noSideEffect" "importc" "nodecl" "rtl" "enum" )
-
+		"break" "for" "in" "yield" "magic" "noSideEffect" "importc" "nodecl" "rtl"
+		"enum" )
 	"Nimrod keywords.")
 
 (defvar nimrod-types
 	'("int" "int8" "int16" "int32" "int64" "float" "float32" "float64"
-		"bool" "char" "string" "cstring" "pointer" "Ordinal" "nil" "expr"
-		"stmt" "typeDesc" "range" "array" "openarray" "seq" "set"
-		"TGenericSeq" "PGenericSeq" "NimStringDesc" "NimString" "Byte"
-		"Natural" "Positive" "TObject" "PObject" "TResult" "TEndian"
-		"TAddress" "BiggestInt" "BiggestFloat" "cchar" "cschar" "cshort"
+		"bool" "char" "string" "cstring" "pointer" "ordinal" "nil" "expr"
+		"stmt" "typedesc" "range" "array" "openarray" "seq" "set"
+		"tgenericseq" "pgenericseq" "nimstringdesc" "nimstring" "byte"
+		"natural" "positive" "tobject" "pobject" "tresult" "tendian"
+		"taddress" "biggestint" "biggestfloat" "cchar" "cschar" "cshort"
 		"cint" "clong" "clonglong" "cfloat" "cdouble" "clongdouble"
-		"cstringArray" "PFloat32" "PFloat64" "PInt64" "PInt32"
-		"TGC_Strategy" "TFile" "TFileMode")
+		"cstringarray" "pfloat32" "pfloat64" "pint64" "pint32"
+		"tgc_strategy" "tfile" "tfilemode")
 	"Nimrod types defined in <lib/system.nim>."
 	)
 
 (defvar nimrod-exceptions
-	'("E_Base" "EAsynch" "ESynch" "ESystem" "EIO" "EOS"
-		"EInvalidLibrary" "EResourceExhausted" "EArithmetic" "EDivByZero"
-		"EOverflow" "EaccessViolation" "EAssertionFailed" "EControlC"
-		"EInvalidValue" "EOutOfMemory" "EInvalidIndex" "EInvalidField"
-		"EOutOfRange" "EStackOverflow" "ENoExceptionToReraise"
-		"EInvalidObjectAssignment" "EInvalidObjectConversion"
-		"EFloatingPoint" "EFloatingInvalidOp" "EFloatDivByZero"
-		"EFloatOverflow" "EFloatUnderflow" "EFloatInexact")
+	'("e_base" "easynch" "esynch" "esystem" "eio" "eos"
+		"einvalidlibrary" "eresourceexhausted" "earithmetic" "edivbyzero"
+		"eoverflow" "eaccessviolation" "eassertionfailed" "econtrolc"
+		"einvalidvalue" "eoutofmemory" "einvalidindex" "einvalidfield"
+		"eoutofrange" "estackoverflow" "enoexceptiontoreraise"
+		"einvalidobjectassignment" "einvalidobjectconversion"
+		"efloatingpoint" "efloatinginvalidop" "efloatdivbyzero"
+		"efloatoverflow" "efloatunderflow" "efloatinexact")
 	"Nimrod exceptions defined in <lib/system.nim>.")
 
 (defvar nimrod-constants
-	'("isMainModule" "CompileDate" "CompileTime" "NimrodVersion"
-		"NimrodMajor" "NimrodMinor" "NimrodPatch" "cpuEndian" "hostOS"
-		"hostCPU" "appType" "inf" "neginf" "nan" "QuitSuccess"
-		"QuitFailure" "stdin" "stdout" "stderr" "true" "false" )
+	'("ismainmodule" "compiledate" "compiletime" "nimrodversion"
+		"nimrodmajor" "nimrodminor" "nimrodpatch" "cpuendian" "hostos"
+		"hostcpu" "apptype" "inf" "neginf" "nan" "quitsuccess"
+		"quitfailure" "stdin" "stdout" "stderr" "true" "false" )
 	"Nimrod constants defined in <lib/system.nim>.")
 
 (defvar nimrod-builtins 
-
-	'("defined" "definedInScope" "not" "+" "-" "=" "<" ">" "@" "&" "*"
+	'("defined" "definedinscope" "not" "+" "-" "=" "<" ">" "@" "&" "*"
 		">=" "<=" "$" ">=%" ">%" "<%" "<=%" "," ":" "==" "/"  "div" "mod"
 		"shr" "shl" "and" "or" "xor" "abs" "+%" "-%" "*%" "/%" "%%" "-+-"
 		"not_in" "is_not" "cmp" "high" "low" "sizeof" "succ" "pred" "inc"
-		"dec" "newSeq" "len" "incl" "excl" "card" "ord" "chr" "ze" "ze64"
-		"toU8" "toU16" "toU32" "min" "max" "setLen" "newString" "add"
-		"compileOption" "del" "delete" "insert" "repr" "toFloat"
-		"toBiggestFloat" "toInt" "toBiggestInt" "addQuitProc" "copy"
-		"zeroMem" "copyMem" "moveMem" "equalMem" "alloc" "alloc0"
-		"realloc" "dealloc" "assert" "swap" "getRefcount" "getOccupiedMem"
-		"getFreeMem" "getTotalMem" "countdown" "countup" "items"
-		"enumerate" "isNil" "find" "contains" "pop" "each" "GC_disable"
-		"GC_enable" "GC_fullCollect" "GC_setStrategy"
-		"GC_enableMarkAndSweep" "GC_disableMarkAndSweep"
-		"GC_getStatistics" "GC_ref" "GC_unref" "accumulateResult" "echo"
-		"newException" "quit" "open" "reopen" "close" "endoffile"
+		"dec" "newseq" "len" "incl" "excl" "card" "ord" "chr" "ze" "ze64"
+		"tou8" "tou16" "tou32" "min" "max" "setlen" "newstring" "add"
+		"compileoption" "del" "delete" "insert" "repr" "tofloat"
+		"tobiggestfloat" "toint" "tobiggestint" "addquitproc" "copy"
+		"zeromem" "copymem" "movemem" "equalmem" "alloc" "alloc0"
+		"realloc" "dealloc" "assert" "swap" "getrefcount" "getoccupiedmem"
+		"getfreemem" "gettotalmem" "countdown" "countup" "items"
+		"enumerate" "isnil" "find" "contains" "pop" "each" "gc_disable"
+		"gc_enable" "gc_fullcollect" "gc_setstrategy"
+		"gc_enablemarkandsweep" "gc_disablemarkandsweep"
+		"gc_getstatistics" "gc_ref" "gc_unref" "accumulateresult" "echo"
+		"newexception" "quit" "open" "reopen" "close" "endoffile"
 		"readchar" "flushfile" "readfile" "write" "readline" "writeln"
 		"getfilesize" "readbytes" "readchars" "readbuffer" "writebytes"
 		"writechars" "writebuffer" "setfilepos" "getfilepos" "lines"
-		"filehandle" "cstringArrayToSeq" "getDiscriminant" "selectBranch"
-		"getCurrentException" "getCurrentExceptionMsg" "likely" "unlikely"
+		"filehandle" "cstringarraytoseq" "getdiscriminant" "selectbranch"
+		"getcurrentexception" "getcurrentexceptionmsg" "likely" "unlikely"
 		)
-
-	"Standard library functions fundamental enough to count as builtins. Magic functions."
+	"Standard library functions fundamental enough to count as builtins.
+Magic functions."
 )
 
 (defvar nimrod-operators
 	'( "`" "{." ".}" "[" "]" "{" "}" "(" ")" )
 	"Nimrod standard operators.")
 
+
+;; Create regular expressions
+;; --------------------------
+
 (defvar nimrod-keywords-regexp (regexp-opt nimrod-keywords 'words))
-(defvar nimrod-types-regexp (regexp-opt (append nimrod-types nimrod-exceptions) 'words))
+(defvar nimrod-types-regexp (regexp-opt nimrod-types 'words))
+(defvar nimrod-types-regexp (regexp-opt nimrod-exceptions 'words))
 (defvar nimrod-constants-regexp (regexp-opt nimrod-constants 'words))
 (defvar nimrod-builtins-regexp (regexp-opt nimrod-builtins 'words))
 (defvar nimrod-operators-regexp (regexp-opt nimrod-operators 'words))
 
-(defvar nimrod-decimal-regexp "\\<[0-9_]+\\(\\.[0-9_]+\\)?\\([eE][0-9]+\\)?\\>")
-(defvar nimrod-hex-regexp "\\<\\0x[0-9a-fA-F_]+\\(\\.[0-9a-fA-F_]+\\)?\\([eE][0-9a-fA-F]+\\)?\\>")
-(defvar nimrod-octal-regexp "\\<\\0o[0-7_]+\\(\\.[0-7_]+\\)?\\([eE][0-7]+\\)?\\>")
-(defvar nimrod-binary-regexp "\\<\\0b[01_]+\\(\\.[01_]+\\)?\\([eE][01]+\\)?\\>")
-(defvar nimrod-variables-regexp "\\<[a-zA-Z][a-zA-Z0-9_]+\\>")
+(defvar nimrod-decimal-regexp
+	"\\<[0-9_]+\\(\\.[0-9_]+\\)?\\([eE][0-9]+\\)?\\>"
+	"Regular expression for matching decimal literals in Nimrod."
+	)
+
+(defvar nimrod-hex-regexp
+	"\\<\\0x[0-9a-fA-F_]+\\(\\.[0-9a-fA-F_]+\\)?\\([eE][0-9a-fA-F]+\\)?\\>"
+	"Regular expression for matching hexadecimal literals in Nimrod."
+	)
+
+(defvar nimrod-octal-regexp
+	"\\<\\0o[0-7_]+\\(\\.[0-7_]+\\)?\\([eE][0-7]+\\)?\\>"
+	"Regular expression for matching octal literals in Nimrod."
+	)
+
+(defvar nimrod-binary-regexp
+	"\\<\\0b[01_]+\\(\\.[01_]+\\)?\\([eE][01]+\\)?\\>"
+	"Regular expression for matching binary literals in Nimrod."
+	)
+
+(defvar nimrod-variables-regexp
+	"\\<[a-zA-Z][a-zA-Z0-9_]+\\>"
+	"Regular expression for matching variable identifiers in Nimrod."	
+	)
 
 (defvar nimrod-tab-regexp "\\(\t+\\)")
 
@@ -113,8 +206,15 @@
 				))
 
 
-;; Comments
-;; --------
+(defun nimrod-setup-font-lock ()
+	"This will be called when defining nimrod-node, below."
+	(setq font-lock-defaults '((nimrod-font-lock-keywords))))
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 								                Comments                                    ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; the command to comment/uncomment text
 (defun nimrod-comment-dwim (arg)
@@ -126,18 +226,18 @@ For detail, see `comment-dwim'."
 		(comment-dwim arg)))
 
 
-;; Indentation
-;; -----------
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 								               Indentation                                  ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defvar nimrod-indent-offset 2
-  "Number of spaces per level of indentation.")
 
+(defvar nimrod-indent-offset 2 "Number of spaces per level of indentation.")
 
 (defconst nimrod-blank-line-re "^ *$"
   "Regexp matching a line containing only (valid) whitespace.")
 
 (defconst nimrod-new-block-re ".*\\(\=\\|var\\|type\\|const\\|\\:\\)$"
-  "Regexp matching a line containing only (valid) whitespace.")
+  "Regexp matching a line that precedes a new block.")
 
 (defun nimrod-compute-indentation ()
   "Calculate the maximum sensible indentation for the current line."
@@ -152,8 +252,6 @@ For detail, see `comment-dwim'."
 
 		(+ (current-indentation)
 			 (if (looking-at nimrod-new-block-re) nimrod-indent-offset 0))))
-
-
 
 
 (defun nimrod-indent-line ()
@@ -179,16 +277,18 @@ back-dent the line by `nimrod-indent-offset' spaces.  On reaching column
 				(forward-to-indentation 0))))
 
 
-;; Wrap it all up
-;; --------------
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 								             Wrap it all up ...                             ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define-derived-mode nimrod-mode fundamental-mode
 	"nimrod mode"
-	"Major mode for the Nimrod programming language"
+	"A major mode for the Nimrod programming language."
 
-	(setq mode-name "Nimrod")
+	(setq mode-name "Nimrod")  ;; This will display in the mode line.
 
-	(setq font-lock-defaults '((nimrod-font-lock-keywords)))
+	(nimrod-setup-font-lock)
+
 
 
   ;; modify the keymap
@@ -208,25 +308,9 @@ back-dent the line by `nimrod-indent-offset' spaces.  On reaching column
   (modify-syntax-entry ?\" "\""  nimrod-mode-syntax-table)
 
 	(setq indent-tabs-mode nil) ;; Always indent with SPACES!
-)
+	)
 
 (provide 'nimrod-mode)
 
 (setq auto-mode-alist (cons '("\\.nim$" . nimrod-mode) auto-mode-alist))
 
-;; TODO
-;; ----
-
-;; Make things non-case-sensitive
-
-;; Indent to previous # character if we're on a commented line
-
-;; Identifier following "proc" gets font-lock-function-name-face
-
-;; Treat proc ___ ( ... ) parameter list separately
-
-;; Make double-# comments get font-lock-doc-face.
-
-;; Highlight tabs as syntax error.
-
-;; Treat things inside {. ... .} separately.
