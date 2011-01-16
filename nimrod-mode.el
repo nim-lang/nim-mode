@@ -236,7 +236,7 @@ For detail, see `comment-dwim'."
 (defconst nimrod-blank-line-re "^ *$"
   "Regexp matching a line containing only (valid) whitespace.")
 
-(defconst nimrod-new-block-re ".*\\(\=\\|var\\|type\\|const\\|\\:\\)$"
+(defconst nimrod-new-block-re ".*\\(\=\\|var\\|type\\|const\\|enum\\|\\:\\)$"
   "Regexp matching a line that precedes a new block.")
 
 (defun nimrod-compute-indentation ()
@@ -255,10 +255,12 @@ For detail, see `comment-dwim'."
 
 
 (defun nimrod-indent-line ()
-  "Indent the current line.  The first time this command is used, the line will be indented to the
-maximum sensible indentation.  Each immediately subsequent usage will
-back-dent the line by `nimrod-indent-offset' spaces.  On reaching column
-0, it will cycle back to the maximum sensible indentation."
+  "Indent the current line.
+The first time this command is used, the line will be indented to the
+maximum sensible indentation.
+Each immediately subsequent usage will back-dent the line by
+`nimrod-indent-offset' spaces.
+On reaching column 0, it will cycle back to the maximum sensible indentation."
 
   (interactive "*")
 
