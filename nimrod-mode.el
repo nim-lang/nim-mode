@@ -143,6 +143,20 @@ Magic functions."
   "Nimrod standard operators.")
 
 
+;; Custom faces
+;; ------------
+
+;; TODO: make work!?
+(defface nimrod-tab-face
+  '((((class color) (background dark))
+     (:background "grey22" :foreground "darkgray"))
+    (((class color) (background light))
+     (:background "beige"  :foreground "lightgray"))
+    (t (:inverse-video t)))
+  "Face used to visualize TAB."
+  :group 'whitespace)
+
+
 ;; Create regular expressions
 ;; --------------------------
 
@@ -178,20 +192,29 @@ Magic functions."
   "Regular expression for matching variable identifiers in Nimrod."     
   )
 
+(defvar nimrod-single-quote-string-regexp
+  "\\<\".*\"\\>"
+  "Regular expression for matching single-quoted strings."
+  )
+
+(defvar nimrod-raw-string-regexp
+  "\\<r\".*\"\\>"
+  "Regular expression for matching raw strings."
+  )
+
+(defvar nimrod-triple-quote-string-regexp
+  "\\<\"\"\".*\"\"\"\\>"
+  "Regular expression for matching triple quote strings."
+  )
+
 (defvar nimrod-tab-regexp "\\(\t+\\)")
 
-;; TODO: make work!
-(defface nimrod-tab-face
-  '((((class color) (background dark))
-     (:background "grey22" :foreground "darkgray"))
-    (((class color) (background light))
-     (:background "beige"  :foreground "lightgray"))
-    (t (:inverse-video t)))
-  "Face used to visualize TAB."
-  :group 'whitespace)
 
 (setq nimrod-font-lock-keywords
       `(  ;; note the BACKTICK, `
+        (,nimrod-raw-string-regexp . font-lock-string-face)
+        (,nimrod-triple-quote-string-regexp . font-lock-string-face)
+        (,nimrod-single-quote-string-regexp . font-lock-string-face)
         (,nimrod-tab-regexp . nimrod-tab-face) ;; TODO: make work!
         (,nimrod-keywords-regexp . font-lock-keyword-face)
         (,nimrod-types-regexp . font-lock-type-face)
@@ -305,8 +328,8 @@ On reaching column 0, it will cycle back to the maximum sensible indentation."
   (modify-syntax-entry ?# "< b"  nimrod-mode-syntax-table)
   (modify-syntax-entry ?\n "> b" nimrod-mode-syntax-table)
 
-  (modify-syntax-entry ?\' "\""  nimrod-mode-syntax-table)
-  (modify-syntax-entry ?\" "\""  nimrod-mode-syntax-table)
+  (modify-syntax-entry ?\' "w"  nimrod-mode-syntax-table)
+  (modify-syntax-entry ?\" "w"  nimrod-mode-syntax-table)
 
   (setq indent-tabs-mode nil) ;; Always indent with SPACES!
   )
