@@ -74,11 +74,28 @@
 ;; ---------------------
 
 (defvar nimrod-keywords
-  '("import" "type" "proc" "when" "include" "object" "of" "ptr" "ref"
-    "template" "const" "var" "iterator" "else" "while" "elif" "return"
-    "break" "for" "in" "yield" "magic" "noSideEffect" "importc" "nodecl" "rtl"
-    "enum" )
-  "Nimrod keywords.")
+  (split-string "addr and as asm atomic
+bind block break
+case cast const continue converter
+discard distinct div
+elif else end enum except
+finally for from generic
+if implies import in include is isnot iterator
+lambda let
+macro method mod
+nil not notin
+object of or out
+proc ptr
+raise ref return
+shl shr
+template try tuple type
+var
+when while with without
+xor
+yield")
+  "Nimrod keywords. The above string is taken from
+<http://force7.de/nimrod/manual.html#identifiers-keywords>,
+for easy updating.")
 
 (defvar nimrod-types
   '("int" "int8" "int16" "int32" "int64" "float" "float32" "float64"
@@ -252,6 +269,24 @@ For detail, see `comment-dwim'."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;                               Indentation                                  ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Desired indentation logic:
+;; 1. When a newline is entered, or <TAB> is pressed, do:
+;;    
+;;    1. If this line is all comment (i.e. ^\w*#.*$ ),
+;;
+;;       1. Find previous non-blank line.
+;;
+;;       2. If contains comment, set expected indentation to there.
+;;          Else, set to first non-whitespace character.
+;;
+;;    2. Else if this line is all string (i.e. ^\w*\".*$ ),
+;;       Find expected indentation based on previous line,
+;;       ignoring blank lines between:
+;;    
+
+;; -- Indent to previous # character if we're on a commented line
+;; -- Indent to previous start-of-string if line starts with string
 
 
 (defvar nimrod-indent-offset 2 "Number of spaces per level of indentation.")
