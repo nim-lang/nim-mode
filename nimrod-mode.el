@@ -209,6 +209,11 @@ Magic functions."
   "Regular expression for matching variable identifiers in Nimrod."     
   )
 
+(defvar nimrod-character-literal-regexp
+  "\\<\'\\(.\\|\\\\.*\\)'\\>"  ;; TODO: make more precise
+  "Regular expression for matching character literal tokens."
+  )
+
 (defvar nimrod-single-quote-string-regexp
   "\\<\".*\"\\>"
   "Regular expression for matching single-quoted strings."
@@ -229,6 +234,7 @@ Magic functions."
 
 (setq nimrod-font-lock-keywords
       `(  ;; note the BACKTICK, `
+        (,nimrod-character-literal-regexp . font-lock-constant-face)
         (,nimrod-raw-string-regexp . font-lock-string-face)
         (,nimrod-triple-quote-string-regexp . font-lock-string-face)
         (,nimrod-single-quote-string-regexp . font-lock-string-face)
