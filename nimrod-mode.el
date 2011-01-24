@@ -66,7 +66,7 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; 								             Simple keywords                                ;;
+;;                             Simple keywords                                ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -74,73 +74,104 @@
 ;; ---------------------
 
 (defvar nimrod-keywords
-	'("import" "type" "proc" "when" "include" "object" "of" "ptr" "ref"
-		"template" "const" "var" "iterator" "else" "while" "elif" "return"
-		"break" "for" "in" "yield" "magic" "noSideEffect" "importc" "nodecl" "rtl"
-		"enum" )
-	"Nimrod keywords.")
+  (split-string "addr and as asm atomic
+bind block break
+case cast const continue converter
+discard distinct div
+elif else end enum except
+finally for from generic
+if implies import in include is isnot iterator
+lambda let
+macro method mod
+nil not notin
+object of or out
+proc ptr
+raise ref return
+shl shr
+template try tuple type
+var
+when while with without
+xor
+yield")
+  "Nimrod keywords. The above string is taken from
+<http://force7.de/nimrod/manual.html#identifiers-keywords>,
+for easy updating.")
 
 (defvar nimrod-types
-	'("int" "int8" "int16" "int32" "int64" "float" "float32" "float64"
-		"bool" "char" "string" "cstring" "pointer" "ordinal" "nil" "expr"
-		"stmt" "typedesc" "range" "array" "openarray" "seq" "set"
-		"tgenericseq" "pgenericseq" "nimstringdesc" "nimstring" "byte"
-		"natural" "positive" "tobject" "pobject" "tresult" "tendian"
-		"taddress" "biggestint" "biggestfloat" "cchar" "cschar" "cshort"
-		"cint" "clong" "clonglong" "cfloat" "cdouble" "clongdouble"
-		"cstringarray" "pfloat32" "pfloat64" "pint64" "pint32"
-		"tgc_strategy" "tfile" "tfilemode")
-	"Nimrod types defined in <lib/system.nim>."
-	)
+  '("int" "int8" "int16" "int32" "int64" "float" "float32" "float64"
+    "bool" "char" "string" "cstring" "pointer" "ordinal" "nil" "expr"
+    "stmt" "typedesc" "range" "array" "openarray" "seq" "set"
+    "tgenericseq" "pgenericseq" "nimstringdesc" "nimstring" "byte"
+    "natural" "positive" "tobject" "pobject" "tresult" "tendian"
+    "taddress" "biggestint" "biggestfloat" "cchar" "cschar" "cshort"
+    "cint" "clong" "clonglong" "cfloat" "cdouble" "clongdouble"
+    "cstringarray" "pfloat32" "pfloat64" "pint64" "pint32"
+    "tgc_strategy" "tfile" "tfilemode")
+  "Nimrod types defined in <lib/system.nim>."
+  )
 
 (defvar nimrod-exceptions
-	'("e_base" "easynch" "esynch" "esystem" "eio" "eos"
-		"einvalidlibrary" "eresourceexhausted" "earithmetic" "edivbyzero"
-		"eoverflow" "eaccessviolation" "eassertionfailed" "econtrolc"
-		"einvalidvalue" "eoutofmemory" "einvalidindex" "einvalidfield"
-		"eoutofrange" "estackoverflow" "enoexceptiontoreraise"
-		"einvalidobjectassignment" "einvalidobjectconversion"
-		"efloatingpoint" "efloatinginvalidop" "efloatdivbyzero"
-		"efloatoverflow" "efloatunderflow" "efloatinexact")
-	"Nimrod exceptions defined in <lib/system.nim>.")
+  '("e_base" "easynch" "esynch" "esystem" "eio" "eos"
+    "einvalidlibrary" "eresourceexhausted" "earithmetic" "edivbyzero"
+    "eoverflow" "eaccessviolation" "eassertionfailed" "econtrolc"
+    "einvalidvalue" "eoutofmemory" "einvalidindex" "einvalidfield"
+    "eoutofrange" "estackoverflow" "enoexceptiontoreraise"
+    "einvalidobjectassignment" "einvalidobjectconversion"
+    "efloatingpoint" "efloatinginvalidop" "efloatdivbyzero"
+    "efloatoverflow" "efloatunderflow" "efloatinexact")
+  "Nimrod exceptions defined in <lib/system.nim>.")
 
 (defvar nimrod-constants
-	'("ismainmodule" "compiledate" "compiletime" "nimrodversion"
-		"nimrodmajor" "nimrodminor" "nimrodpatch" "cpuendian" "hostos"
-		"hostcpu" "apptype" "inf" "neginf" "nan" "quitsuccess"
-		"quitfailure" "stdin" "stdout" "stderr" "true" "false" )
-	"Nimrod constants defined in <lib/system.nim>.")
+  '("ismainmodule" "compiledate" "compiletime" "nimrodversion"
+    "nimrodmajor" "nimrodminor" "nimrodpatch" "cpuendian" "hostos"
+    "hostcpu" "apptype" "inf" "neginf" "nan" "quitsuccess"
+    "quitfailure" "stdin" "stdout" "stderr" "true" "false" )
+  "Nimrod constants defined in <lib/system.nim>.")
 
 (defvar nimrod-builtins 
-	'("defined" "definedinscope" "not" "+" "-" "=" "<" ">" "@" "&" "*"
-		">=" "<=" "$" ">=%" ">%" "<%" "<=%" "," ":" "==" "/"  "div" "mod"
-		"shr" "shl" "and" "or" "xor" "abs" "+%" "-%" "*%" "/%" "%%" "-+-"
-		"not_in" "is_not" "cmp" "high" "low" "sizeof" "succ" "pred" "inc"
-		"dec" "newseq" "len" "incl" "excl" "card" "ord" "chr" "ze" "ze64"
-		"tou8" "tou16" "tou32" "min" "max" "setlen" "newstring" "add"
-		"compileoption" "del" "delete" "insert" "repr" "tofloat"
-		"tobiggestfloat" "toint" "tobiggestint" "addquitproc" "copy"
-		"zeromem" "copymem" "movemem" "equalmem" "alloc" "alloc0"
-		"realloc" "dealloc" "assert" "swap" "getrefcount" "getoccupiedmem"
-		"getfreemem" "gettotalmem" "countdown" "countup" "items"
-		"enumerate" "isnil" "find" "contains" "pop" "each" "gc_disable"
-		"gc_enable" "gc_fullcollect" "gc_setstrategy"
-		"gc_enablemarkandsweep" "gc_disablemarkandsweep"
-		"gc_getstatistics" "gc_ref" "gc_unref" "accumulateresult" "echo"
-		"newexception" "quit" "open" "reopen" "close" "endoffile"
-		"readchar" "flushfile" "readfile" "write" "readline" "writeln"
-		"getfilesize" "readbytes" "readchars" "readbuffer" "writebytes"
-		"writechars" "writebuffer" "setfilepos" "getfilepos" "lines"
-		"filehandle" "cstringarraytoseq" "getdiscriminant" "selectbranch"
-		"getcurrentexception" "getcurrentexceptionmsg" "likely" "unlikely"
-		)
-	"Standard library functions fundamental enough to count as builtins.
+  '("defined" "definedinscope" "not" "+" "-" "=" "<" ">" "@" "&" "*"
+    ">=" "<=" "$" ">=%" ">%" "<%" "<=%" "," ":" "==" "/"  "div" "mod"
+    "shr" "shl" "and" "or" "xor" "abs" "+%" "-%" "*%" "/%" "%%" "-+-"
+    "not_in" "is_not" "cmp" "high" "low" "sizeof" "succ" "pred" "inc"
+    "dec" "newseq" "len" "incl" "excl" "card" "ord" "chr" "ze" "ze64"
+    "tou8" "tou16" "tou32" "min" "max" "setlen" "newstring" "add"
+    "compileoption" "del" "delete" "insert" "repr" "tofloat"
+    "tobiggestfloat" "toint" "tobiggestint" "addquitproc" "copy"
+    "zeromem" "copymem" "movemem" "equalmem" "alloc" "alloc0"
+    "realloc" "dealloc" "assert" "swap" "getrefcount" "getoccupiedmem"
+    "getfreemem" "gettotalmem" "countdown" "countup" "items"
+    "enumerate" "isnil" "find" "contains" "pop" "each" "gc_disable"
+    "gc_enable" "gc_fullcollect" "gc_setstrategy"
+    "gc_enablemarkandsweep" "gc_disablemarkandsweep"
+    "gc_getstatistics" "gc_ref" "gc_unref" "accumulateresult" "echo"
+    "newexception" "quit" "open" "reopen" "close" "endoffile"
+    "readchar" "flushfile" "readfile" "write" "readline" "writeln"
+    "getfilesize" "readbytes" "readchars" "readbuffer" "writebytes"
+    "writechars" "writebuffer" "setfilepos" "getfilepos" "lines"
+    "filehandle" "cstringarraytoseq" "getdiscriminant" "selectbranch"
+    "getcurrentexception" "getcurrentexceptionmsg" "likely" "unlikely"
+    )
+  "Standard library functions fundamental enough to count as builtins.
 Magic functions."
-)
+  )
 
 (defvar nimrod-operators
-	'( "`" "{." ".}" "[" "]" "{" "}" "(" ")" )
-	"Nimrod standard operators.")
+  '( "`" "{." ".}" "[" "]" "{" "}" "(" ")" )
+  "Nimrod standard operators.")
+
+
+;; Custom faces
+;; ------------
+
+;; TODO: make work!?
+(defface nimrod-tab-face
+  '((((class color) (background dark))
+     (:background "grey22" :foreground "darkgray"))
+    (((class color) (background light))
+     (:background "beige"  :foreground "lightgray"))
+    (t (:inverse-video t)))
+  "Face used to visualize TAB."
+  :group 'whitespace)
 
 
 ;; Create regular expressions
@@ -154,81 +185,114 @@ Magic functions."
 (defvar nimrod-operators-regexp (regexp-opt nimrod-operators 'words))
 
 (defvar nimrod-decimal-regexp
-	"\\<[0-9_]+\\(\\.[0-9_]+\\)?\\([eE][0-9]+\\)?\\>"
-	"Regular expression for matching decimal literals in Nimrod."
-	)
+  "\\<[0-9_]+\\(\\.[0-9_]+\\)?\\([eE][0-9]+\\)?\\(\'\\(i8\\|i16\\|i32\\|i64\\|f32\\|f64\\)\\)?\\>"
+  "Regular expression for matching decimal literals in Nimrod."
+  )
 
 (defvar nimrod-hex-regexp
-	"\\<\\0x[0-9a-fA-F_]+\\(\\.[0-9a-fA-F_]+\\)?\\([eE][0-9a-fA-F]+\\)?\\>"
-	"Regular expression for matching hexadecimal literals in Nimrod."
-	)
+  "\\<\\0x[0-9a-fA-F_]+\\(\\.[0-9a-fA-F_]+\\)?\\([eE][0-9a-fA-F]+\\)?\\(\'\\(i8\\|i16\\|i32\\|i64\\|f32\\|f64\\)\\)?\\>"
+  "Regular expression for matching hexadecimal literals in Nimrod."
+  )
 
 (defvar nimrod-octal-regexp
-	"\\<\\0o[0-7_]+\\(\\.[0-7_]+\\)?\\([eE][0-7]+\\)?\\>"
-	"Regular expression for matching octal literals in Nimrod."
-	)
+  "\\<\\0o[0-7_]+\\(\\.[0-7_]+\\)?\\([eE][0-7]+\\)?\\(\'\\(i8\\|i16\\|i32\\|i64\\|f32\\|f64\\)\\)?\\>"
+  "Regular expression for matching octal literals in Nimrod."
+  )
 
 (defvar nimrod-binary-regexp
-	"\\<\\0b[01_]+\\(\\.[01_]+\\)?\\([eE][01]+\\)?\\>"
-	"Regular expression for matching binary literals in Nimrod."
-	)
+  "\\<\\0b[01_]+\\(\\.[01_]+\\)?\\([eE][01]+\\)?\\(\'\\(i8\\|i16\\|i32\\|i64\\|f32\\|f64\\)\\)?\\>"
+  "Regular expression for matching binary literals in Nimrod."
+  )
 
 (defvar nimrod-variables-regexp
-	"\\<[a-zA-Z][a-zA-Z0-9_]+\\>"
-	"Regular expression for matching variable identifiers in Nimrod."	
-	)
+  "\\<[a-zA-Z][a-zA-Z0-9_]+\\>"
+  "Regular expression for matching variable identifiers in Nimrod."     
+  )
+
+(defvar nimrod-character-literal-regexp
+  "\\<\'\\(.\\|\\\\.*\\)'\\>"  ;; TODO: make more precise
+  "Regular expression for matching character literal tokens."
+  )
+
+(defvar nimrod-single-quote-string-regexp
+  "\\<\".*\"\\>"
+  "Regular expression for matching single-quoted strings."
+  )
+
+(defvar nimrod-raw-string-regexp
+  "\\<r\".*\"\\>"
+  "Regular expression for matching raw strings."
+  )
+
+(defvar nimrod-triple-quote-string-regexp
+  "\\<\"\"\".*\"\"\"\\>"
+  "Regular expression for matching triple quote strings."
+  )
 
 (defvar nimrod-tab-regexp "\\(\t+\\)")
 
-;; TODO: make work!
-(defface nimrod-tab-face
-  '((((class color) (background dark))
-     (:background "grey22" :foreground "darkgray"))
-    (((class color) (background light))
-     (:background "beige"  :foreground "lightgray"))
-    (t (:inverse-video t)))
-  "Face used to visualize TAB."
-  :group 'whitespace)
 
 (setq nimrod-font-lock-keywords
       `(  ;; note the BACKTICK, `
-				(,nimrod-tab-regexp . nimrod-tab-face) ;; TODO: make work!
-				(,nimrod-keywords-regexp . font-lock-keyword-face)
-				(,nimrod-types-regexp . font-lock-type-face)
-				(,nimrod-constants-regexp . font-lock-constant-face)
+        (,nimrod-character-literal-regexp . font-lock-constant-face)
+        (,nimrod-raw-string-regexp . font-lock-string-face)
+        (,nimrod-triple-quote-string-regexp . font-lock-string-face)
+        (,nimrod-single-quote-string-regexp . font-lock-string-face)
+        (,nimrod-tab-regexp . nimrod-tab-face) ;; TODO: make work!
+        (,nimrod-keywords-regexp . font-lock-keyword-face)
+        (,nimrod-types-regexp . font-lock-type-face)
+        (,nimrod-constants-regexp . font-lock-constant-face)
         (,nimrod-builtins-regexp . font-lock-builtin-face)
-				(,nimrod-decimal-regexp . font-lock-constant-face)
-				(,nimrod-hex-regexp . font-lock-constant-face)
-				(,nimrod-octal-regexp . font-lock-constant-face)
-				(,nimrod-binary-regexp . font-lock-constant-face)
-				(,nimrod-operators-regexp . font-lock-variable-face)
-				(,nimrod-variables-regexp . font-lock-variable-face)
-				))
+        (,nimrod-decimal-regexp . font-lock-constant-face)
+        (,nimrod-hex-regexp . font-lock-constant-face)
+        (,nimrod-octal-regexp . font-lock-constant-face)
+        (,nimrod-binary-regexp . font-lock-constant-face)
+        (,nimrod-operators-regexp . font-lock-variable-face)
+        (,nimrod-variables-regexp . font-lock-variable-face)
+        ))
 
 
 (defun nimrod-setup-font-lock ()
-	"This will be called when defining nimrod-node, below."
-	(setq font-lock-defaults '((nimrod-font-lock-keywords))))
+  "This will be called when defining nimrod-node, below."
+  (setq font-lock-defaults '((nimrod-font-lock-keywords))))
 
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; 								                Comments                                    ;;
+;;                                Comments                                    ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; the command to comment/uncomment text
 (defun nimrod-comment-dwim (arg)
-	"Comment or uncomment current line or region in a smart way.
+  "Comment or uncomment current line or region in a smart way.
 For detail, see `comment-dwim'."
-	(interactive "*P")
-	(require 'newcomment)
-	(let ((deactivate-mark nil) (comment-start "#") (comment-end ""))
-		(comment-dwim arg)))
+  (interactive "*P")
+  (require 'newcomment)
+  (let ((deactivate-mark nil) (comment-start "#") (comment-end ""))
+    (comment-dwim arg)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; 								               Indentation                                  ;;
+;;                               Indentation                                  ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Desired indentation logic:
+;; 1. When a newline is entered, or <TAB> is pressed, do:
+;;    
+;;    1. If this line is all comment (i.e. ^\w*#.*$ ),
+;;
+;;       1. Find previous non-blank line.
+;;
+;;       2. If contains comment, set expected indentation to there.
+;;          Else, set to first non-whitespace character.
+;;
+;;    2. Else if this line is all string (i.e. ^\w*\".*$ ),
+;;       Find expected indentation based on previous line,
+;;       ignoring blank lines between:
+;;    
+
+;; -- Indent to previous # character if we're on a commented line
+;; -- Indent to previous start-of-string if line starts with string
 
 
 (defvar nimrod-indent-offset 2 "Number of spaces per level of indentation.")
@@ -244,20 +308,19 @@ For detail, see `comment-dwim'."
   (save-excursion
 
     (beginning-of-line)
-		(forward-line -1)
-		(while (and (looking-at nimrod-blank-line-re)
-								(> (point) (point-min)))
-			(forward-line -1)
-			)
+    (forward-line -1)
+    (while (and (looking-at nimrod-blank-line-re)
+                (> (point) (point-min)))
+      (forward-line -1)
+      )
 
-		(+ (current-indentation)
-			 (if (looking-at nimrod-new-block-re) nimrod-indent-offset 0))))
+    (+ (current-indentation)
+       (if (looking-at nimrod-new-block-re) nimrod-indent-offset 0))))
 
 
 (defun nimrod-indent-line ()
-  "Indent the current line.
-The first time this command is used, the line will be indented to the
-maximum sensible indentation.
+  "Indent the current line.  The first time this command is used, the line
+will be indented to the maximum sensible indentation.
 Each immediately subsequent usage will back-dent the line by
 `nimrod-indent-offset' spaces.
 On reaching column 0, it will cycle back to the maximum sensible indentation."
@@ -271,46 +334,46 @@ On reaching column 0, it will cycle back to the maximum sensible indentation."
     (save-excursion
       (beginning-of-line)
       (delete-horizontal-space)
-      (if	(and (equal last-command this-command) (/= ci 0))
-					(indent-to (* (/ (- ci 1) nimrod-indent-offset) nimrod-indent-offset))
-				  (indent-to need)))
+      (if (and (equal last-command this-command) (/= ci 0))
+          (indent-to (* (/ (- ci 1) nimrod-indent-offset) nimrod-indent-offset))
+        (indent-to need)))
 
-		(if (< (current-column) (current-indentation))
-				(forward-to-indentation 0))))
+    (if (< (current-column) (current-indentation))
+        (forward-to-indentation 0))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; 								             Wrap it all up ...                             ;;
+;;                             Wrap it all up ...                             ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define-derived-mode nimrod-mode fundamental-mode
-	"nimrod mode"
-	"A major mode for the Nimrod programming language."
+  "nimrod mode"
+  "A major mode for the Nimrod programming language."
 
-	(setq mode-name "Nimrod")  ;; This will display in the mode line.
+  (setq mode-name "Nimrod")  ;; This will display in the mode line.
 
-	(nimrod-setup-font-lock)
+  (nimrod-setup-font-lock)
 
 
 
   ;; modify the keymap
   (define-key nimrod-mode-map [remap comment-dwim] 'nimrod-comment-dwim)
 
-	(set (make-local-variable 'indent-line-function) 'nimrod-indent-line)
+  (set (make-local-variable 'indent-line-function) 'nimrod-indent-line)
 
-	;; Documentation comment highlighting
+  ;; Documentation comment highlighting
   ;; (modify-syntax-entry ?\# ". 12b" nimrod-mode-syntax-table)
   ;; (modify-syntax-entry ?\n "> b" nimrod-mode-syntax-table)
 
-	;; Comment highlighting
+  ;; Comment highlighting
   (modify-syntax-entry ?# "< b"  nimrod-mode-syntax-table)
   (modify-syntax-entry ?\n "> b" nimrod-mode-syntax-table)
 
-  (modify-syntax-entry ?\' "\""  nimrod-mode-syntax-table)
-  (modify-syntax-entry ?\" "\""  nimrod-mode-syntax-table)
+  (modify-syntax-entry ?\' "w"  nimrod-mode-syntax-table)
+  (modify-syntax-entry ?\" "w"  nimrod-mode-syntax-table)
 
-	(setq indent-tabs-mode nil) ;; Always indent with SPACES!
-	)
+  (setq indent-tabs-mode nil) ;; Always indent with SPACES!
+  )
 
 (provide 'nimrod-mode)
 
