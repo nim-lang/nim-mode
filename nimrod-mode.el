@@ -51,9 +51,7 @@
 ;;
 ;; Todo:
 ;;
-;; -- Make things non-case-sensitive
-;; -- Indent to previous # character if we're on a commented line
-;; -- Indent to previous start-of-string if line starts with string
+;; -- Make things non-case-sensitive and ignore underscores
 ;; -- Identifier following "proc" gets font-lock-function-name-face
 ;; -- Treat parameter lists separately
 ;; -- Treat pragmas inside "{." and ".}" separately
@@ -63,6 +61,19 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 
 ;;; Code:
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;                                Helpers                                     ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun nimrod-glue-strings (glue strings)
+"Given a list of strings and some glue, concatenate."
+	(mapconcat 'identity strings glue))
+
+(defun nimrod-regexp-choice (strings)
+	"Given a list of strings, construct a regexp multiple-choice."
+	(concat "\\(" (nimrod-glue-strings "\\|" strings) "\\)"))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -177,12 +188,28 @@ Magic functions."
 ;; Create regular expressions
 ;; --------------------------
 
+
+;; regexp-opt'ed expressions
+;; '''''''''''''''''''''''''
+
 (defvar nimrod-keywords-regexp (regexp-opt nimrod-keywords 'words))
 (defvar nimrod-types-regexp (regexp-opt nimrod-types 'words))
 (defvar nimrod-types-regexp (regexp-opt nimrod-exceptions 'words))
 (defvar nimrod-constants-regexp (regexp-opt nimrod-constants 'words))
 (defvar nimrod-builtins-regexp (regexp-opt nimrod-builtins 'words))
 (defvar nimrod-operators-regexp (regexp-opt nimrod-operators 'words))
+
+;; Free memory
+(defvar nimrod-keywords nil)
+(defvar nimrod-types nil)
+(defvar nimrod-exceptions nil)
+(defvar nimrod-constants nil)
+(defvar nimrod-builtins nil)
+(defvar nimrod-operators nil)
+
+
+;; Hand-reared expressions
+;; '''''''''''''''''''''''
 
 (defvar nimrod-decimal-regexp
   "\\<[0-9_]+\\(\\.[0-9_]+\\)?\\([eE][0-9]+\\)?\\(\'\\(i8\\|i16\\|i32\\|i64\\|f32\\|f64\\)\\)?\\>"
@@ -229,7 +256,18 @@ Magic functions."
   "Regular expression for matching triple quote strings."
   )
 
-(defvar nimrod-tab-regexp "\\(\t+\\)")
+(defconst nimrod-tab-regexp "\\(\t+\\)")
+
+(defconst nimrod-blank-line-regexp "^ *$"
+  "Regexp matching a line containing only (valid) whitespace.")
+
+(defconst nimrod-new-block-regexp
+	(concat ".*"                                          ;; Anything
+					(nimrod-regexp-choice '("=" "var" "type" "const" "enum" "\\:")) ;; ending in a new block indicator,
+					" *"                                          ;; then non-syntactic whitespace,
+					"\\(#.*\\)?"                                  ;; then possibly a comment.
+					"$")
+  "Regexp matching a line that precedes a new block.")
 
 
 (setq nimrod-font-lock-keywords
@@ -247,10 +285,26 @@ Magic functions."
         (,nimrod-hex-regexp . font-lock-constant-face)
         (,nimrod-octal-regexp . font-lock-constant-face)
         (,nimrod-binary-regexp . font-lock-constant-face)
-        (,nimrod-operators-regexp . font-lock-variable-face)
-        (,nimrod-variables-regexp . font-lock-variable-face)
+        (,nimrod-operators-regexp . font-lock-variable-name-face)
+        (,nimrod-variables-regexp . font-lock-variable-name-face)
         ))
 
+;; Free memory
+(defvar nimrod-character-literal-regexp nil)
+(defvar nimrod-raw-string-regexp nil)
+(defvar nimrod-triple-quote-string-regexp nil)
+(defvar nimrod-single-quote-string-regexp nil)
+(defvar nimrod-tab-regexp nil)
+(defvar nimrod-keywords-regexp nil)
+(defvar nimrod-types-regexp nil)
+(defvar nimrod-constants-regexp nil)
+(defvar nimrod-builtins-regexp nil)
+(defvar nimrod-decimal-regexp nil)
+(defvar nimrod-hex-regexp nil)
+(defvar nimrod-octal-regexp nil)
+(defvar nimrod-binary-regexp nil)
+(defvar nimrod-operators-regexp nil)
+(defvar nimrod-variables-regexp nil)
 
 (defun nimrod-setup-font-lock ()
   "This will be called when defining nimrod-node, below."
@@ -286,7 +340,7 @@ For detail, see `comment-dwim'."
 ;;       2. If contains comment, set expected indentation to there.
 ;;          Else, set to first non-whitespace character.
 ;;
-;;    2. Else if this line is all string (i.e. ^\w*\".*$ ),
+;;    2. Else if this line starts as a string (i.e. ^\w*\".*$ ),
 ;;       Find expected indentation based on previous line,
 ;;       ignoring blank lines between:
 ;;    
@@ -295,27 +349,39 @@ For detail, see `comment-dwim'."
 ;; -- Indent to previous start-of-string if line starts with string
 
 
-(defvar nimrod-indent-offset 2 "Number of spaces per level of indentation.")
+(defconst nimrod-indent-offset 2 "Number of spaces per level of indentation.")
 
-(defconst nimrod-blank-line-re "^ *$"
-  "Regexp matching a line containing only (valid) whitespace.")
+(defun nimrod-skip-blank-lines ()
+	(progn
+		(forward-line -1)                                  ;; Go back one line.
+		(while (and (looking-at nimrod-blank-line-regexp)  ;; While it's a blank line,
+								(> (point) (point-min)))               ;; and there are other lines,
+			(forward-line -1))))                             ;; skip back.
 
-(defconst nimrod-new-block-re ".*\\(\=\\|var\\|type\\|const\\|enum\\|\\:\\)$"
-  "Regexp matching a line that precedes a new block.")
+(defun nimrod-compute-indentation-of-char (char)
+	""
+	(progn
+		(nimrod-skip-blank-lines)
+		(skip-chars-forward (concat "^\n" char))
+		(if (looking-at char)
+				(current-column)
+			(+ (progn
+					 (beginning-of-line)
+					 (if (looking-at nimrod-new-block-regexp) nimrod-indent-offset 0))
+				 (current-indentation)))))
 
 (defun nimrod-compute-indentation ()
   "Calculate the maximum sensible indentation for the current line."
   (save-excursion
+		(beginning-of-line)
 
-    (beginning-of-line)
-    (forward-line -1)
-    (while (and (looking-at nimrod-blank-line-re)
-                (> (point) (point-min)))
-      (forward-line -1)
-      )
-
-    (+ (current-indentation)
-       (if (looking-at nimrod-new-block-re) nimrod-indent-offset 0))))
+		(cond ((looking-at "^ *#")  (nimrod-compute-indentation-of-char "#" )) ;; Comment line; look for a comment
+					((looking-at "^ *\"") (nimrod-compute-indentation-of-char "\"")) ;; String
+					((looking-at "^ *'")  (nimrod-compute-indentation-of-char "'" )) ;; Char
+					(t                   (progn
+																 (nimrod-skip-blank-lines)
+																 (+ (current-indentation)
+																		(if (looking-at nimrod-new-block-regexp) nimrod-indent-offset 0)))))))
 
 
 (defun nimrod-indent-line ()
