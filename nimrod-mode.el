@@ -432,6 +432,9 @@ On reaching column 0, it will cycle back to the maximum sensible indentation."
   (modify-syntax-entry ?\' "w"  nimrod-mode-syntax-table)
   (modify-syntax-entry ?\" "|"  nimrod-mode-syntax-table)
 
+  (modify-syntax-entry ?\[ "("  nimrod-mode-syntax-table)
+  (modify-syntax-entry ?\] ")"  nimrod-mode-syntax-table)
+
   (setq indent-tabs-mode nil) ;; Always indent with SPACES!
   )
 
