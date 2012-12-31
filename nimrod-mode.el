@@ -438,7 +438,115 @@ On reaching column 0, it will cycle back to the maximum sensible indentation."
   (setq indent-tabs-mode nil) ;; Always indent with SPACES!
   )
 
-(provide 'nimrod-mode)
+(defcustom nimrod-compiled-buffer-name "*nimrod-js*"
+  "The name of the scratch buffer used to compile Javascript from Nimrod."
+  :type 'string
+  :group 'nimrod)
 
+(defcustom nimrod-command "nimrod"
+  "The NimRod command used for compiling code and idetools."
+  :type 'string
+  :group 'nimrod)
+
+(defcustom nimrod-args-compile '()
+  "The arguments to pass to `nimrod-command' to compile a file."
+  :type 'list
+  :group 'nimrod)
+
+(defun nimrod-compile-buffer-to-js ()
+  "Compiles the current buffer and displays the JavaScript in a buffer
+called `nimrod-compiled-buffer-name'."
+  (interactive)
+  (save-excursion
+    (nimrod-compile-region-to-js (point-min) (point-max))))
+
+(defun nimrod-compile-region-to-js (start end)
+  "Compiles the current region to javascript into the buffer `nimrod-compiled-buffer-name'."
+  (interactive "r")
+
+  (lexical-let ((buffer (get-buffer-create nimrod-compiled-buffer-name))
+                (tmpdir (file-name-as-directory (make-temp-file "nimrod-compile" t))))
+    (let ((default-directory tmpdir))
+      (write-region start end "tmp.nim")
+      (with-current-buffer buffer
+        (erase-buffer)
+        (let ((default-directory tmpdir))
+          (set-process-sentinel
+           (apply
+            (apply-partially 'start-file-process "nimrod" "*nimrod-compile*" nimrod-command)
+            (append '("js") nimrod-args-compile '("tmp.nim")))
+           (lambda (process-name status)
+             (cond ((string= status "finished\n")
+                    (with-current-buffer buffer
+                      (insert-file
+                       (concat tmpdir (file-name-as-directory "nimcache") "tmp.js"))
+                      (display-buffer buffer)))
+                   (t (error status))))))))))
+
+(defun nimrod-get-project-main-file ()
+  "Get the main file for the project."
+  (or (concat (file-name-sans-extension
+               (nimrod-find-file-in-heirarchy
+                (file-name-directory (buffer-file-name))
+                ".*\.nimrod\.cfg"))
+              ".nim")
+      (buffer-file-name)))
+
+(defun nimrod-get-project-root ()
+  "Get the project root. Uses `nimrod-get-project-main-file' or git. "
+  (or (file-name-directory (nimrod-get-project-main-file))
+      (replace-regexp-in-string "\n$" "" 
+                                (shell-command-to-string "git rev-parse --show-toplevel"))))
+
+(defun nimrod-format-cursor-position (tempfile)
+  "Formats the position of the cursor to a nice little --track
+statement, referencing the file in the temprorary directory."
+  (format "--track %s,%d,%d" tempfile (line-number-at-pos) (current-column)))
+
+(defun nimrod-call-idetools (&rest args)
+  "ARGS should be one of --suggest --def --context --usages."
+  (set-process-sentinel
+   (let ((tempfile (nimrod-save-buffer-temporarly))))
+   (apply
+    (apply-partially 'start-file-process "nimrod idetools" "*nimrod-idetools*" nimrod-command)
+    (append
+     '("idetools")
+     (nimrod-format-cursor-position tempfile) ; --track
+     (when (nimrod-get-project-root)
+       (format "--include:%s" (nimrod-get-project-root)))
+     args
+     ;; in case of on project main file, use the tempfile. Might be
+     ;; useful for repl.
+     (or nimrod-get-project-main-file tempfile)))
+   (lambda (process-name status)
+     ;; read results
+     )))
+
+(defun nimrod-save-buffer-temporarly ()
+  "This saves the current buffer and returns the location, so we
+  can pass it to idetools."
+  (let* ((dirname (make-temp-file "nimrod-suggest" t))
+         (filename (concat (file-name-as-directory dirname)
+                           (file-name-nondirectory (buffer-file-name)))))
+    (save-restriction
+      (widen)
+      (write-region (point-min) (point-max) filename))
+    filename))
+
+;; From http://stackoverflow.com/questions/14095189/walk-up-the-directory-tree
+
+(defun nimrod-parent-directory (dir)
+  (unless (equal "/" dir)
+    (file-name-directory (directory-file-name dir))))
+
+(defun nimrod-find-file-in-heirarchy (current-dir pattern)
+  "Search for a file matching PATTERN upwards through the directory
+hierarchy, starting from CURRENT-DIR"
+  (let ((parent (nimrod-parent-directory (expand-file-name current-dir))))
+    (or (directory-files current-dir t pattern nil)
+      (when parent
+        (find-file-in-heirarchy parent fname)))))
+
+(provide 'nimrod-mode)
 
 (setq auto-mode-alist (cons '("\\.nim$" . nimrod-mode) auto-mode-alist))
