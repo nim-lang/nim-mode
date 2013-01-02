@@ -119,6 +119,7 @@ for easy updating.")
     "cstringarray" "pfloat32" "pfloat64" "pint64" "pint32"
     "tgc_strategy" "tfile" "tfilemode")
   "Nimrod types defined in <lib/system.nim>."
+
   )
 
 (defvar nimrod-exceptions
@@ -453,8 +454,8 @@ On reaching column 0, it will cycle back to the maximum sensible indentation."
   :type 'list
   :group 'nimrod)
 
-(defvar nimrod-idetools-modes "Which modes are available to use with the idetools."
-  '(suggest def context usages))
+(defvar nimrod-idetools-modes '(suggest def context usages)
+  "Which modes are available to use with the idetools.")
 
 (defun nimrod-compile-buffer-to-js ()
   "Compiles the current buffer and displays the JavaScript in a buffer
@@ -502,10 +503,7 @@ called `nimrod-compiled-buffer-name'."
           (assoc-default 'completion
                          (rsense-code-completion (current-buffer)
                                                  ac-point
-                                                 (point))))
-
-(defun nimrod-candidates-at-point ()
-  )
+                                                 (point)))))
 
 (defstruct nimrod-sug type namespace name signature path line column)
 
@@ -520,30 +518,33 @@ called `nimrod-compiled-buffer-name'."
      :line (nth 5 split)
      :column (nth 6 split))))
 
+(defun nimrod-test () (interactive) (nimrod-call-idetools 'suggest))
 (defun nimrod-call-idetools (mode)
   "ARGS should be one of `nimrod-idetools-modes'. Returns the
 process created."
   (when (not (memq mode nimrod-idetools-modes))
     (error (concat mode " not one from `nimrod-idetools-modes'.")))
-   (let ((tempfile (nimrod-save-buffer-temporarly))
-         (buffer-name (format "*nimrod-idetools-%s*" mode))))
-   ;; There can only be one. Useful for suggest, not sure about the
-   ;; other modes. Change as needed.
-   (kill-process (get-buffer-process buffer-name))
-   (with-current-buffer buffer-name
-     (erase-buffer))
-   (apply
-    (apply-partially 'start-file-process "nimrod idetools" buffer-name nimrod-command)
-    (append
-     '("idetools")
-     '("--stdout")
-     (nimrod-format-cursor-position tempfile) ; --track
-     (when (nimrod-get-project-root)
-       (format "--include:%s" (nimrod-get-project-root)))
-     (concat "--" mode)
-     ;; in case of on project main file, use the tempfile. Might be
-     ;; useful for repl.
-     (or nimrod-get-project-main-file tempfile))))
+  (let ((tempfile (nimrod-save-buffer-temporarly))
+        (buffer-name (format "*nimrod-idetools-%s*" mode)))
+    ;; There can only be one. Useful for suggest, not sure about the
+    ;; other modes. Change as needed.
+    (when (bufferp buffer-name)
+      (kill-process (get-buffer-process buffer-name))
+      (with-current-buffer buffer-name
+        (erase-buffer)))
+    ;; Discard stderr for now. Will bite when debugging.
+    (apply 'call-process
+           (append (list nimrod-command nil (list buffer-name "/tmp/nimrod-idetools-stderr") nil)
+                   (remove nil (list
+                                "idetools"
+                                "--stdout"
+                                (nimrod-format-cursor-position tempfile) ; --track
+                                (when (nimrod-get-project-root)
+                                  (format "--include:%s" (nimrod-get-project-root)))
+                                (concat "--" (symbol-name mode))
+                                ;; in case of on project main file, use the tempfile. Might be
+                                ;; useful for repl.
+                                (or (nimrod-get-project-main-file) tempfile)))))))
 
 (defun nimrod-save-buffer-temporarly ()
   "This saves the current buffer and returns the location, so we
@@ -568,27 +569,32 @@ hierarchy, starting from CURRENT-DIR"
   (let ((parent (nimrod-parent-directory (expand-file-name current-dir))))
     (or (directory-files current-dir t pattern nil)
       (when parent
-        (find-file-in-heirarchy parent fname)))))
+        (nimrod-find-file-in-heirarchy parent pattern)))))
 
 (defun nimrod-get-project-main-file ()
   "Get the main file for the project."
-  (or (concat (file-name-sans-extension
-               (nimrod-find-file-in-heirarchy
+  (let ((main-file (nimrod-find-file-in-heirarchy
                 (file-name-directory (buffer-file-name))
-                ".*\.nimrod\.cfg"))
-              ".nim")
-      (buffer-file-name)))
+                ".*\.nimrod\.cfg")))
+    (when main-file (concat (file-name-sans-extension main-file) ".nim"))))
 
 (defun nimrod-get-project-root ()
   "Get the project root. Uses `nimrod-get-project-main-file' or git. "
-  (or (file-name-directory (nimrod-get-project-main-file))
-      (replace-regexp-in-string "\n$" "" 
-                                (shell-command-to-string "git rev-parse --show-toplevel"))))
+  (or (let ((main-file (nimrod-get-project-main-file)))
+        (when main-file (file-name-directory main-file)))
+      (let ((git-output (replace-regexp-in-string "\n$" "" 
+                                        (with-output-to-string
+                                          (with-current-buffer
+                                              standard-output
+                                            (process-file shell-file-name nil (list t nil) nil shell-command-switch "git rev-parse --show-toplevel"))))))
+        (if (< 0 (length git-output))
+            git-output
+          nil))))
 
 (defun nimrod-format-cursor-position (tempfile)
   "Formats the position of the cursor to a nice little --track
 statement, referencing the file in the temprorary directory."
-  (format "--track %s,%d,%d" tempfile (line-number-at-pos) (current-column)))
+  (format "--track:%s,%d,%d" tempfile (line-number-at-pos) (current-column)))
 
 (provide 'nimrod-mode)
 
