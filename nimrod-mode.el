@@ -415,8 +415,6 @@ On reaching column 0, it will cycle back to the maximum sensible indentation."
 
   (nimrod-setup-font-lock)
 
-
-
   ;; modify the keymap
   (define-key nimrod-mode-map [remap comment-dwim] 'nimrod-comment-dwim)
 
@@ -437,7 +435,47 @@ On reaching column 0, it will cycle back to the maximum sensible indentation."
   (modify-syntax-entry ?\] ")"  nimrod-mode-syntax-table)
 
   (setq indent-tabs-mode nil) ;; Always indent with SPACES!
+
+  ;; Enable completion - copy/pasted from ensime.
+  (make-local-variable 'ac-sources)
+  (setq ac-sources '(ac-source-nimrod-completions))
+
+  (make-local-variable 'ac-use-comphist)
+  (setq ac-use-comphist nil)
+
+  (make-local-variable 'ac-auto-show-menu)
+  (setq ac-auto-show-menu 0.5)
+
+  (make-local-variable 'ac-candidates-cache)
+  (setq ac-candidates-cache nil)
+
+  (make-local-variable 'ac-auto-start)
+  (setq ac-auto-start nil)
+
+  (make-local-variable 'ac-expand-on-auto-complete)
+  (setq ac-expand-on-auto-complete t)
+
+  (make-local-variable 'ac-use-fuzzy)
+  (setq ac-use-fuzzy nil)
+
+  (make-local-variable 'ac-dwim)
+  (setq ac-dwim nil)
+
+  (make-local-variable 'ac-use-quick-help)
+  (setq ac-use-quick-help t)
+
+  (make-local-variable 'ac-delete-dups)
+  (setq ac-delete-dups nil)
+
+  (make-local-variable 'ac-ignore-case)
+  (setq ac-ignore-case t)
+
+  (make-local-variable 'ac-trigger-key)
+  (ac-set-trigger-key "TAB")
+  (auto-complete-mode 1)
   )
+
+(require 'auto-complete)
 
 (defcustom nimrod-compiled-buffer-name "*nimrod-js*"
   "The name of the scratch buffer used to compile Javascript from Nimrod."
@@ -452,6 +490,30 @@ On reaching column 0, it will cycle back to the maximum sensible indentation."
 (defcustom nimrod-args-compile '()
   "The arguments to pass to `nimrod-command' to compile a file."
   :type 'list
+  :group 'nimrod)
+
+(defcustom nimrod-type-abbrevs '(
+                                 ("skProc" . "f")
+                                 ("skIterator" . "i")
+                                 ("skTemplate" . "T")
+                                 ("skType" . "t")
+                                 ("skMethod" . "f")
+                                 ("skEnumField" . "e")
+                                 ("skGenericParam" . "p")
+                                 ("skParam" . "p")
+                                 ("skModule" . "m")
+                                 ("skConverter" . "C")
+                                 ("skMacro" . "M")
+                                 ("skField" . "F")
+                                 ("skForVar" . "v")
+                                 ("skVar" . "v")
+                                 ("skLet" . "v")
+                                 ("skLabel" . "l")
+                                 ("skConst" . "c")
+                                 ("skResult" . "r")
+                                 )
+  "Abbrevs for auto-complete."
+  :type 'assoc
   :group 'nimrod)
 
 (defvar nimrod-idetools-modes '(suggest def context usages)
@@ -487,54 +549,63 @@ called `nimrod-compiled-buffer-name'."
                       (display-buffer buffer)))
                    (t (error status))))))))))
 
-(defun ac-source-nimrod ()
-  (mapcar (lambda (entry)
-            (let ((name (nth 0 entry))
-                  (qname (nth 1 entry))
-                  (base (nth 2 entry))
-                  (kind (nth 3 entry)))
-              (propertize name
+;;; Some copy/paste from ensime.
+(ac-define-source nimrod-completions
+  '((candidates . (nimrod-ac-completion-candidates ac-prefix))
+    (prefix . nimrod-ac-completion-prefix)
+    (action . (lambda ()))                   ; TODO
+    (requires . 0)
+    ))
+
+(defun nimrod-ac-completion-prefix ()
+  "Starting at current point. Find the point of completion."
+  (let ((point (re-search-backward "\\(\\W\\|[\t ]\\)\\([^\\. ]*\\)?"
+				   (point-at-bol) t)))
+    (if point (1+ point))))
+
+(defun nimrod-ac-completion-candidates (prefix)
+  ;; TODO handle prefix - ensime doesn't do it either? O.o
+  (let* ((suggest-buffer (nimrod-call-idetools 'suggest))
+         (suggestions (nimrod-parse-suggestion-buffer suggest-buffer)))
+    (mapcar (lambda (entry)
+              (propertize (nimrod-sug-name entry)
                           'value entry
-                          'symbol (assoc-default kind '(("CLASS" . "C")
-                                                        ("MODULE" . "M")
-                                                        ("CONSTANT" . "c")
-                                                        ("METHOD" . "m")))
-                          'summary base)))
-          (assoc-default 'completion
-                         (rsense-code-completion (current-buffer)
-                                                 ac-point
-                                                 (point)))))
+                          'symbol (assoc-default (nimrod-sug-type entry)
+                                                 nimrod-type-abbrevs)
+                          ))
+            suggestions)))
 
 (defstruct nimrod-sug type namespace name signature path line column)
 
-(defun nimrod-parse-suggestion-line (line)
-  (let ((split (split-string line "[\t\n]")))
-    (make-nimrod-sug
-     :type (nth 1 split)
-     :namespace (first (split-string (nth 2 split) "\\."))
-     :name (second (split-string (nth 2 split) "\\."))
-     :signature (nth 3 split)
-     :path (nth 4 split)
-     :line (nth 5 split)
-     :column (nth 6 split))))
+(defun nimrod-parse-suggestion-buffer (buffer)
+  "Returns a list of `nimrod-sug' structs, based on the contents of `buffer'."
+  (with-current-buffer buffer
+    (mapcar (lambda (line)
+              (destructuring-bind (_ type fn sig path line col) (split-string line "\t")
+                (make-nimrod-sug
+                 :type type
+                 :namespace (first (split-string fn "\\."))
+                 :name (second (split-string fn "\\."))
+                 :signature sig
+                 :path path
+                 :line line
+                 :column col)))
+            (split-string (buffer-string) "[\r\n]" t))))
 
-(defun nimrod-test () (interactive) (nimrod-call-idetools 'suggest))
 (defun nimrod-call-idetools (mode)
-  "ARGS should be one of `nimrod-idetools-modes'. Returns the
-process created."
+  "ARGS should be one of `nimrod-idetools-modes'. Grab the data
+from the returned buffer."
   (when (not (memq mode nimrod-idetools-modes))
     (error (concat mode " not one from `nimrod-idetools-modes'.")))
   (let ((tempfile (nimrod-save-buffer-temporarly))
-        (buffer-name (format "*nimrod-idetools-%s*" mode)))
+        (buffer (get-buffer-create (format "*nimrod-idetools-%s*" mode))))
     ;; There can only be one. Useful for suggest, not sure about the
     ;; other modes. Change as needed.
-    (when (bufferp buffer-name)
-      (kill-process (get-buffer-process buffer-name))
-      (with-current-buffer buffer-name
+    (when (bufferp buffer)
+      (with-current-buffer buffer
         (erase-buffer)))
-    ;; Discard stderr for now. Will bite when debugging.
     (apply 'call-process
-           (append (list nimrod-command nil (list buffer-name "/tmp/nimrod-idetools-stderr") nil)
+           (append (list nimrod-command nil (list buffer "/tmp/nimrod-idetools-stderr") nil)
                    (remove nil (list
                                 "idetools"
                                 "--stdout"
@@ -544,7 +615,8 @@ process created."
                                 (concat "--" (symbol-name mode))
                                 ;; in case of on project main file, use the tempfile. Might be
                                 ;; useful for repl.
-                                (or (nimrod-get-project-main-file) tempfile)))))))
+                                (or (nimrod-get-project-main-file) tempfile)))))
+    buffer))
 
 (defun nimrod-save-buffer-temporarly ()
   "This saves the current buffer and returns the location, so we
