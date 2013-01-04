@@ -592,8 +592,7 @@ from the returned buffer."
     (when (bufferp buffer)
       (with-current-buffer buffer
         (erase-buffer)))
-    (apply 'call-process
-           (append (list nimrod-command nil (list buffer "/tmp/nimrod-idetools-stderr") nil)
+    (let ((args (append (list nimrod-command nil (list buffer "/tmp/nimrod-idetools-stderr") nil)
                    (remove nil (list
                                 "idetools"
                                 "--stdout"
@@ -603,7 +602,8 @@ from the returned buffer."
                                 (concat "--" (symbol-name mode))
                                 ;; in case of on project main file, use the tempfile. Might be
                                 ;; useful for repl.
-                                (or (nimrod-get-project-main-file) tempfile)))))
+                                (or (nimrod-get-project-main-file) tempfile))))))
+      (apply 'call-process args))
     (delete-directory (file-name-directory tempfile) t)
     buffer))
 
