@@ -407,7 +407,7 @@ On reaching column 0, it will cycle back to the maximum sensible indentation."
 ;;                             Wrap it all up ...                             ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define-derived-mode nimrod-mode fundamental-mode
+(define-derived-mode nimrod-mode prog-mode
   "nimrod mode"
   "A major mode for the Nimrod programming language."
 
@@ -495,7 +495,7 @@ called `nimrod-compiled-buffer-name'."
   (lexical-let ((buffer (get-buffer-create nimrod-compiled-buffer-name))
                 (tmpdir (file-name-as-directory (make-temp-file "nimrod-compile" t))))
     (let ((default-directory tmpdir))
-      (write-region start end "tmp.nim")
+      (write-region start end "tmp.nim" nil 'foo)
       (with-current-buffer buffer
         (erase-buffer)
         (let ((default-directory tmpdir))
