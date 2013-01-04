@@ -616,6 +616,7 @@ from the returned buffer."
                                 ;; in case of on project main file, use the tempfile. Might be
                                 ;; useful for repl.
                                 (or (nimrod-get-project-main-file) tempfile)))))
+    (delete-directory (file-name-directory tempfile) t)
     buffer))
 
 (defun nimrod-save-buffer-temporarly ()
