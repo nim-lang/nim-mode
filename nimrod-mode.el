@@ -435,47 +435,9 @@ On reaching column 0, it will cycle back to the maximum sensible indentation."
   (modify-syntax-entry ?\] ")"  nimrod-mode-syntax-table)
 
   (setq indent-tabs-mode nil) ;; Always indent with SPACES!
+)
 
-  ;; Enable completion - copy/pasted from ensime.
-  (make-local-variable 'ac-sources)
-  (setq ac-sources '(ac-source-nimrod-completions))
-
-  (make-local-variable 'ac-use-comphist)
-  (setq ac-use-comphist nil)
-
-  (make-local-variable 'ac-auto-show-menu)
-  (setq ac-auto-show-menu 0.5)
-
-  (make-local-variable 'ac-candidates-cache)
-  (setq ac-candidates-cache nil)
-
-  (make-local-variable 'ac-auto-start)
-  (setq ac-auto-start nil)
-
-  (make-local-variable 'ac-expand-on-auto-complete)
-  (setq ac-expand-on-auto-complete t)
-
-  (make-local-variable 'ac-use-fuzzy)
-  (setq ac-use-fuzzy nil)
-
-  (make-local-variable 'ac-dwim)
-  (setq ac-dwim nil)
-
-  (make-local-variable 'ac-use-quick-help)
-  (setq ac-use-quick-help t)
-
-  (make-local-variable 'ac-delete-dups)
-  (setq ac-delete-dups nil)
-
-  (make-local-variable 'ac-ignore-case)
-  (setq ac-ignore-case t)
-
-  (make-local-variable 'ac-trigger-key)
-  (ac-set-trigger-key "TAB")
-  (auto-complete-mode 1)
-  )
-
-(require 'auto-complete)
+(add-hook 'nimrod-mode-hook 'nimrod-ac-enable)
 
 (defcustom nimrod-compiled-buffer-name "*nimrod-js*"
   "The name of the scratch buffer used to compile Javascript from Nimrod."
@@ -549,6 +511,32 @@ called `nimrod-compiled-buffer-name'."
                       (display-buffer buffer)))
                    (t (error status))))))))))
 
+(defun nimrod-ac-enable ()
+  "Enable Autocompletion."
+  (make-local-variable 'ac-sources)
+  (setq ac-sources '(ac-source-nimrod-completions))
+
+  (make-local-variable 'ac-use-comphist)
+  (setq ac-use-comphist nil)
+
+  (make-local-variable 'ac-use-quick-help)
+  (setq ac-use-quick-help t)
+
+  (make-local-variable 'ac-delete-dups)
+  (setq ac-delete-dups nil)
+
+  (make-local-variable 'ac-ignore-case)
+  (setq ac-ignore-case t)
+
+  (make-local-variable 'ac-auto-show-menu)
+  (setq ac-auto-show-menu 0.5)
+
+  (make-local-variable 'ac-auto-start)
+  (setq ac-auto-start nil)
+
+  (auto-complete-mode)
+)
+
 ;;; Some copy/paste from ensime.
 (ac-define-source nimrod-completions
   '((candidates . (nimrod-ac-completion-candidates ac-prefix))
@@ -564,7 +552,6 @@ called `nimrod-compiled-buffer-name'."
     (if point (1+ point))))
 
 (defun nimrod-ac-completion-candidates (prefix)
-  ;; TODO handle prefix - ensime doesn't do it either? O.o
   (let* ((suggest-buffer (nimrod-call-idetools 'suggest))
          (suggestions (nimrod-parse-suggestion-buffer suggest-buffer)))
     (mapcar (lambda (entry)
@@ -627,7 +614,7 @@ from the returned buffer."
                            (file-name-nondirectory (buffer-file-name)))))
     (save-restriction
       (widen)
-      (write-region (point-min) (point-max) filename))
+      (write-region (point-min) (point-max) filename) nil 'foo)
     filename))
 
 ;; From http://stackoverflow.com/questions/14095189/walk-up-the-directory-tree
@@ -649,7 +636,9 @@ hierarchy, starting from CURRENT-DIR"
   (let ((main-file (nimrod-find-file-in-heirarchy
                 (file-name-directory (buffer-file-name))
                 ".*\.nimrod\.cfg")))
-    (when main-file (concat (file-name-sans-extension main-file) ".nim"))))
+    (when main-file (concat
+                     (replace-regexp-in-string "\.nimrod\.cfg$" "" (first main-file))
+                     ".nim"))))
 
 (defun nimrod-get-project-root ()
   "Get the project root. Uses `nimrod-get-project-main-file' or git. "
