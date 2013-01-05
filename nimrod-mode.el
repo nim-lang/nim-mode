@@ -418,6 +418,7 @@ On reaching column 0, it will cycle back to the maximum sensible indentation."
 
   ;; modify the keymap
   (define-key nimrod-mode-map [remap comment-dwim] 'nimrod-comment-dwim)
+  (define-key nimrod-mode-map (kbd "M-.") 'nimrod-goto-sym)
 
   (set (make-local-variable 'indent-line-function) 'nimrod-indent-line)
 
