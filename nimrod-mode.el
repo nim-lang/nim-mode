@@ -553,31 +553,34 @@ called `nimrod-compiled-buffer-name'."
     (if point (1+ point))))
 
 (defun nimrod-ac-completion-candidates (prefix)
-  (let* ((suggest-buffer (nimrod-call-idetools 'suggest))
-         (suggestions (nimrod-parse-suggestion-buffer suggest-buffer)))
+  (let ((suggestions (nimrod-call-and-parse-idetools 'suggest)))
     (mapcar (lambda (entry)
-              (propertize (nimrod-sug-name entry)
+              (propertize (nimrod-ide-name entry)
                           'value entry
-                          'symbol (assoc-default (nimrod-sug-type entry)
+                          'symbol (assoc-default (nimrod-ide-type entry)
                                                  nimrod-type-abbrevs)
                           ))
             suggestions)))
 
-(defstruct nimrod-sug type namespace name signature path line column)
+(defun nimrod-call-and-parse-idetools (mode)
+  "Call idetools and get `nimrod-ide' structs back."
+  (nimrod-parse-idetools-buffer (nimrod-call-idetools mode)))
 
-(defun nimrod-parse-suggestion-buffer (buffer)
-  "Returns a list of `nimrod-sug' structs, based on the contents of `buffer'."
+(defstruct nimrod-ide type namespace name signature path line column)
+
+(defun nimrod-parse-idetools-buffer (buffer)
+  "Returns a list of `nimrod-ide' structs, based on the contents of `buffer'."
   (with-current-buffer buffer
     (mapcar (lambda (line)
               (destructuring-bind (_ type fn sig path line col) (split-string line "\t")
-                (make-nimrod-sug
+                (make-nimrod-ide
                  :type type
                  :namespace (first (split-string fn "\\."))
                  :name (second (split-string fn "\\."))
                  :signature sig
                  :path path
-                 :line line
-                 :column col)))
+                 :line (string-to-number line)
+                 :column (string-to-number col))))
             (split-string (buffer-string) "[\r\n]" t))))
 
 (defun nimrod-call-idetools (mode)
@@ -658,6 +661,13 @@ hierarchy, starting from CURRENT-DIR"
   "Formats the position of the cursor to a nice little --track
 statement, referencing the file in the temprorary directory."
   (format "--track:%s,%d,%d" tempfile (line-number-at-pos) (current-column)))
+
+(defun nimrod-goto-sym ()
+  "Go to the definition of the symbol currently under the cursor."
+  (interactive)
+  (let ((def (first (nimrod-call-and-parse-idetools 'def))))
+    (find-file (nimrod-ide-path def))
+    (goto-line (nimrod-ide-line def))))
 
 (provide 'nimrod-mode)
 
