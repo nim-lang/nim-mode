@@ -511,6 +511,8 @@ called `nimrod-compiled-buffer-name'."
                       (insert-file
                        (concat tmpdir (file-name-as-directory "nimcache") "tmp.js"))
                       (display-buffer buffer)))
+                   ((string= status "exited abnormally with code 1\n")
+                    (display-buffer "*nimrod-compile*"))
                    (t (error status))))))))))
 
 (defun nimrod-ac-enable ()
