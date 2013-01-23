@@ -86,25 +86,28 @@
 ;; ---------------------
 
 (defvar nimrod-keywords
-  (split-string "addr and as asm atomic
+  (split-string "
+addr and as asm atomic
 bind block break
 case cast const continue converter
-discard distinct div
-elif else end enum except
-finally for from generic
-if implies import in include is isnot iterator
+discard distinct div do
+elif else end enum except export
+finally for from
+generic
+if import in include interface is isnot iterator
 lambda let
-macro method mod
+macro method mixin mod
 nil not notin
 object of or out
 proc ptr
 raise ref return
-shl shr
+shared shl shr static
 template try tuple type
 var
 when while with without
 xor
-yield")
+yield
+")
   "Nimrod keywords. The above string is taken from
 <http://force7.de/nimrod/manual.html#identifiers-keywords>,
 for easy updating.")
@@ -344,6 +347,8 @@ For detail, see `comment-dwim'."
 ;; -- Indent to previous # character if we're on a commented line
 ;; -- Indent to previous start-of-string if line starts with string
 
+;;; TODO: indent after object
+
 
 (defconst nimrod-indent-offset 2 "Number of spaces per level of indentation.")
 
@@ -419,6 +424,7 @@ On reaching column 0, it will cycle back to the maximum sensible indentation."
   ;; modify the keymap
   (define-key nimrod-mode-map [remap comment-dwim] 'nimrod-comment-dwim)
   (define-key nimrod-mode-map (kbd "M-.") 'nimrod-goto-sym)
+  (define-key nimrod-mode-map (kbd "C-c h") 'nimrod-explain-sym)
 
   (set (make-local-variable 'indent-line-function) 'nimrod-indent-line)
 
