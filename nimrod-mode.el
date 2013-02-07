@@ -661,9 +661,12 @@ statement, referencing the file in the temprorary directory."
   "Go to the definition of the symbol currently under the cursor."
   (interactive)
   (let ((def (first (nimrod-call-and-parse-idetools 'def))))
+    (when (not def) (error "Symbol not found."))
     (find-file (nimrod-ide-path def))
     (goto-line (nimrod-ide-line def))))
 
 (provide 'nimrod-mode)
 
 (setq auto-mode-alist (cons '("\\.nim$" . nimrod-mode) auto-mode-alist))
+
+;;; nimrod-mode.el ends here
