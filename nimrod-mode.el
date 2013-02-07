@@ -598,7 +598,7 @@ from the returned buffer."
                                 (when (nimrod-get-project-root)
                                   (format "--include:%s" (nimrod-get-project-root)))
                                 (concat "--" (symbol-name mode))
-                                ;; in case of on project main file, use the tempfile. Might be
+                                ;; in case of no project main file, use the tempfile. Might be
                                 ;; useful for repl.
                                 (or (nimrod-get-project-main-file) tempfile))))))
       (apply 'call-process args))
