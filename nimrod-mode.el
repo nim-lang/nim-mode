@@ -465,15 +465,26 @@ On reaching column 0, it will cycle back to the maximum sensible indentation."
 (defvar nimrod-idetools-modes '(suggest def context usages)
   "Which modes are available to use with the idetools.")
 
-(defun nimrod-compile-buffer-to-js ()
-  "Compiles the current buffer and displays the JavaScript in a buffer
-called `nimrod-compiled-buffer-name'."
+(defun nimrod-compile-file-to-js (&optional callback)
+  "Saves current file and compiles it. Uses the project
+directory, so it will work best with external libraries where
+`nimrod-compile-region-to-js` does not. Returns the filename of
+the compiled file. he callback is executed on success with the
+filename of the compiled file."
   (interactive)
-  (save-excursion
-    (nimrod-compile-region-to-js (point-min) (point-max))))
+  (save-buffer)
+  (let ((default-directory (or (nimrod-get-project-root) default-directory)))
+    (lexical-let ((callback callback))
+      (nimrod-compile (list "js" (buffer-file-name))
+                      (lambda () (when callback
+                              (funcall callback (concat default-directory
+                                                        "nimcache/"
+                                                        (file-name-sans-extension (file-name-nondirectory (buffer-file-name)))
+                                                        ".js"))))))))
 
 (defun nimrod-compile-region-to-js (start end)
-  "Compiles the current region to javascript into the buffer `nimrod-compiled-buffer-name'."
+  "Compiles the current region to javascript into the buffer
+`nimrod-compiled-buffer-name'."
   (interactive "r")
 
   (lexical-let ((buffer (get-buffer-create nimrod-compiled-buffer-name))
@@ -483,19 +494,27 @@ called `nimrod-compiled-buffer-name'."
       (with-current-buffer buffer
         (erase-buffer)
         (let ((default-directory tmpdir))
-          (set-process-sentinel
-           (apply
-            (apply-partially 'start-file-process "nimrod" "*nimrod-compile*" nimrod-command)
-            (append '("js") nimrod-args-compile '("tmp.nim")))
-           (lambda (process-name status)
-             (cond ((string= status "finished\n")
-                    (with-current-buffer buffer
-                      (insert-file
-                       (concat tmpdir (file-name-as-directory "nimcache") "tmp.js"))
-                      (display-buffer buffer)))
-                   ((string= status "exited abnormally with code 1\n")
-                    (display-buffer "*nimrod-compile*"))
-                   (t (error status))))))))))
+          (nimrod-compile '("js" "tmp.nim")
+                          (lambda () (with-current-buffer buffer
+                                  (insert-file
+                                   (concat tmpdir (file-name-as-directory "nimcache") "tmp.js"))
+                                  (display-buffer buffer)))))))))
+
+(defun nimrod-compile (args &optional on-success)
+  "Invokes the compiler and calls on-success in case of
+successful compile."
+  (lexical-let ((on-success on-success))
+    (set-process-sentinel
+     (apply
+      (apply-partially 'start-file-process "nimrod" "*nimrod-compile*" nimrod-command)
+      (append nimrod-args-compile args))
+     (lambda (process-name status)
+       (cond ((string= status "finished\n")
+              (when on-success
+                (funcall on-success)))
+             ((string= status "exited abnormally with code 1\n")
+              (display-buffer "*nimrod-compile*"))
+             (t (error status)))))))
 
 (defun nimrod-ac-enable ()
   "Enable Autocompletion."
