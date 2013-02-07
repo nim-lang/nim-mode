@@ -2,35 +2,11 @@
 ;;
 ;; Filename: nimrod-mode.el
 ;; Description: A major mode for the Nimrod programming language
-;; Author: James H. Fisher <jameshfisher@gmail.com>
-;; Maintainer: James H. Fisher <jameshfisher@gmail.com>
-;; Created: Sun Jan 16 2011
-;; Version: 0.0.1
-;; Last-Updated: Sun Jan 16 2011
-;;           By: James H. Fisher <jameshfisher@gmail.com>
-;;     Update #: 1
+;; Author: James H. Fisher <jameshfisher@gmail.com>, Simon Hafner
+;; Maintainer: Simon Hafner @reactormonk
+;; Version: 0.1.1
 ;; Keywords: nimrod
-;; Compatibility: GNU Emacs 23
-;;
-;; Features that might be required by this library:
-;;
-;;   None
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Installation: Place this file on your load path, and put this in
-;; your init file (`.emacs'):
-;;
-;; (require 'nimrod-mode)
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;; Change log:
-;;
-;; 2011/01/16
-;;     Initial release of nimrod-mode.el.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Compatibility: GNU Emacs 24
 ;;
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
