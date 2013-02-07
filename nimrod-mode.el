@@ -544,20 +544,29 @@ called `nimrod-compiled-buffer-name'."
                           'value entry
                           'symbol (assoc-default (nimrod-ide-type entry)
                                                  nimrod-type-abbrevs)
+                          'type-sig (nimrod-ide-signature entry)
+                          'summary (nimrod-ac-trunc-summary (nimrod-ide-comment entry))
                           ))
             suggestions)))
+
+;;; Copy/pasted from ensime
+(defun nimrod-ac-trunc-summary (str)
+  (let ((len (length str)))
+    (if (> len 40)
+	(concat (substring str 0 40) "...")
+      str)))
 
 (defun nimrod-call-and-parse-idetools (mode)
   "Call idetools and get `nimrod-ide' structs back."
   (nimrod-parse-idetools-buffer (nimrod-call-idetools mode)))
 
-(defstruct nimrod-ide type namespace name signature path line column)
+(defstruct nimrod-ide type namespace name signature path line column comment)
 
 (defun nimrod-parse-idetools-buffer (buffer)
   "Returns a list of `nimrod-ide' structs, based on the contents of `buffer'."
   (with-current-buffer buffer
     (mapcar (lambda (line)
-              (destructuring-bind (_ type fn sig path line col) (split-string line "\t")
+              (destructuring-bind (_ type fn sig path line col comment) (split-string line "\t")
                 (make-nimrod-ide
                  :type type
                  :namespace (first (split-string fn "\\."))
@@ -565,7 +574,8 @@ called `nimrod-compiled-buffer-name'."
                  :signature sig
                  :path path
                  :line (string-to-number line)
-                 :column (string-to-number col))))
+                 :column (string-to-number col)
+                 :comment comment)))
             (split-string (buffer-string) "[\r\n]" t))))
 
 (defun nimrod-call-idetools (mode)
