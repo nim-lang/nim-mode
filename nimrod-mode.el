@@ -4,9 +4,10 @@
 ;; Description: A major mode for the Nimrod programming language
 ;; Author: James H. Fisher <jameshfisher@gmail.com>, Simon Hafner
 ;; Maintainer: Simon Hafner @reactormonk
-;; Version: 0.1.1
+;; Version: 0.1.2
 ;; Keywords: nimrod
 ;; Compatibility: GNU Emacs 24
+;; Package-Requires: auto-complete
 ;;
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
