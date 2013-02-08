@@ -7,7 +7,7 @@
 ;; Version: 0.1.2
 ;; Keywords: nimrod
 ;; Compatibility: GNU Emacs 24
-;; Package-Requires: auto-complete
+;; Package-Requires: ((auto-complete "1.4"))
 ;;
 ;; Taken over from James H. Fisher <jameshfisher@gmail.com>
 ;;
