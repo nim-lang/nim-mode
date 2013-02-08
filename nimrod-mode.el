@@ -2,12 +2,14 @@
 ;;
 ;; Filename: nimrod-mode.el
 ;; Description: A major mode for the Nimrod programming language
-;; Author: James H. Fisher <jameshfisher@gmail.com>, Simon Hafner
-;; Maintainer: Simon Hafner @reactormonk
+;; Author: Simon Hafner
+;; Maintainer: Simon Hafner <hafnersimon@gmail.com>
 ;; Version: 0.1.2
 ;; Keywords: nimrod
 ;; Compatibility: GNU Emacs 24
 ;; Package-Requires: auto-complete
+;;
+;; Taken over from James H. Fisher <jameshfisher@gmail.com>
 ;;
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
