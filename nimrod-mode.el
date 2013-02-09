@@ -506,7 +506,7 @@ filename of the compiled file."
 (defun nimrod-compile (args &optional on-success)
   "Invokes the compiler and calls on-success in case of
 successful compile."
-  (lexical-let ((on-success on-success))
+  (lexical-let ((on-success (or on-success (lambda () (message "Compilation successful.")))))
     (set-process-sentinel
      (apply
       (apply-partially 'start-file-process "nimrod" "*nimrod-compile*" nimrod-command)
