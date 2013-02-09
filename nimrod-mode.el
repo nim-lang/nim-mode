@@ -4,7 +4,7 @@
 ;; Description: A major mode for the Nimrod programming language
 ;; Author: Simon Hafner
 ;; Maintainer: Simon Hafner <hafnersimon@gmail.com>
-;; Version: 0.1.4
+;; Version: 0.1.5
 ;; Keywords: nimrod
 ;; Compatibility: GNU Emacs 24
 ;; Package-Requires: ((auto-complete "1.4"))
@@ -425,8 +425,6 @@ On reaching column 0, it will cycle back to the maximum sensible indentation."
   (setq indent-tabs-mode nil) ;; Always indent with SPACES!
 )
 
-(add-hook 'nimrod-mode-hook 'nimrod-ac-enable)
-
 (defcustom nimrod-compiled-buffer-name "*nimrod-js*"
   "The name of the scratch buffer used to compile Javascript from Nimrod."
   :type 'string
@@ -522,7 +520,11 @@ successful compile."
              (t (error status)))))))
 
 (defun nimrod-ac-enable ()
-  "Enable Autocompletion."
+  "Enable Autocompletion. Default settings. If you don't like
+them, kick this hook with
+ `(remove-hook 'nimrod-mode-hook 'nimrod-ac-enable)`
+and write your own. I discurage using autostart, as the
+completion candidates need to be loaded from outside emacs."
   (when (not (executable-find nimrod-command))
     (error "NimRod executable not found. Please customize nimrod-command"))
 
@@ -547,8 +549,13 @@ successful compile."
   (make-local-variable 'ac-auto-start)
   (setq ac-auto-start nil)
 
+  (make-local-variable 'ac-trigger-key)
+  (setq ac-trigger-key "TAB")
+
   (auto-complete-mode)
 )
+
+(add-hook 'nimrod-mode-hook 'nimrod-ac-enable)
 
 ;;; Some copy/paste from ensime.
 (ac-define-source nimrod-completions
