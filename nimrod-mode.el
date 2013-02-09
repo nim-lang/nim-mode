@@ -4,7 +4,7 @@
 ;; Description: A major mode for the Nimrod programming language
 ;; Author: Simon Hafner
 ;; Maintainer: Simon Hafner <hafnersimon@gmail.com>
-;; Version: 0.1.2
+;; Version: 0.1.3
 ;; Keywords: nimrod
 ;; Compatibility: GNU Emacs 24
 ;; Package-Requires: ((auto-complete "1.4"))
@@ -612,7 +612,7 @@ from the returned buffer."
     (when (bufferp buffer)
       (with-current-buffer buffer
         (erase-buffer)))
-    (let ((args (append (list nimrod-command nil (list buffer "/tmp/nimrod-idetools-stderr") nil)
+    (let ((args (append (list nimrod-command nil (list buffer (concat temporary-file-directory "nimrod-idetools-stderr")) nil)
                    (remove nil (list
                                 "idetools"
                                 "--stdout"
