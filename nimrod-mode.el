@@ -327,6 +327,7 @@ For detail, see `comment-dwim'."
 ;; -- Indent to previous start-of-string if line starts with string
 
 ;;; TODO: indent after object
+;;; TODO: unindent after else:
 
 
 (defconst nimrod-indent-offset 2 "Number of spaces per level of indentation.")
