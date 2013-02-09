@@ -432,7 +432,8 @@ On reaching column 0, it will cycle back to the maximum sensible indentation."
   :group 'nimrod)
 
 (defcustom nimrod-command "nimrod"
-  "The NimRod command used for compiling code and idetools."
+  "Path to the nimrod executable. If nimrod is in your PATH,
+there should be no problem."
   :type 'string
   :group 'nimrod)
 
@@ -521,6 +522,9 @@ successful compile."
 
 (defun nimrod-ac-enable ()
   "Enable Autocompletion."
+  (when (not (executable-find nimrod-command))
+    (error "NimRod executable not found. Please customize nimrod-command"))
+
   (make-local-variable 'ac-sources)
   (setq ac-sources '(ac-source-nimrod-completions))
 
