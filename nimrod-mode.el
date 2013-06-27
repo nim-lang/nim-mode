@@ -618,6 +618,7 @@ from the returned buffer."
   (when (not (memq mode nimrod-idetools-modes))
     (error (concat mode " not one from `nimrod-idetools-modes'.")))
   (let ((tempfile (nimrod-save-buffer-temporarly))
+        (file (buffer-file-name))
         (buffer (get-buffer-create (format "*nimrod-idetools-%s*" mode))))
     ;; There can only be one. Useful for suggest, not sure about the
     ;; other modes. Change as needed.
@@ -628,13 +629,14 @@ from the returned buffer."
                    (remove nil (list
                                 "idetools"
                                 "--stdout"
-                                (nimrod-format-cursor-position tempfile) ; --track
+                                (nimrod-format-cursor-position file tempfile) ; --trackDirty
                                 (when (nimrod-get-project-root)
                                   (format "--include:%s" (nimrod-get-project-root)))
                                 (concat "--" (symbol-name mode))
                                 ;; in case of no project main file, use the tempfile. Might be
                                 ;; useful for repl.
                                 (or (nimrod-get-project-main-file) tempfile))))))
+      ;; (message (format "%S" args))      ; Debugging
       (apply 'call-process args))
     (delete-directory (file-name-directory tempfile) t)
     buffer))
@@ -686,10 +688,11 @@ hierarchy, starting from CURRENT-DIR"
             git-output
           nil))))
 
-(defun nimrod-format-cursor-position (tempfile)
-  "Formats the position of the cursor to a nice little --track
-statement, referencing the file in the temprorary directory."
-  (format "--track:%s,%d,%d" tempfile (line-number-at-pos) (current-column)))
+(defun nimrod-format-cursor-position (file tempfile)
+  "Formats the position of the cursor to a nice little
+--trackDirty statement, referencing the file in the temprorary
+directory."
+  (format "--trackDirty:%s,%s,%d,%d" tempfile file (line-number-at-pos) (current-column)))
 
 (defun nimrod-goto-sym ()
   "Go to the definition of the symbol currently under the cursor."
