@@ -431,8 +431,8 @@ On reaching column 0, it will cycle back to the maximum sensible indentation."
   :group 'nimrod)
 
 (defcustom nimrod-command "nimrod"
-  "Path to the nimrod executable. If nimrod is in your PATH,
-there should be no problem."
+  "Path to the nimrod executable. You don't need to set this if
+the nimrod executable is inside your PATH."
   :type 'string
   :group 'nimrod)
 
@@ -472,7 +472,7 @@ there should be no problem."
   "Saves current file and compiles it. Uses the project
 directory, so it will work best with external libraries where
 `nimrod-compile-region-to-js` does not. Returns the filename of
-the compiled file. he callback is executed on success with the
+the compiled file. The callback is executed on success with the
 filename of the compiled file."
   (interactive)
   (save-buffer)
@@ -507,6 +507,9 @@ filename of the compiled file."
   "Invokes the compiler and calls on-success in case of
 successful compile."
   (lexical-let ((on-success (or on-success (lambda () (message "Compilation successful.")))))
+    (if (bufferp "*nimrod-compile*")
+        (with-current-buffer "*nimrod-compile*"
+          (erase-buffer)))
     (set-process-sentinel
      (apply
       (apply-partially 'start-file-process "nimrod" "*nimrod-compile*" nimrod-command)
@@ -566,7 +569,7 @@ completion candidates need to be loaded from outside emacs."
     ))
 
 (defun nimrod-ac-completion-prefix ()
-  "Starting at current point. Find the point of completion."
+  "Starting at current point, find the point of completion."
   (let ((point (re-search-backward "\\(\\W\\|[\t ]\\)\\([^\\. ]*\\)?"
 				   (point-at-bol) t)))
     (if point (1+ point))))
