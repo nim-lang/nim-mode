@@ -604,10 +604,11 @@ completion candidates need to be loaded from outside emacs."
   (with-current-buffer buffer
     (mapcar (lambda (line)
               (destructuring-bind (_ type fn sig path line col comment) (split-string line "\t")
+                (string-match "^\\(?:\\(.*\\)\\.\\)?\\([^.]*\\)$" fn)
                 (make-nimrod-ide
                  :type type
-                 :namespace (first (split-string fn "\\."))
-                 :name (second (split-string fn "\\."))
+                 :namespace (match-string 1 fn)
+                 :name (match-string 2 fn)
                  :signature sig
                  :path path
                  :line (string-to-number line)
