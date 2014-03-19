@@ -571,7 +571,7 @@ completion candidates need to be loaded from outside emacs."
 (defun nimrod-ac-completion-prefix ()
   "Starting at current point, find the point of completion."
   (let ((point (re-search-backward "\\(\\W\\|[\t ]\\)\\([^\\. ]*\\)?"
-				   (point-at-bol) t)))
+                   (point-at-bol) t)))
     (if point (1+ point))))
 
 (defun nimrod-ac-completion-candidates (prefix)
@@ -590,7 +590,7 @@ completion candidates need to be loaded from outside emacs."
 (defun nimrod-ac-trunc-summary (str)
   (let ((len (length str)))
     (if (> len 40)
-	(concat (substring str 0 40) "...")
+    (concat (substring str 0 40) "...")
       str)))
 
 (defun nimrod-call-and-parse-idetools (mode)
@@ -682,7 +682,7 @@ hierarchy, starting from CURRENT-DIR"
   "Get the project root. Uses `nimrod-get-project-main-file' or git. "
   (or (let ((main-file (nimrod-get-project-main-file)))
         (when main-file (file-name-directory main-file)))
-      (let ((git-output (replace-regexp-in-string "\n$" "" 
+      (let ((git-output (replace-regexp-in-string "\n$" ""
                                         (with-output-to-string
                                           (with-current-buffer
                                               standard-output
