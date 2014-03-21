@@ -386,6 +386,10 @@ The type returned can be `comment', `string' or `paren'."
      ((nth 8 ppss) (if (nth 4 ppss) 'comment 'string))
      ((nth 1 ppss) 'paren))))
 
+(defsubst nimrod-syntax-comment-or-string-p ()
+  "Return non-nil if point is inside 'comment or 'string."
+  (nth 8 (syntax-ppss)))
+
 (defun nimrod-indent-context ()
   "Get information on indentation context.
 Context information is returned with a cons with the form:
@@ -706,12 +710,13 @@ With numeric ARG, just insert that many colons.  With
              (not (nimrod-syntax-comment-or-string-p)))
     (let ((indentation (current-indentation))
           (calculated-indentation (nimrod-indent-calculate-indentation)))
-      (nimrod-info-closing-block-message)
+      ;(nimrod-info-closing-block-message)
       (when (> indentation calculated-indentation)
         (save-excursion
           (indent-line-to calculated-indentation)
-          (when (not (nimrod-info-closing-block-message))
-            (indent-line-to indentation)))))))
+          ;; (when (not (nimrod-info-closing-block-message))
+          ;;   (indent-line-to indentation)))))))
+          )))))
 (put 'nimrod-indent-electric-colon 'delete-selection t)
 
 (defun nimrod-indent-post-self-insert-function ()
@@ -777,6 +782,7 @@ Optional argument DIRECTION defines the direction to move to."
   (define-key nimrod-mode-map [remap comment-dwim] 'nimrod-comment-dwim)
   (define-key nimrod-mode-map (kbd "M-.") 'nimrod-goto-sym)
   (define-key nimrod-mode-map (kbd "C-c h") 'nimrod-explain-sym)
+  (define-key nimrod-mode-map ":" 'nimrod-indent-electric-colon)
 
   (set (make-local-variable 'indent-line-function) 'nimrod-indent-line-function)
   (set (make-local-variable 'indent-region-function) #'nimrod-indent-region)
