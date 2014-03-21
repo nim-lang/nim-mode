@@ -289,21 +289,6 @@ Magic functions."
   (setq font-lock-defaults '((nimrod-font-lock-keywords))))
 
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;                                Comments                                    ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; the command to comment/uncomment text
-(defun nimrod-comment-dwim (arg)
-  "Comment or uncomment current line or region in a smart way.
-For detail, see `comment-dwim'."
-  (interactive "*P")
-  (require 'newcomment)
-  (let ((deactivate-mark nil) (comment-start "#") (comment-end ""))
-    (comment-dwim arg)))
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;                               Indentation                                  ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -411,6 +396,10 @@ On reaching column 0, it will cycle back to the maximum sensible indentation."
   ;; Documentation comment highlighting
   ;; (modify-syntax-entry ?\# ". 12b" nimrod-mode-syntax-table)
   ;; (modify-syntax-entry ?\n "> b" nimrod-mode-syntax-table)
+
+  ;; Comment
+  (set (make-local-variable 'comment-start) "# ")
+  (set (make-local-variable 'comment-start-skip) "#+\\s-*")
 
   ;; Comment highlighting
   (modify-syntax-entry ?# "< b"  nimrod-mode-syntax-table)
