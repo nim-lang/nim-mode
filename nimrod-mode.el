@@ -275,7 +275,7 @@ This variant of `rx' supports common nimrod named REGEXPS."
   )
 
 (defvar nimrod-variables-regexp
-  "\\<[a-zA-Z][a-zA-Z0-9_]+\\>"
+  (nimrod-rx symbol-name)
   "Regular expression for matching variable identifiers in Nimrod."
   )
 
