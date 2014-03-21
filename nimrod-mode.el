@@ -28,6 +28,9 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+;; Large parts of this code is shamelessly stolen from python.el and
+;; adapted to Nimrod
+;;
 ;; Todo:
 ;;
 ;; -- Make things non-case-sensitive and ignore underscores
@@ -169,6 +172,62 @@ Magic functions."
   :group 'whitespace)
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;                            Nimrod specialized rx                           ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(eval-when-compile
+  (defconst nimrod-rx-constituents
+    `((block-start          . ,(rx symbol-start
+                                   (or "type" "const" "var" "let"
+                                       "proc" "method" "converter" "iterator"
+                                       "template" "macro"
+                                       "if" "elif" "else" "when" "while" "for"
+                                       "try" "except" "finally"
+                                       "with" "block"
+                                       "enum" "tuple" "object")
+                                   symbol-end))
+      (defun                 . ,(rx symbol-start
+                                    (or "proc" "method" "converter"
+                                        "iterator" "template" "macro")
+                                    symbol-end))
+      (symbol-name          . ,(rx (any letter ?_) (* (any word ?_))))
+      (open-paren           . ,(rx (or "{" "[" "(")))
+      (close-paren          . ,(rx (or "}" "]" ")")))
+      (simple-operator      . ,(rx (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%)))
+      ;; FIXME: rx should support (not simple-operator).
+      (not-simple-operator  . ,(rx
+                                (not
+                                 (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%))))
+      ;; FIXME: Use regexp-opt.
+      (operator             . ,(rx (or "+" "-" "/" "&" "^" "~" "|" "*" "<" ">"
+                                       "=" "%" "**" "//" "<<" ">>" "<=" "!="
+                                       "==" ">=" "is" "not")))
+      ;; FIXME: Use regexp-opt.
+      (assignment-operator  . ,(rx (or "=" "+=" "-=" "*=" "/=" "//=" "%=" "**="
+                                       ">>=" "<<=" "&=" "^=" "|=")))
+      (string-delimiter . ,(rx (and
+                                ;; Match even number of backslashes.
+                                (or (not (any ?\\ ?\' ?\")) point
+                                    ;; Quotes might be preceded by a escaped quote.
+                                    (and (or (not (any ?\\)) point) ?\\
+                                         (* ?\\ ?\\) (any ?\' ?\")))
+                                (* ?\\ ?\\)
+                                ;; Match single or triple quotes of any kind.
+                                (group (or  "\"" "\"\"\"" "'" "'''"))))))
+    "Additional Nimrod specific sexps for `nimrod-rx'")
+
+  (defmacro nimrod-rx (&rest regexps)
+    "Nimrod mode specialized rx macro.
+This variant of `rx' supports common nimrod named REGEXPS."
+    (let ((rx-constituents (append nimrod-rx-constituents rx-constituents)))
+      (cond ((null regexps)
+             (error "No regexp"))
+            ((cdr regexps)
+             (rx-to-string `(and ,@regexps) t))
+            (t
+             (rx-to-string (car regexps) t))))))
+
 ;; Create regular expressions
 ;; --------------------------
 
@@ -293,86 +352,425 @@ Magic functions."
 ;;                               Indentation                                  ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Desired indentation logic:
-;; 1. When a newline is entered, or <TAB> is pressed, do:
-;;
-;;    1. If this line is all comment (i.e. ^\w*#.*$ ),
-;;
-;;       1. Find previous non-blank line.
-;;
-;;       2. If contains comment, set expected indentation to there.
-;;          Else, set to first non-whitespace character.
-;;
-;;    2. Else if this line starts as a string (i.e. ^\w*\".*$ ),
-;;       Find expected indentation based on previous line,
-;;       ignoring blank lines between:
-;;
-
-;; -- Indent to previous # character if we're on a commented line
-;; -- Indent to previous start-of-string if line starts with string
-
-;;; TODO: indent after object
-;;; TODO: unindent after else:
-
-
 (defconst nimrod-indent-offset 2 "Number of spaces per level of indentation.")
 
-(defun nimrod-skip-blank-lines ()
-  (progn
-    (forward-line -1)                                  ;; Go back one line.
-    (while (and (looking-at nimrod-blank-line-regexp)  ;; While it's a blank line,
-                (> (point) (point-min)))               ;; and there are other lines,
-      (forward-line -1))))                             ;; skip back.
+;;; Indentation
 
-(defun nimrod-compute-indentation-of-char (char)
-  ""
-  (progn
-    (nimrod-skip-blank-lines)
-    (skip-chars-forward (concat "^\n" char))
-    (if (looking-at char)
-        (current-column)
-      (+ (progn
-           (beginning-of-line)
-           (if (looking-at nimrod-new-block-regexp) nimrod-indent-offset 0))
-         (current-indentation)))))
+(defvar nimrod-indent-indenters
+  (nimrod-rx (or "type" "const" "var" "let" "tuple" "object" ":"
+                 (and defun (* (not (any ?=))) "=")
+                 (and "object" (+ whitespace) "of" (+ whitespace) symbol-name)))
+  "Regular expression matching the end of line after with a block starts.
+If the end of a line matches this regular expression, the next
+line is considered an indented block. Whitespaces at the end of a
+line are ignored.")
 
-(defun nimrod-compute-indentation ()
-  "Calculate the maximum sensible indentation for the current line."
-  (save-excursion
-    (beginning-of-line)
+(defvar nimrod-indent-dedenters
+  (nimrod-rx (or "else" "elif" "finally" "except")
+             (* whitespace) ":")
+  "Regular expression matching the end of line after which should be dedented.
+If the end of a line matches this regular expression, the line
+will be detended relative to the previous block.")
 
-    (cond ((looking-at "^ *#")  (nimrod-compute-indentation-of-char "#" )) ;; Comment line; look for a comment
-          ((looking-at "^ *\"") (nimrod-compute-indentation-of-char "\"")) ;; String
-          ((looking-at "^ *'")  (nimrod-compute-indentation-of-char "'" )) ;; Char
-          (t                   (progn
-                                 (nimrod-skip-blank-lines)
-                                 (+ (current-indentation)
-                                    (if (looking-at nimrod-new-block-regexp) nimrod-indent-offset 0)))))))
+(defcustom nimrod-indent-trigger-commands
+  '(indent-for-tab-command yas-expand yas/expand)
+  "Commands that might trigger a `nimrod-indent-line' call."
+  :type '(repeat symbol)
+  :group 'nimrod)
 
+(defun nimrod-syntax-context (type &optional syntax-ppss)
+  "Return non-nil if point is on TYPE using SYNTAX-PPSS.
+TYPE can be `comment', `string' or `paren'.  It returns the start
+character address of the specified TYPE."
+  (let ((ppss (or syntax-ppss (syntax-ppss))))
+    (case type
+      (comment (and (nth 4 ppss) (nth 8 ppss)))
+      (string (and (not (nth 4 ppss)) (nth 8 ppss)))
+      (paren (nth 1 ppss))
+      (t nil))))
 
-(defun nimrod-indent-line ()
-  "Indent the current line.  The first time this command is used, the line
-will be indented to the maximum sensible indentation.
-Each immediately subsequent usage will back-dent the line by
-`nimrod-indent-offset' spaces.
-On reaching column 0, it will cycle back to the maximum sensible indentation."
+(defun nimrod-syntax-context-type (&optional syntax-ppss)
+  "Return the context type using SYNTAX-PPSS.
+The type returned can be `comment', `string' or `paren'."
+  (let ((ppss (or syntax-ppss (syntax-ppss))))
+    (cond
+     ((nth 8 ppss) (if (nth 4 ppss) 'comment 'string))
+     ((nth 1 ppss) 'paren))))
 
-  (interactive "*")
+(defun nimrod-indent-context ()
+  "Get information on indentation context.
+Context information is returned with a cons with the form:
+    \(STATUS . START)
 
-  (let ((ci (current-indentation))
-        (cc (current-column))
-        (need (nimrod-compute-indentation)))
+Where status can be any of the following symbols:
+ * inside-paren: If point in between (), {} or []
+ * inside-string: If point is inside a string
+ * after-beginning-of-block: Point is after beginning of block
+ * after-line: Point is after normal line
+ * no-indent: Point is at beginning of buffer or other special case
+START is the buffer position where the sexp starts."
+  (save-restriction
+    (widen)
+    (let ((ppss (save-excursion (beginning-of-line) (syntax-ppss)))
+          (start))
+      (cons
+       (cond
+        ;; Beginning of buffer
+        ((save-excursion
+           (goto-char (line-beginning-position))
+           (bobp))
+         'no-indent)
+        ;; Inside string
+        ((setq start (nimrod-syntax-context 'string ppss))
+         'inside-string)
+        ;; Inside a paren
+        ((setq start (nimrod-syntax-context 'paren ppss))
+         'inside-paren)
+        ;; After beginning of block
+        ((setq start (save-excursion
+                       (when (progn
+                               (back-to-indentation)
+                               (nimrod-util-forward-comment -1)
+                               (looking-back nimrod-indent-indenters
+                                             (line-beginning-position)))
+                         ;; Move to the first block start that's not in within
+                         ;; a string, comment or paren and that's not a
+                         ;; continuation line.
+                         (while (and (re-search-backward
+                                      (nimrod-rx block-start) nil t)
+                                     (nimrod-syntax-context-type)))
+                         (when (looking-at (nimrod-rx block-start))
+                           ;; block starts might not be at the first whitespace,
+                           ;; however, we need the beginning
+                           (back-to-indentation)
+                           (point-marker)))))
+         'after-beginning-of-block)
+        ;; After normal line
+        ((setq start (save-excursion
+                       (back-to-indentation)
+                       (skip-chars-backward (rx (or whitespace ?\n)))
+                       (nimrod-nav-beginning-of-statement)
+                       (point-marker)))
+         'after-line)
+        ;; Do not indent
+        (t 'no-indent))
+       start))))
 
-    (save-excursion
+(defun nimrod-indent-calculate-indentation ()
+  "Calculate correct indentation offset for the current line."
+  (let* ((indentation-context (nimrod-indent-context))
+         (context-status (car indentation-context))
+         (context-start (cdr indentation-context)))
+    (save-restriction
+      (widen)
+      (save-excursion
+        (case context-status
+          ('no-indent 0)
+          ;; When point is after beginning of block just add one level
+          ;; of indentation relative to the context-start
+          ('after-beginning-of-block
+           (goto-char context-start)
+           (+ (current-indentation) nimrod-indent-offset))
+          ;; When after a simple line just use previous line
+          ;; indentation, in the case current line starts with a
+          ;; `nimrod-indent-dedenters' de-indent one level.
+          ('after-line
+           (-
+            (save-excursion
+              (goto-char context-start)
+              (current-indentation))
+            (if (progn
+                  (back-to-indentation)
+                  (looking-at nimrod-indent-dedenters))
+                nimrod-indent-offset
+              0)))
+          ;; When inside of a string, do nothing. just use the current
+          ;; indentation.  XXX: perhaps it would be a good idea to
+          ;; invoke standard text indentation here
+          ('inside-string
+           (goto-char context-start)
+           (current-indentation))
+          ;; When inside a paren there's a need to handle nesting
+          ;; correctly
+          ('inside-paren
+           (cond
+            ;; If current line closes the outermost open paren use the
+            ;; current indentation of the context-start line.
+            ((save-excursion
+               (skip-syntax-forward "\s" (line-end-position))
+               (when (and (looking-at (regexp-opt '(")" "]" "}")))
+                          (progn
+                            (forward-char 1)
+                            (not (nimrod-syntax-context 'paren))))
+                 (goto-char context-start)
+                 (current-indentation))))
+            ;; If open paren is contained on a line by itself add another
+            ;; indentation level, else look for the first word after the
+            ;; opening paren and use it's column position as indentation
+            ;; level.
+            ((let* ((content-starts-in-newline)
+                    (indent
+                     (save-excursion
+                       (if (setq content-starts-in-newline
+                                 (progn
+                                   (goto-char context-start)
+                                   (forward-char)
+                                   (save-restriction
+                                     (narrow-to-region
+                                      (line-beginning-position)
+                                      (line-end-position))
+                                     (nimrod-util-forward-comment))
+                                   (looking-at "$")))
+                           (+ (current-indentation) nimrod-indent-offset)
+                         (current-column)))))
+               ;; Adjustments
+               (cond
+                ;; If current line closes a nested open paren de-indent one
+                ;; level.
+                ((progn
+                   (back-to-indentation)
+                   (looking-at (regexp-opt '(")" "]" "}"))))
+                 (- indent nimrod-indent-offset))
+                ;; If the line of the opening paren that wraps the current
+                ;; line starts a block add another level of indentation to
+                ;; follow new pep8 recommendation. See: http://ur1.ca/5rojx
+                ((save-excursion
+                   (when (and content-starts-in-newline
+                              (progn
+                                (goto-char context-start)
+                                (back-to-indentation)
+                                (looking-at (nimrod-rx block-start))))
+                     (+ indent nimrod-indent-offset))))
+                (t indent)))))))))))
+
+(defun nimrod-indent-calculate-levels ()
+  "Calculate `nimrod-indent-levels' and reset `nimrod-indent-current-level'."
+  (let* ((indentation (nimrod-indent-calculate-indentation))
+         (remainder (% indentation nimrod-indent-offset))
+         (steps (/ (- indentation remainder) nimrod-indent-offset)))
+    (setq nimrod-indent-levels (list 0))
+    (dotimes (step steps)
+      (push (* nimrod-indent-offset (1+ step)) nimrod-indent-levels))
+    (when (not (eq 0 remainder))
+      (push (+ (* nimrod-indent-offset steps) remainder) nimrod-indent-levels))
+    (setq nimrod-indent-levels (nreverse nimrod-indent-levels))
+    (setq nimrod-indent-current-level (1- (length nimrod-indent-levels)))))
+
+(defun nimrod-indent-toggle-levels ()
+  "Toggle `nimrod-indent-current-level' over `nimrod-indent-levels'."
+  (setq nimrod-indent-current-level (1- nimrod-indent-current-level))
+  (when (< nimrod-indent-current-level 0)
+    (setq nimrod-indent-current-level (1- (length nimrod-indent-levels)))))
+
+(defun nimrod-indent-line (&optional force-toggle)
+  "Internal implementation of `nimrod-indent-line-function'.
+Uses the offset calculated in
+`nimrod-indent-calculate-indentation' and available levels
+indicated by the variable `nimrod-indent-levels' to set the
+current indentation.
+
+When the variable `last-command' is equal to one of the symbols
+inside `nimrod-indent-trigger-commands' or FORCE-TOGGLE is
+non-nil it cycles levels indicated in the variable
+`nimrod-indent-levels' by setting the current level in the
+variable `nimrod-indent-current-level'.
+
+When the variable `last-command' is not equal to one of the
+symbols inside `nimrod-indent-trigger-commands' and FORCE-TOGGLE
+is nil it calculates possible indentation levels and saves it in
+the variable `nimrod-indent-levels'.  Afterwards it sets the
+variable `nimrod-indent-current-level' correctly so offset is
+equal to (`nth' `nimrod-indent-current-level'
+`nimrod-indent-levels')"
+  (or
+   (and (or (and (memq this-command nimrod-indent-trigger-commands)
+                 (eq last-command this-command))
+            force-toggle)
+        (not (equal nimrod-indent-levels '(0)))
+        (or (nimrod-indent-toggle-levels) t))
+   (nimrod-indent-calculate-levels))
+  (let* ((starting-pos (point-marker))
+         (indent-ending-position
+          (+ (line-beginning-position) (current-indentation)))
+         (follow-indentation-p
+          (or (bolp)
+              (and (<= (line-beginning-position) starting-pos)
+                   (>= indent-ending-position starting-pos))))
+         (next-indent (nth nimrod-indent-current-level nimrod-indent-levels)))
+    (unless (= next-indent (current-indentation))
       (beginning-of-line)
       (delete-horizontal-space)
-      (if (and (equal last-command this-command) (/= ci 0))
-          (indent-to (* (/ (- ci 1) nimrod-indent-offset) nimrod-indent-offset))
-        (indent-to need)))
+      (indent-to next-indent)
+      (goto-char starting-pos))
+    (and follow-indentation-p (back-to-indentation)))
+  ;(nimrod-info-closing-block-message)
+  )
 
-    (if (< (current-column) (current-indentation))
-        (forward-to-indentation 0))))
+(defun nimrod-indent-line-function ()
+  "`indent-line-function' for Nimrod mode.
+See `nimrod-indent-line' for details."
+  (nimrod-indent-line))
 
+(defun nimrod-indent-dedent-line ()
+  "De-indent current line."
+  (interactive "*")
+  (when (and (not (nimrod-syntax-comment-or-string-p))
+             (<= (point-marker) (save-excursion
+                                  (back-to-indentation)
+                                  (point-marker)))
+             (> (current-column) 0))
+    (nimrod-indent-line t)
+    t))
+
+(defun nimrod-indent-dedent-line-backspace (arg)
+  "De-indent current line.
+Argument ARG is passed to `backward-delete-char-untabify' when
+point is  not in between the indentation."
+  (interactive "*p")
+  (when (not (nimrod-indent-dedent-line))
+    (backward-delete-char-untabify arg)))
+(put 'nimrod-indent-dedent-line-backspace 'delete-selection 'supersede)
+
+(defun nimrod-indent-region (start end)
+  "Indent a nimrod region automagically.
+
+Called from a program, START and END specify the region to indent."
+  (let ((deactivate-mark nil))
+    (save-excursion
+      (goto-char end)
+      (setq end (point-marker))
+      (goto-char start)
+      (or (bolp) (forward-line 1))
+      (while (< (point) end)
+        (or (and (bolp) (eolp))
+            (let (word)
+              (forward-line -1)
+              (back-to-indentation)
+              (setq word (current-word))
+              (forward-line 1)
+              (when (and word
+                         ;; Don't mess with strings, unless it's the
+                         ;; enclosing set of quotes.
+                         (or (not (nimrod-syntax-context 'string))
+                             (eq
+                              (syntax-after
+                               (+ (1- (point))
+                                  (current-indentation)
+                                  (nimrod-syntax-count-quotes (char-after) (point))))
+                              (string-to-syntax "|"))))
+                (beginning-of-line)
+                (delete-horizontal-space)
+                (indent-to (nimrod-indent-calculate-indentation)))))
+        (forward-line 1))
+      (move-marker end nil))))
+
+(defun nimrod-indent-shift-left (start end &optional count)
+  "Shift lines contained in region START END by COUNT columns to the left.
+COUNT defaults to `nimrod-indent-offset'.  If region isn't
+active, the current line is shifted.  The shifted region includes
+the lines in which START and END lie.  An error is signaled if
+any lines in the region are indented less than COUNT columns."
+  (interactive
+   (if mark-active
+       (list (region-beginning) (region-end) current-prefix-arg)
+     (list (line-beginning-position) (line-end-position) current-prefix-arg)))
+  (if count
+      (setq count (prefix-numeric-value count))
+    (setq count nimrod-indent-offset))
+  (when (> count 0)
+    (let ((deactivate-mark nil))
+      (save-excursion
+        (goto-char start)
+        (while (< (point) end)
+          (if (and (< (current-indentation) count)
+                   (not (looking-at "[ \t]*$")))
+              (error "Can't shift all lines enough"))
+          (forward-line))
+        (indent-rigidly start end (- count))))))
+
+(add-to-list 'debug-ignored-errors "^Can't shift all lines enough")
+
+(defun nimrod-indent-shift-right (start end &optional count)
+  "Shift lines contained in region START END by COUNT columns to the left.
+COUNT defaults to `nimrod-indent-offset'.  If region isn't
+active, the current line is shifted.  The shifted region includes
+the lines in which START and END lie."
+  (interactive
+   (if mark-active
+       (list (region-beginning) (region-end) current-prefix-arg)
+     (list (line-beginning-position) (line-end-position) current-prefix-arg)))
+  (let ((deactivate-mark nil))
+    (if count
+        (setq count (prefix-numeric-value count))
+      (setq count nimrod-indent-offset))
+    (indent-rigidly start end count)))
+
+(defun nimrod-indent-electric-colon (arg)
+  "Insert a colon and maybe de-indent the current line.
+With numeric ARG, just insert that many colons.  With
+\\[universal-argument], just insert a single colon."
+  (interactive "*P")
+  (self-insert-command (if (not (integerp arg)) 1 arg))
+  (when (and (not arg)
+             (eolp)
+             (not (equal ?: (char-after (- (point-marker) 2))))
+             (not (nimrod-syntax-comment-or-string-p)))
+    (let ((indentation (current-indentation))
+          (calculated-indentation (nimrod-indent-calculate-indentation)))
+      (nimrod-info-closing-block-message)
+      (when (> indentation calculated-indentation)
+        (save-excursion
+          (indent-line-to calculated-indentation)
+          (when (not (nimrod-info-closing-block-message))
+            (indent-line-to indentation)))))))
+(put 'nimrod-indent-electric-colon 'delete-selection t)
+
+(defun nimrod-indent-post-self-insert-function ()
+  "Adjust closing paren line indentation after a char is added.
+This function is intended to be added to the
+`post-self-insert-hook.'  If a line renders a paren alone, after
+adding a char before it, the line will be re-indented
+automatically if needed."
+  (when (and (eq (char-before) last-command-event)
+             (not (bolp))
+             (memq (char-after) '(?\) ?\] ?\})))
+    (save-excursion
+      (goto-char (line-beginning-position))
+      ;; If after going to the beginning of line the point
+      ;; is still inside a paren it's ok to do the trick
+      (when (nimrod-syntax-context 'paren)
+        (let ((indentation (nimrod-indent-calculate-indentation)))
+          (when (< (current-indentation) indentation)
+            (indent-line-to indentation)))))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;                             Utility functions ...                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun nimrod-util-forward-comment (&optional direction)
+  "Nimrod mode specific version of `forward-comment'.
+Optional argument DIRECTION defines the direction to move to."
+  (let ((comment-start (nimrod-syntax-context 'comment))
+        (factor (if (< (or direction 0) 0)
+                    -99999
+                  99999)))
+    (when comment-start
+      (goto-char comment-start))
+    (forward-comment factor)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;                             Navigation functions ...                       ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun nimrod-nav-beginning-of-statement ()
+  "Move to start of current statement."
+  (interactive "^")
+  (while (and (or (back-to-indentation) t)
+              (not (bobp))
+              (when (or (nimrod-syntax-context 'string)
+                        (nimrod-syntax-context 'paren))
+                (forward-line -1))))
+  (point-marker))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;                             Wrap it all up ...                             ;;
@@ -391,7 +789,8 @@ On reaching column 0, it will cycle back to the maximum sensible indentation."
   (define-key nimrod-mode-map (kbd "M-.") 'nimrod-goto-sym)
   (define-key nimrod-mode-map (kbd "C-c h") 'nimrod-explain-sym)
 
-  (set (make-local-variable 'indent-line-function) 'nimrod-indent-line)
+  (set (make-local-variable 'indent-line-function) 'nimrod-indent-line-function)
+  (set (make-local-variable 'indent-region-function) #'nimrod-indent-region)
 
   ;; Documentation comment highlighting
   ;; (modify-syntax-entry ?\# ". 12b" nimrod-mode-syntax-table)
