@@ -770,6 +770,13 @@ Optional argument DIRECTION defines the direction to move to."
 ;;                             Wrap it all up ...                             ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defvar nimrod-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "M-.") 'nimrod-goto-sym)
+    (define-key map (kbd "C-c h") 'nimrod-explain-sym)
+    (define-key map ":" 'nimrod-indent-electric-colon)
+    map))
+
 (define-derived-mode nimrod-mode prog-mode
   "nimrod mode"
   "A major mode for the Nimrod programming language."
@@ -779,11 +786,6 @@ Optional argument DIRECTION defines the direction to move to."
   (nimrod-setup-font-lock)
 
   ;; modify the keymap
-  (define-key nimrod-mode-map [remap comment-dwim] 'nimrod-comment-dwim)
-  (define-key nimrod-mode-map (kbd "M-.") 'nimrod-goto-sym)
-  (define-key nimrod-mode-map (kbd "C-c h") 'nimrod-explain-sym)
-  (define-key nimrod-mode-map ":" 'nimrod-indent-electric-colon)
-
   (set (make-local-variable 'indent-line-function) 'nimrod-indent-line-function)
   (set (make-local-variable 'indent-region-function) #'nimrod-indent-region)
 
