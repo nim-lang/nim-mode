@@ -296,17 +296,6 @@ This variant of `rx' supports common nimrod named REGEXPS."
 
 (defconst nimrod-tab-regexp "\\(\t+\\)")
 
-(defconst nimrod-blank-line-regexp "^ *$"
-  "Regexp matching a line containing only (valid) whitespace.")
-
-(defconst nimrod-new-block-regexp
-  (concat ".*"                                          ;; Anything
-          (nimrod-regexp-choice '("=" "var" "type" "const" "enum" "\\:")) ;; ending in a new block indicator,
-          " *"                                          ;; then non-syntactic whitespace,
-          "\\(#.*\\)?"                                  ;; then possibly a comment.
-          "$")
-  "Regexp matching a line that precedes a new block.")
-
 
 (setq nimrod-font-lock-keywords
       `(  ;; note the BACKTICK, `
