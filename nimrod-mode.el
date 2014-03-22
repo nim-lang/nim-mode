@@ -284,11 +284,6 @@ This variant of `rx' supports common nimrod named REGEXPS."
   "Font lock expressions for Nimrod mode.")
 (put 'nimrod-mode 'font-lock-defaults '(nimrod-font-lock-keywords nil t))
 
-(defun nimrod-setup-font-lock ()
-  "This will be called when defining nimrod-node, below."
-  (setq font-lock-defaults '((nimrod-font-lock-keywords))))
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;                               Indentation                                  ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -735,7 +730,8 @@ Optional argument DIRECTION defines the direction to move to."
 
   (setq mode-name "Nimrod")  ;; This will display in the mode line.
 
-  (nimrod-setup-font-lock)
+  (set (make-local-variable 'font-lock-defaults)
+       '(nimrod-font-lock-keywords nil t))
 
   ;; modify the keymap
   (set (make-local-variable 'indent-line-function) 'nimrod-indent-line-function)
