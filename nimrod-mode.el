@@ -178,7 +178,12 @@ Magic functions."
 
 (eval-when-compile
   (defconst nimrod-rx-constituents
-    `((block-start          . ,(rx symbol-start
+    `((keyword . ,(rx symbol-start (eval (cons 'or nimrod-keywords)) symbol-end))
+      (type . ,(rx symbol-start (eval (cons 'or nimrod-types)) symbol-end))
+      (exception . ,(rx symbol-start (eval (cons 'or nimrod-exceptions)) symbol-end))
+      (constant . ,(rx symbol-start (eval (cons 'or nimrod-constants)) symbol-end))
+      (builtin . ,(rx symbol-start (eval (cons 'or nimrod-builtins)) symbol-end))
+      (block-start          . ,(rx symbol-start
                                    (or "type" "const" "var" "let"
                                        "proc" "method" "converter" "iterator"
                                        "template" "macro"
@@ -192,6 +197,30 @@ Magic functions."
                                         "iterator" "template" "macro")
                                     symbol-end))
       (symbol-name          . ,(rx (any letter ?_) (* (any word ?_))))
+      (dec-number . ,(rx symbol-start
+                         (1+ (in digit "_"))
+                         (opt "." (in digit "_"))
+                         (opt (any "eE") (1+ digit))
+                         (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
+                         symbol-end))
+      (hex-number . ,(rx symbol-start
+                         (1+ (in xdigit "_"))
+                         (opt "." (in xdigit "_"))
+                         (opt (any "eE") (1+ xdigit))
+                         (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
+                         symbol-end))
+      (oct-number . ,(rx symbol-start
+                         (1+ (in "0-7_"))
+                         (opt "." (in "0-7_"))
+                         (opt (any "eE") (1+ "0-7_"))
+                         (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
+                         symbol-end))
+      (bin-number . ,(rx symbol-start
+                         (1+ (in "0-1_"))
+                         (opt "." (in "0-1_"))
+                         (opt (any "eE") (1+ "0-1_"))
+                         (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
+                         symbol-end))
       (open-paren           . ,(rx (or "{" "[" "(")))
       (close-paren          . ,(rx (or "}" "]" ")")))
       (simple-operator      . ,(rx (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%)))
@@ -228,20 +257,6 @@ This variant of `rx' supports common nimrod named REGEXPS."
             (t
              (rx-to-string (car regexps) t))))))
 
-;; Create regular expressions
-;; --------------------------
-
-
-;; regexp-opt'ed expressions
-;; '''''''''''''''''''''''''
-
-(defvar nimrod-keywords-regexp (regexp-opt nimrod-keywords 'words))
-(defvar nimrod-types-regexp (regexp-opt nimrod-types 'words))
-(defvar nimrod-types-regexp (regexp-opt nimrod-exceptions 'words))
-(defvar nimrod-constants-regexp (regexp-opt nimrod-constants 'words))
-(defvar nimrod-builtins-regexp (regexp-opt nimrod-builtins 'words))
-(defvar nimrod-operators-regexp (regexp-opt nimrod-operators 'words))
-
 ;; Free memory
 (defvar nimrod-keywords nil)
 (defvar nimrod-types nil)
@@ -251,86 +266,23 @@ This variant of `rx' supports common nimrod named REGEXPS."
 (defvar nimrod-operators nil)
 
 
-;; Hand-reared expressions
-;; '''''''''''''''''''''''
-
-(defvar nimrod-decimal-regexp
-  "\\<[0-9_]+\\(\\.[0-9_]+\\)?\\([eE][0-9]+\\)?\\(\'\\(i8\\|i16\\|i32\\|i64\\|f32\\|f64\\)\\)?\\>"
-  "Regular expression for matching decimal literals in Nimrod."
-  )
-
-(defvar nimrod-hex-regexp
-  "\\<\\0x[0-9a-fA-F_]+\\(\\.[0-9a-fA-F_]+\\)?\\([eE][0-9a-fA-F]+\\)?\\(\'\\(i8\\|i16\\|i32\\|i64\\|f32\\|f64\\)\\)?\\>"
-  "Regular expression for matching hexadecimal literals in Nimrod."
-  )
-
-(defvar nimrod-octal-regexp
-  "\\<\\0o[0-7_]+\\(\\.[0-7_]+\\)?\\([eE][0-7]+\\)?\\(\'\\(i8\\|i16\\|i32\\|i64\\|f32\\|f64\\)\\)?\\>"
-  "Regular expression for matching octal literals in Nimrod."
-  )
-
-(defvar nimrod-binary-regexp
-  "\\<\\0b[01_]+\\(\\.[01_]+\\)?\\([eE][01]+\\)?\\(\'\\(i8\\|i16\\|i32\\|i64\\|f32\\|f64\\)\\)?\\>"
-  "Regular expression for matching binary literals in Nimrod."
-  )
-
-(defvar nimrod-variables-regexp
-  (nimrod-rx symbol-name)
-  "Regular expression for matching variable identifiers in Nimrod."
-  )
-
-(defvar nimrod-character-literal-regexp
-  "\\<\'\\(.\\|\\\\.*\\)'\\>"  ;; TODO: make more precise
-  "Regular expression for matching character literal tokens."
-  )
-
-(defvar nimrod-single-quote-string-regexp
-  "\\<\".*\"\\>"
-  "Regular expression for matching single-quoted strings."
-  )
-
-(defvar nimrod-raw-string-regexp
-  "\\<r\".*\"\\>"
-  "Regular expression for matching raw strings."
-  )
-
-(defconst nimrod-tab-regexp "\\(\t+\\)")
-
-
-(setq nimrod-font-lock-keywords
-      `(  ;; note the BACKTICK, `
-        (,nimrod-raw-string-regexp . font-lock-string-face)
-        (,nimrod-character-literal-regexp . font-lock-constant-face)
-        (,nimrod-single-quote-string-regexp . font-lock-string-face)
-        (,nimrod-tab-regexp . nimrod-tab-face) ;; TODO: make work!
-        (,nimrod-keywords-regexp . font-lock-keyword-face)
-        (,nimrod-types-regexp . font-lock-type-face)
-        (,nimrod-constants-regexp . font-lock-constant-face)
-        (,nimrod-builtins-regexp . font-lock-builtin-face)
-        (,nimrod-decimal-regexp . font-lock-constant-face)
-        (,nimrod-hex-regexp . font-lock-constant-face)
-        (,nimrod-octal-regexp . font-lock-constant-face)
-        (,nimrod-binary-regexp . font-lock-constant-face)
-        (,nimrod-operators-regexp . font-lock-variable-name-face)
-        (,nimrod-variables-regexp . font-lock-variable-name-face)
-        ))
-
-;; Free memory
-(defvar nimrod-character-literal-regexp nil)
-(defvar nimrod-raw-string-regexp nil)
-(defvar nimrod-triple-quote-string-regexp nil)
-(defvar nimrod-single-quote-string-regexp nil)
-(defvar nimrod-tab-regexp nil)
-(defvar nimrod-keywords-regexp nil)
-(defvar nimrod-types-regexp nil)
-(defvar nimrod-constants-regexp nil)
-(defvar nimrod-builtins-regexp nil)
-(defvar nimrod-decimal-regexp nil)
-(defvar nimrod-hex-regexp nil)
-(defvar nimrod-octal-regexp nil)
-(defvar nimrod-binary-regexp nil)
-(defvar nimrod-operators-regexp nil)
-(defvar nimrod-variables-regexp nil)
+(defconst nimrod-font-lock-keywords
+  `(  ;; note the BACKTICK, `
+    ;; (,(nimrod-rx (1+ "\t")) . nimrod-tab-face) ;; TODO: make work!
+    (,(nimrod-rx defun (1+ whitespace) (group symbol-name))
+     . (1 font-lock-function-name-face))
+    (,(nimrod-rx (or "var" "let") (1+ whitespace) (group symbol-name))
+     . (1 font-lock-variable-name-face))
+    (,(nimrod-rx (or exception type)) . font-lock-type-face)
+    (,(nimrod-rx constant) . font-lock-constant-face)
+    (,(nimrod-rx builtin) . font-lock-builtin-face)
+    (,(nimrod-rx keyword) . font-lock-keyword-face)
+    (,(nimrod-rx "{." (1+ any) ".}") . font-lock-preprocessor-face)
+    (,(nimrod-rx symbol-name (* whitespace) ":" (* whitespace) (group symbol-name))
+     . (1 font-lock-type-face))
+    )
+  "Font lock expressions for Nimrod mode.")
+(put 'nimrod-mode 'font-lock-defaults '(nimrod-font-lock-keywords nil t))
 
 (defun nimrod-setup-font-lock ()
   "This will be called when defining nimrod-node, below."
