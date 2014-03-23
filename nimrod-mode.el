@@ -722,6 +722,8 @@ Optional argument DIRECTION defines the direction to move to."
     (define-key map (kbd "M-.") 'nimrod-goto-sym)
     (define-key map (kbd "C-c h") 'nimrod-explain-sym)
     (define-key map ":" 'nimrod-indent-electric-colon)
+    (define-key map "\C-c<" 'nimrod-indent-shift-left)
+    (define-key map "\C-c>" 'nimrod-indent-shift-right)
     map))
 
 (define-derived-mode nimrod-mode prog-mode
