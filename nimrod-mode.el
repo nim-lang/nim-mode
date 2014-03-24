@@ -357,13 +357,20 @@ Context information is returned with a cons with the form:
     \(STATUS . START)
 
 Where status can be any of the following symbols:
- * inside-paren: If point in between (), {} or []
- * inside-string: If point is inside a string
- * after-beginning-of-block: Point is after beginning of block
- * after-operator: Previous line ends in an operator
- * after-line: Point is after normal line
- * no-indent: Point is at beginning of buffer or other special case
-START is the buffer position where the sexp starts."
+ * inside-paren: If point in between (), {} or []. START is the
+   position of the opening parenthesis.
+ * inside-string: If point is inside a string. START is the
+   beginning of the string.
+ * after-beginning-of-block: Point is after beginning of
+   block. START is the beginning position of line that starts the
+   new block.
+ * after-operator: Previous line ends in an operator or current
+   line starts with an operator.  START is the position of the
+   operator.
+ * after-line: Point is after normal line. START is the beginning
+   of the line.
+ * no-indent: Point is at beginning of buffer or other special
+   case. START is the position of point."
   (save-restriction
     (widen)
     (let ((ppss (save-excursion (beginning-of-line) (syntax-ppss)))
@@ -371,9 +378,8 @@ START is the buffer position where the sexp starts."
       (cons
        (cond
         ;; Beginning of buffer
-        ((save-excursion
-           (goto-char (line-beginning-position))
-           (bobp))
+        ((= (line-beginning-position) (point-min))
+         (setq start (point))
          'no-indent)
         ;; Inside string
         ((setq start (nimrod-syntax-context 'string ppss))
@@ -389,33 +395,37 @@ START is the buffer position where the sexp starts."
                                (looking-back nimrod-indent-indenters
                                              (line-beginning-position)))
                          ;; Move to the first block start that's not in within
-                         ;; a string, comment or paren and that's not a
-                         ;; continuation line.
-                         (while (and (re-search-backward
-                                      (nimrod-rx block-start) nil t)
+                         ;; a string, comment or paren.
+                         (while (and (re-search-backward (nimrod-rx block-start)
+                                                         nil
+                                                         t)
                                      (nimrod-syntax-context-type)))
                          (when (looking-at (nimrod-rx block-start))
                            ;; block starts might not be at the first whitespace,
                            ;; however, we need the beginning
                            (back-to-indentation)
-                           (point-marker)))))
+                           (point)))))
          'after-beginning-of-block)
-        ;; After operator
+        ;; Current line begins with operator
+        ((setq start (save-excursion
+                       (progn
+                         (back-to-indentation)
+                         (and (looking-at (nimrod-rx operator))
+                              (match-beginning 0)))))
+         'after-operator)
+        ;; After operator on previous line
         ((setq start (save-excursion
                        (progn
                          (back-to-indentation)
                          (nimrod-util-forward-comment -1)
-                         (and
-                          (looking-back (nimrod-rx operator)
-                                        (line-beginning-position))
-                          (point-marker)))))
+                         (and (looking-back (nimrod-rx operator)
+                                            (line-beginning-position))
+                              (match-beginning 0)))))
          'after-operator)
         ;; After normal line
         ((setq start (save-excursion
                        (back-to-indentation)
-                       (skip-chars-backward (rx (or whitespace ?\n)))
-                       (nimrod-nav-beginning-of-statement)
-                       (point-marker)))
+                       (point)))
          'after-line)
         ;; Do not indent
         (t 'no-indent))
@@ -443,6 +453,8 @@ START is the buffer position where the sexp starts."
            (-
             (save-excursion
               (goto-char context-start)
+              (forward-line -1)
+              (nimrod-nav-beginning-of-statement)
               (current-indentation))
             (if (progn
                   (back-to-indentation)
@@ -457,32 +469,32 @@ START is the buffer position where the sexp starts."
            (current-indentation))
           ;; When point is after an operator line, there are several cases
           ('after-operator
-           (let (pos)
+           (save-excursion
+             (nimrod-nav-beginning-of-statement)
              (cond
-              ;; inside a paren, adjust to the opening paren
-              ((setq pos (nimrod-syntax-context 'paren))
-               (+ 1 (- pos (save-excursion
-                             (goto-char pos)
-                             (line-beginning-position)))
-                  nimrod-indent-offset))
-              ;; an operator continuation line after a block
-              ;; beginning, align with the first token after the block
-              ;; keyword
-              ((setq pos (nimrod-info-block-continuation-line-p))
-               (goto-char pos)
-               (re-search-forward (nimrod-rx block-start (* space))
-                                  (line-end-position)
-                                  t)
+              ;; current line is a continuation of a block statement
+              ((looking-at (nimrod-rx block-start (* space)))
+               (goto-char (match-end 0))
                (current-column))
-              ;; an operator continuation after an assignment
-              ;; operator, align with the first token after the
-              ;; assignment operator
-              ((setq pos (nimrod-info-assignment-continuation-line-p))
-               (goto-char pos)
+              ;; current line is a continuation of an assignment
+              ;; operator. Find an assignment operator that is not
+              ;; contained in a string/comment/paren and is not
+              ;; followed by whitespace only
+              ((save-excursion
+                 (and (re-search-forward (nimrod-rx not-simple-operator
+                                                    assignment-operator
+                                                    not-simple-operator))
+                      (not (nimrod-syntax-context-type))
+                      (progn
+                        (backward-char)
+                        (not (looking-at (rx (* space) (or "#" eol)))))))
+               (goto-char (match-end 0))
+               (skip-syntax-forward "\s")
                (current-column))
-              ;; otherwise just use the normal indentation
+              ;; current line is a continuation of some other operator, just indent
               (t
-               (current-indentation)))))
+               (back-to-indentation)
+               (+ (current-column) nimrod-indent-offset)))))
           ;; When inside a paren there's a need to handle nesting
           ;; correctly
           ('inside-paren
@@ -491,7 +503,7 @@ START is the buffer position where the sexp starts."
             ;; current indentation of the context-start line.
             ((save-excursion
                (skip-syntax-forward "\s" (line-end-position))
-               (when (and (looking-at (regexp-opt '(")" "]" "}")))
+               (when (and (looking-at (nimrod-rx (in ")]}")))
                           (progn
                             (forward-char 1)
                             (not (nimrod-syntax-context 'paren))))
@@ -522,7 +534,7 @@ START is the buffer position where the sexp starts."
                 ;; level.
                 ((progn
                    (back-to-indentation)
-                   (looking-at (regexp-opt '(")" "]" "}"))))
+                   (looking-at (nimrod-rx ")]}")))
                  (- indent nimrod-indent-offset))
                 ;; If the line of the opening paren that wraps the current
                 ;; line starts a block add another level of indentation to
@@ -754,70 +766,6 @@ Optional argument DIRECTION defines the direction to move to."
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;                             Info functions ...                             ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defun nimrod-info-continuation-line-p ()
-  "Check if current line is continuation of another.
-When current line is continuation of another return the point
-where the continued line ends."
-  (save-excursion
-    (save-restriction
-      (widen)
-      (let* ((context-type (progn
-                             (back-to-indentation)
-                             (nimrod-syntax-context-type)))
-             (line-start (line-number-at-pos))
-             (context-start (when context-type
-                              (nimrod-syntax-context context-type))))
-        (cond
-         ((eq context-type 'paren)
-           ;; Lines inside a paren are always a continuation line
-           ;; (except the first one).
-           (nimrod-util-forward-comment -1)
-           (point-marker))
-         ((memq context-type  '(string comment))
-           ;; move forward an roll again
-           (goto-char context-start)
-           (nimrod-util-forward-comment)
-           (nimrod-info-continuation-line-p))
-          (t
-           (let ((context (nimrod-indent-context)))
-             ;; Not within a paren, string or comment, the only way
-             ;; we are dealing with a continuation line is that
-             ;; previous line ends in an operator
-             (when (eq (car context) 'after-operator)
-               (cdr context)))))))))
-
-(defun nimrod-info-block-continuation-line-p ()
-  "Return non-nil if current line is a continuation of a block."
-  (save-excursion
-    (when (nimrod-info-continuation-line-p)
-      (forward-line -1)
-      (back-to-indentation)
-      (when (looking-at (nimrod-rx block-start))
-        (point-marker)))))
-
-(defun nimrod-info-assignment-continuation-line-p ()
-  "Check if current line is a continuation of an assignment.
-When current line is continuation of another with an assignment
-return the point of the first non-blank character after the
-operator."
-  (save-excursion
-    (when (nimrod-info-continuation-line-p)
-      (nimrod-nav-beginning-of-statement)
-      (back-to-indentation)
-      (when (and (not (looking-at (nimrod-rx block-start)))
-                 (and (re-search-forward (nimrod-rx not-simple-operator
-                                                    assignment-operator
-                                                    not-simple-operator)
-                                         (line-end-position) t)
-                      (not (nimrod-syntax-context-type))))
-        (skip-syntax-forward "\s")
-        (point-marker)))))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;                             Navigation functions ...                       ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -826,10 +774,12 @@ operator."
   (interactive "^")
   (while (and (or (back-to-indentation) t)
               (not (bobp))
-              (when (or (nimrod-syntax-context 'string)
-                        (nimrod-syntax-context 'paren)
-                        (nimrod-info-continuation-line-p))
-                (forward-line -1))))
+              (memq (car (nimrod-indent-context))
+                    '(inside-string
+                      inside-paren
+                      after-operator
+                      after-assignment-operator)))
+    (forward-line -1))
   (point-marker))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
