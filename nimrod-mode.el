@@ -297,6 +297,12 @@ This variant of `rx' supports common nimrod named REGEXPS."
 
 ;;; Indentation
 
+(defvar nimrod-indent-current-level 0
+  "Current indentation level `nimrod-indent-line-function' is using.")
+
+(defvar nimrod-indent-levels '(0)
+  "Levels of indentation available for `nimrod-indent-line-function'.")
+
 (defvar nimrod-indent-indenters
   (nimrod-rx (or "type" "const" "var" "let" "tuple" "object" ":"
                  (and defun (* (not (any ?=))) "=")
