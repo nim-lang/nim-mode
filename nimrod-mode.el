@@ -313,11 +313,14 @@ line is considered an indented block. Whitespaces at the end of a
 line are ignored.")
 
 (defvar nimrod-indent-dedenters
-  (nimrod-rx (or "else" "elif" "finally" "except")
-             (* whitespace) ":")
+  (nimrod-rx symbol-start
+             (or "else" "elif" "finally" "except")
+             symbol-end
+             (* (not (in "\n")))
+             ":" (* space) (or "#" eol))
   "Regular expression matching the end of line after which should be dedented.
 If the end of a line matches this regular expression, the line
-will be detended relative to the previous block.")
+will be dedented relative to the previous block.")
 
 (defcustom nimrod-indent-trigger-commands
   '(indent-for-tab-command yas-expand yas/expand)
