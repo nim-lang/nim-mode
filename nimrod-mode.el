@@ -234,12 +234,12 @@ Magic functions."
                                 (not
                                  (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%))))
       ;; FIXME: Use regexp-opt.
-      (operator             . ,(rx (or "+" "-" "/" "&" "^" "~" "|" "*" "<" ">"
-                                       "=" "%" "**" "//" "<<" ">>" "<=" "!="
-                                       "==" ">=" "is" "not")))
+      (operator             . ,(rx (or (1+ (in "-=+*/<>@$~&%|!?^.:\\"))
+                                       "and" "or" "not" "xor" "shl"
+                                       "shr" "div" "mod" "in" "notin" "is"
+                                       "isnot" "of")))
       ;; FIXME: Use regexp-opt.
-      (assignment-operator  . ,(rx (or "=" "+=" "-=" "*=" "/=" "//=" "%=" "**="
-                                       ">>=" "<<=" "&=" "^=" "|=")))
+      (assignment-operator  . ,(rx (* (in "-=+*/<>@$~&%|!?^.:\\")) "="))
       (string-delimiter . ,(rx (and
                                 ;; Match even number of backslashes.
                                 (or (not (any ?\\ ?\' ?\")) point
