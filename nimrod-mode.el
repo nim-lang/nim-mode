@@ -379,14 +379,26 @@ Where status can be any of the following symbols:
    case. START is the position of point."
   (save-restriction
     (widen)
-    (let ((ppss (save-excursion (beginning-of-line) (syntax-ppss)))
-          (start))
+    ;; restrict to the enclosing parentheses, if any
+    (let* ((within-paren
+            (save-excursion
+              (condition-case nil
+                  (prog1 t
+                    (narrow-to-region (progn
+                                        (backward-up-list)
+                                        (1+ (point)))
+                                      (progn
+                                        (forward-list)
+                                        (1- (point)))))
+                (scan-error nil))))
+           (ppss (save-excursion (beginning-of-line) (syntax-ppss)))
+           (start))
       (cons
        (cond
         ;; Beginning of buffer
         ((= (line-beginning-position) (point-min))
          (setq start (point))
-         'no-indent)
+         (if within-paren 'inside-paren 'no-indent))
         ;; Inside string
         ((setq start (nimrod-syntax-context 'string ppss))
          'inside-string)
@@ -412,9 +424,6 @@ Where status can be any of the following symbols:
                            (back-to-indentation)
                            (point))))))
          'after-beginning-of-block)
-        ;; Inside a paren
-        ((setq start (nimrod-syntax-context 'paren ppss))
-         'inside-paren)
         ;; Current line begins with operator
         ((setq start (save-excursion
                        (progn
@@ -435,7 +444,12 @@ Where status can be any of the following symbols:
         ((setq start (save-excursion
                        (back-to-indentation)
                        (point)))
-         'after-line)
+         (if (and within-paren
+                  (save-excursion
+                    (skip-chars-backward "\s\n")
+                    (bobp)))
+             'inside-paren
+           'after-line))
         ;; Do not indent
         (t 'no-indent))
        start))))
@@ -447,6 +461,17 @@ Where status can be any of the following symbols:
          (context-start (cdr indentation-context)))
     (save-restriction
       (widen)
+      ;; restrict to enclosing parentheses, if any
+      (save-excursion
+        (condition-case nil
+            (prog1 t
+              (narrow-to-region (progn
+                                  (backward-up-list)
+                                  (1+ (point)))
+                                (progn
+                                  (forward-list)
+                                  (1- (point)))))
+          (scan-error nil)))
       (save-excursion
         (case context-status
           ('no-indent 0)
@@ -454,7 +479,7 @@ Where status can be any of the following symbols:
           ;; of indentation relative to the context-start
           ('after-beginning-of-block
            (goto-char context-start)
-           (+ (current-column) nimrod-indent-offset))
+           (+ (nimrod-util-real-current-column) nimrod-indent-offset))
           ;; When after a simple line just use previous line
           ;; indentation, in the case current line starts with a
           ;; `nimrod-indent-dedenters' de-indent one level.
@@ -465,7 +490,7 @@ Where status can be any of the following symbols:
               (forward-line -1)
               (end-of-line)
               (nimrod-nav-beginning-of-statement)
-              (current-indentation))
+              (nimrod-util-real-current-indentation))
             (if (progn
                   (back-to-indentation)
                   (looking-at nimrod-indent-dedenters))
@@ -476,7 +501,7 @@ Where status can be any of the following symbols:
           ;; invoke standard text indentation here
           ('inside-string
            (goto-char context-start)
-           (current-indentation))
+           (nimrod-util-real-current-indentation))
           ;; When point is after an operator line, there are several cases
           ('after-operator
            (save-excursion
@@ -485,7 +510,7 @@ Where status can be any of the following symbols:
               ;; current line is a continuation of a block statement
               ((looking-at (nimrod-rx block-start (* space)))
                (goto-char (match-end 0))
-               (current-column))
+               (nimrod-util-real-current-column))
               ;; current line is a continuation of an assignment
               ;; operator. Find an assignment operator that is not
               ;; contained in a string/comment/paren and is not
@@ -493,18 +518,20 @@ Where status can be any of the following symbols:
               ((save-excursion
                  (and (re-search-forward (nimrod-rx not-simple-operator
                                                     assignment-operator
-                                                    not-simple-operator))
+                                                    not-simple-operator)
+                                         nil
+                                         t)
                       (not (nimrod-syntax-context-type))
                       (progn
                         (backward-char)
                         (not (looking-at (rx (* space) (or "#" eol)))))))
                (goto-char (match-end 0))
                (skip-syntax-forward "\s")
-               (current-column))
+               (nimrod-util-real-current-column))
               ;; current line is a continuation of some other operator, just indent
               (t
                (back-to-indentation)
-               (+ (current-column) nimrod-indent-offset)))))
+               (+ (nimrod-util-real-current-column) nimrod-indent-offset)))))
           ;; When inside a paren there's a need to handle nesting
           ;; correctly
           ('inside-paren
@@ -518,7 +545,7 @@ Where status can be any of the following symbols:
                             (forward-char 1)
                             (not (nimrod-syntax-context 'paren))))
                  (goto-char context-start)
-                 (current-indentation))))
+                 (nimrod-util-real-current-indentation))))
             ;; If open paren is contained on a line by itself add another
             ;; indentation level, else look for the first word after the
             ;; opening paren and use it's column position as indentation
@@ -536,8 +563,8 @@ Where status can be any of the following symbols:
                                       (line-end-position))
                                      (nimrod-util-forward-comment))
                                    (looking-at "$")))
-                           (+ (current-indentation) nimrod-indent-offset)
-                         (current-column)))))
+                           (+ (nimrod-util-real-current-indentation) nimrod-indent-offset)
+                         (nimrod-util-real-current-column)))))
                ;; Adjustments
                (cond
                 ;; If current line closes a nested open paren de-indent one
@@ -804,6 +831,28 @@ skipped."
                   (prog1 t (backward-char))))))
       (and (match-beginning 1)
            (goto-char (match-beginning 1))))))
+
+(defun nimrod-util-real-current-column ()
+  "Returns the current column without narrowing."
+  (+ (current-column)
+     (if (= (line-beginning-position) (point-min))
+         (save-excursion
+           (goto-char (point-min))
+           (save-restriction
+             (widen)
+             (current-column)))
+       0)))
+
+(defun nimrod-util-real-current-indentation ()
+  "Returns the indentation without narrowing."
+  (+ (current-indentation)
+     (if (= (line-beginning-position) (point-min))
+         (save-excursion
+           (goto-char (point-min))
+           (save-restriction
+             (widen)
+             (current-column)))
+       0)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;                             Navigation functions ...                       ;;
