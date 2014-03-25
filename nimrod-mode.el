@@ -380,17 +380,7 @@ Where status can be any of the following symbols:
   (save-restriction
     (widen)
     ;; restrict to the enclosing parentheses, if any
-    (let* ((within-paren
-            (save-excursion
-              (condition-case nil
-                  (prog1 t
-                    (narrow-to-region (progn
-                                        (backward-up-list)
-                                        (1+ (point)))
-                                      (progn
-                                        (forward-list)
-                                        (1- (point)))))
-                (scan-error nil))))
+    (let* ((within-paren (nimrod-util-narrow-to-paren))
            (ppss (save-excursion (beginning-of-line) (syntax-ppss)))
            (start))
       (cons
@@ -462,16 +452,7 @@ Where status can be any of the following symbols:
     (save-restriction
       (widen)
       ;; restrict to enclosing parentheses, if any
-      (save-excursion
-        (condition-case nil
-            (prog1 t
-              (narrow-to-region (progn
-                                  (backward-up-list)
-                                  (1+ (point)))
-                                (progn
-                                  (forward-list)
-                                  (1- (point)))))
-          (scan-error nil)))
+      (nimrod-util-narrow-to-paren)
       (save-excursion
         (case context-status
           ('no-indent 0)
@@ -810,12 +791,7 @@ skipped."
   (let ((level (nth 0 (syntax-ppss))))
     (save-restriction
       ;; narrow to surrounding parentheses
-      (condition-case nil
-          (save-excursion
-            (backward-up-list)
-            (narrow-to-region (1+ (point))
-                              (progn (forward-list) (1- (point)))))
-        (scan-error))
+      (nimrod-util-narrow-to-paren)
       (while (progn
                (if (re-search-backward "[,;]" (line-beginning-position) t)
                    (forward-char)
@@ -831,6 +807,20 @@ skipped."
                   (prog1 t (backward-char))))))
       (and (match-beginning 1)
            (goto-char (match-beginning 1))))))
+
+(defun nimrod-util-narrow-to-paren ()
+  "Narrow buffer to content of enclosing parentheses.
+Returns non-nil if and only if there are enclosing parentheses."
+  (save-excursion
+    (condition-case nil
+        (prog1 t
+          (narrow-to-region (progn
+                              (backward-up-list)
+                              (1+ (point)))
+                            (progn
+                              (forward-list)
+                              (1- (point)))))
+      (scan-error nil))))
 
 (defun nimrod-util-real-current-column ()
   "Returns the current column without narrowing."
