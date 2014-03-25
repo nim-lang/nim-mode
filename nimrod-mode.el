@@ -183,12 +183,16 @@ Magic functions."
       (exception . ,(rx symbol-start (eval (cons 'or nimrod-exceptions)) symbol-end))
       (constant . ,(rx symbol-start (eval (cons 'or nimrod-constants)) symbol-end))
       (builtin . ,(rx symbol-start (eval (cons 'or nimrod-builtins)) symbol-end))
+      (decl-block . ,(rx symbol-start
+                         (or "type" "const" "var" "let")
+                         symbol-end
+                         (* space)
+                         (or "#" eol)))
       (block-start          . ,(rx (or (and symbol-start
                                             (or "type" "const" "var" "let")
                                             symbol-end
                                             (* space)
-                                            (opt (and "#" (*? any)))
-                                            eol)
+                                            (or "#" eol))
                                        (and symbol-start
                                             (or "proc" "method" "converter" "iterator"
                                                 "template" "macro"
@@ -347,9 +351,11 @@ The type returned can be `comment', `string' or `paren'."
      ((nth 8 ppss) (if (nth 4 ppss) 'comment 'string))
      ((nth 1 ppss) 'paren))))
 
-(defsubst nimrod-syntax-comment-or-string-p ()
-  "Return non-nil if point is inside 'comment or 'string."
-  (nth 8 (syntax-ppss)))
+(defsubst nimrod-syntax-comment-or-string-p (&optional syntax-ppss)
+  "Return non-nil if point is inside 'comment or 'string.
+Use the parser state at point or SYNTAX-PPSS."
+  (let ((ppss (or syntax-ppss (syntax-ppss))))
+    (nth 8 ppss)))
 
 (defun nimrod-indent-context ()
   "Get information on indentation context.
@@ -384,28 +390,31 @@ Where status can be any of the following symbols:
         ;; Inside string
         ((setq start (nimrod-syntax-context 'string ppss))
          'inside-string)
-        ;; Inside a paren
-        ((setq start (nimrod-syntax-context 'paren ppss))
-         'inside-paren)
         ;; After beginning of block
         ((setq start (save-excursion
                        (when (progn
                                (back-to-indentation)
                                (nimrod-util-forward-comment -1)
-                               (looking-back nimrod-indent-indenters
-                                             (line-beginning-position)))
-                         ;; Move to the first block start that's not in within
-                         ;; a string, comment or paren.
-                         (while (and (re-search-backward (nimrod-rx block-start)
-                                                         nil
-                                                         t)
-                                     (nimrod-syntax-context-type)))
-                         (when (looking-at (nimrod-rx block-start))
-                           ;; block starts might not be at the first whitespace,
-                           ;; however, we need the beginning
+                               (or (save-excursion
+                                     (back-to-indentation)
+                                     (looking-at (nimrod-rx decl-block)))
+                                   (memq (char-before) '(?: ?=))))
+                         (cond
+                          ((= (char-before) ?:)
+                           (nimrod-util-backward-stmt)
+                           (point))
+                          ((= (char-before) ?=)
+                           (nimrod-util-backward-stmt)
+                           (and (looking-at (nimrod-rx defun))
+                                (point)))
+                          ;; a single block statement on a line like type, var, const, ...
+                          (t
                            (back-to-indentation)
-                           (point)))))
+                           (point))))))
          'after-beginning-of-block)
+        ;; Inside a paren
+        ((setq start (nimrod-syntax-context 'paren ppss))
+         'inside-paren)
         ;; Current line begins with operator
         ((setq start (save-excursion
                        (progn
@@ -445,7 +454,7 @@ Where status can be any of the following symbols:
           ;; of indentation relative to the context-start
           ('after-beginning-of-block
            (goto-char context-start)
-           (+ (current-indentation) nimrod-indent-offset))
+           (+ (current-column) nimrod-indent-offset))
           ;; When after a simple line just use previous line
           ;; indentation, in the case current line starts with a
           ;; `nimrod-indent-dedenters' de-indent one level.
@@ -454,6 +463,7 @@ Where status can be any of the following symbols:
             (save-excursion
               (goto-char context-start)
               (forward-line -1)
+              (end-of-line)
               (nimrod-nav-beginning-of-statement)
               (current-indentation))
             (if (progn
@@ -764,6 +774,36 @@ Optional argument DIRECTION defines the direction to move to."
       (goto-char comment-start))
     (forward-comment factor)))
 
+(defun nimrod-util-backward-stmt ()
+  "Move point backward to the beginning of the current statement.
+Point is moved to the beginning of the first symbol that is
+either the first on a line or the first after a
+semicolon. Balanced parentheses, strings and comments are
+skipped."
+  (let ((level (nth 0 (syntax-ppss))))
+    (save-restriction
+      ;; narrow to surrounding parentheses
+      (condition-case nil
+          (save-excursion
+            (backward-up-list)
+            (narrow-to-region (1+ (point))
+                              (progn (forward-list) (1- (point)))))
+        (scan-error))
+      (while (progn
+               (if (re-search-backward "[,;]" (line-beginning-position) t)
+                   (forward-char)
+                 (beginning-of-line))
+               (let ((state (syntax-ppss)))
+                 (and
+                  (or (> (nth 0 state) level)
+                      (nimrod-syntax-comment-or-string-p state)
+                      (save-match-data
+                        (looking-at (nimrod-rx (* space) (group operator))))
+                      (not (looking-at (nimrod-rx (* space) (group symbol-name)))))
+                  (not (bobp))
+                  (prog1 t (backward-char))))))
+      (and (match-beginning 1)
+           (goto-char (match-beginning 1))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;                             Navigation functions ...                       ;;
@@ -772,15 +812,12 @@ Optional argument DIRECTION defines the direction to move to."
 (defun nimrod-nav-beginning-of-statement ()
   "Move to start of current statement."
   (interactive "^")
-  (while (and (or (back-to-indentation) t)
+  (while (and (nimrod-util-backward-stmt)
               (not (bobp))
               (memq (car (nimrod-indent-context))
-                    '(inside-string
-                      inside-paren
-                      after-operator
-                      after-assignment-operator)))
-    (forward-line -1))
-  (point-marker))
+                    '(after-operator)))
+    (end-of-line 0))
+  (point))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;                             Wrap it all up ...                             ;;
