@@ -899,8 +899,8 @@ Returns non-nil if and only if there are enclosing parentheses."
   (modify-syntax-entry ?\' "w"  nimrod-mode-syntax-table)
   (modify-syntax-entry ?\" "|"  nimrod-mode-syntax-table)
 
-  (modify-syntax-entry ?\[ "("  nimrod-mode-syntax-table)
-  (modify-syntax-entry ?\] ")"  nimrod-mode-syntax-table)
+  (modify-syntax-entry ?\[ "(]"  nimrod-mode-syntax-table)
+  (modify-syntax-entry ?\] ")["  nimrod-mode-syntax-table)
 
   (setq indent-tabs-mode nil) ;; Always indent with SPACES!
 )
