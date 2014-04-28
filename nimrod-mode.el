@@ -312,7 +312,7 @@ This variant of `rx' supports common nimrod named REGEXPS."
   "Levels of indentation available for `nimrod-indent-line-function'.")
 
 (defvar nimrod-indent-indenters
-  (nimrod-rx (or "type" "const" "var" "let" "tuple" "object" ":"
+  (nimrod-rx (or "type" "const" "var" "let" "tuple" "object" "enum" ":"
                  (and defun (* (not (any ?=))) "=")
                  (and "object" (+ whitespace) "of" (+ whitespace) symbol-name)))
   "Regular expression matching the end of line after with a block starts.
