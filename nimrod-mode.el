@@ -404,7 +404,8 @@ Where status can be any of the following symbols:
                                (or (save-excursion
                                      (back-to-indentation)
                                      (looking-at (nimrod-rx decl-block)))
-                                   (memq (char-before) '(?: ?=))))
+                                   (memq (char-before) '(?: ?=))
+                                   (looking-back nimrod-indent-indenters)))
                          (cond
                           ((= (char-before) ?:)
                            (nimrod-util-backward-stmt)
