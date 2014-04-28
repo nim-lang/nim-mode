@@ -239,9 +239,13 @@ Magic functions."
                                  (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%))))
       ;; FIXME: Use regexp-opt.
       (operator             . ,(rx (or (1+ (in "-=+*/<>@$~&%|!?^.:\\"))
-                                       "and" "or" "not" "xor" "shl"
-                                       "shr" "div" "mod" "in" "notin" "is"
-                                       "isnot" "of")))
+                                       (and
+                                        symbol-start
+                                        (or
+                                         "and" "or" "not" "xor" "shl"
+                                         "shr" "div" "mod" "in" "notin" "is"
+                                         "isnot" "of")
+                                        symbol-end))))
       ;; FIXME: Use regexp-opt.
       (assignment-operator  . ,(rx (* (in "-=+*/<>@$~&%|!?^.:\\")) "="))
       (string-delimiter . ,(rx (and
