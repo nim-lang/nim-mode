@@ -1191,6 +1191,13 @@ directory."
     (find-file (nimrod-ide-path def))
     (goto-line (nimrod-ide-line def))))
 
+;; compilation error
+(eval-after-load 'compile
+  '(progn
+     (add-to-list 'compilation-error-regexp-alist 'nimrod)
+     (add-to-list 'compilation-error-regexp-alist-alist
+                  '(nimrod "^\\s-*\\(.*\\)(\\([0-9]+\\),\\s-*\\([0-9]+\\))\\s-+\\(?:Error\\|\\(Hint\\)\\):" 1 2 3 (4)))))
+
 (provide 'nimrod-mode)
 
 (setq auto-mode-alist (cons '("\\.nim$" . nimrod-mode) auto-mode-alist))
