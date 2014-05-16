@@ -244,7 +244,7 @@ Magic functions."
                                         (or
                                          "and" "or" "not" "xor" "shl"
                                          "shr" "div" "mod" "in" "notin" "is"
-                                         "isnot" "of")
+                                         "isnot")
                                         symbol-end))))
       ;; FIXME: Use regexp-opt.
       (assignment-operator  . ,(rx (* (in "-=+*/<>@$~&%|!?^.:\\")) "="))
