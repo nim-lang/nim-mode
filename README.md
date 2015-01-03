@@ -1,8 +1,8 @@
-nimrod-mode
+nim-mode
 ===========
 
-An emacs major mode for the Nimrod programming language.
+An emacs major mode for the Nim programming language.
 
 * [Install Nimrod](http://nimrod-code.org/download.html)
-* Install `nimrod-mode.el`. Package manager support will come.
-* Enjoy tab completion.
+* Install `nim-mode.el`. Package manager support will come.
+* Enjoy tab completion (experimental).
