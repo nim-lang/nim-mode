@@ -5,9 +5,9 @@
 ;; Author: Simon Hafner
 ;; Maintainer: Simon Hafner <hafnersimon@gmail.com>
 ;; Version: 0.1.5
-;; Keywords: nim
+;; Keywords: nim languages
 ;; Compatibility: GNU Emacs 24
-;; Package-Requires: ((auto-complete "1.4"))
+;; Package-Requires: ((emacs "24"))
 ;;
 ;; Taken over from James H. Fisher <jameshfisher@gmail.com>
 ;;
@@ -28,6 +28,8 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+;;; Commentary:
+;;
 ;; Large parts of this code is shamelessly stolen from python.el and
 ;; adapted to Nim
 ;;
@@ -43,8 +45,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;; Code:
-
-(require 'auto-complete)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;                                Helpers                                     ;;
@@ -67,7 +67,7 @@
 ;; Define keywords, etc.
 ;; ---------------------
 
-(defvar nim-keywords
+(defconst nim-keywords
   (split-string "
 addr and as asm atomic
 bind block break
@@ -176,108 +176,98 @@ Magic functions."
 ;;                            Nim specialized rx                           ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(eval-when-compile
-  (defconst nim-rx-constituents
-    `((keyword . ,(rx symbol-start (eval (cons 'or nim-keywords)) symbol-end))
-      (type . ,(rx symbol-start (eval (cons 'or nim-types)) symbol-end))
-      (exception . ,(rx symbol-start (eval (cons 'or nim-exceptions)) symbol-end))
-      (constant . ,(rx symbol-start (eval (cons 'or nim-constants)) symbol-end))
-      (builtin . ,(rx symbol-start (eval (cons 'or nim-builtins)) symbol-end))
-      (decl-block . ,(rx symbol-start
-                         (or "type" "const" "var" "let")
-                         symbol-end
-                         (* space)
-                         (or "#" eol)))
-      (block-start          . ,(rx (or (and symbol-start
-                                            (or "type" "const" "var" "let")
-                                            symbol-end
-                                            (* space)
-                                            (or "#" eol))
-                                       (and symbol-start
-                                            (or "proc" "method" "converter" "iterator"
-                                                "template" "macro"
-                                                "if" "elif" "else" "when" "while" "for"
-                                                "try" "except" "finally"
-                                                "with" "block"
-                                                "enum" "tuple" "object")
-                                            symbol-end))))
-      (defun                 . ,(rx symbol-start
-                                    (or "proc" "method" "converter"
-                                        "iterator" "template" "macro")
-                                    symbol-end))
-      (symbol-name          . ,(rx (any letter ?_) (* (any word ?_))))
-      (dec-number . ,(rx symbol-start
-                         (1+ (in digit "_"))
-                         (opt "." (in digit "_"))
-                         (opt (any "eE") (1+ digit))
-                         (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
-                         symbol-end))
-      (hex-number . ,(rx symbol-start
-                         (1+ (in xdigit "_"))
-                         (opt "." (in xdigit "_"))
-                         (opt (any "eE") (1+ xdigit))
-                         (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
-                         symbol-end))
-      (oct-number . ,(rx symbol-start
-                         (1+ (in "0-7_"))
-                         (opt "." (in "0-7_"))
-                         (opt (any "eE") (1+ "0-7_"))
-                         (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
-                         symbol-end))
-      (bin-number . ,(rx symbol-start
-                         (1+ (in "0-1_"))
-                         (opt "." (in "0-1_"))
-                         (opt (any "eE") (1+ "0-1_"))
-                         (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
-                         symbol-end))
-      (open-paren           . ,(rx (or "{" "[" "(")))
-      (close-paren          . ,(rx (or "}" "]" ")")))
-      (simple-operator      . ,(rx (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%)))
-      ;; FIXME: rx should support (not simple-operator).
-      (not-simple-operator  . ,(rx
-                                (not
-                                 (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%))))
-      ;; FIXME: Use regexp-opt.
-      (operator             . ,(rx (or (1+ (in "-=+*/<>@$~&%|!?^.:\\"))
-                                       (and
-                                        symbol-start
-                                        (or
-                                         "and" "or" "not" "xor" "shl"
-                                         "shr" "div" "mod" "in" "notin" "is"
-                                         "isnot")
-                                        symbol-end))))
-      ;; FIXME: Use regexp-opt.
-      (assignment-operator  . ,(rx (* (in "-=+*/<>@$~&%|!?^.:\\")) "="))
-      (string-delimiter . ,(rx (and
-                                ;; Match even number of backslashes.
-                                (or (not (any ?\\ ?\' ?\")) point
-                                    ;; Quotes might be preceded by a escaped quote.
-                                    (and (or (not (any ?\\)) point) ?\\
-                                         (* ?\\ ?\\) (any ?\' ?\")))
-                                (* ?\\ ?\\)
-                                ;; Match single or triple quotes of any kind.
-                                (group (or  "\"" "\"\"\"" "'" "'''"))))))
-    "Additional Nim specific sexps for `nim-rx'")
+(defconst nim-rx-constituents
+  `((keyword . ,(rx symbol-start (eval (cons 'or nim-keywords)) symbol-end))
+    (type . ,(rx symbol-start (eval (cons 'or nim-types)) symbol-end))
+    (exception . ,(rx symbol-start (eval (cons 'or nim-exceptions)) symbol-end))
+    (constant . ,(rx symbol-start (eval (cons 'or nim-constants)) symbol-end))
+    (builtin . ,(rx symbol-start (eval (cons 'or nim-builtins)) symbol-end))
+    (decl-block . ,(rx symbol-start
+                       (or "type" "const" "var" "let")
+                       symbol-end
+                       (* space)
+                       (or "#" eol)))
+    (block-start          . ,(rx (or (and symbol-start
+                                          (or "type" "const" "var" "let")
+                                          symbol-end
+                                          (* space)
+                                          (or "#" eol))
+                                     (and symbol-start
+                                          (or "proc" "method" "converter" "iterator"
+                                              "template" "macro"
+                                              "if" "elif" "else" "when" "while" "for"
+                                              "try" "except" "finally"
+                                              "with" "block"
+                                              "enum" "tuple" "object")
+                                          symbol-end))))
+    (defun                 . ,(rx symbol-start
+                                  (or "proc" "method" "converter"
+                                      "iterator" "template" "macro")
+                                  symbol-end))
+    (symbol-name          . ,(rx (any letter ?_) (* (any word ?_))))
+    (dec-number . ,(rx symbol-start
+                       (1+ (in digit "_"))
+                       (opt "." (in digit "_"))
+                       (opt (any "eE") (1+ digit))
+                       (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
+                       symbol-end))
+    (hex-number . ,(rx symbol-start
+                       (1+ (in xdigit "_"))
+                       (opt "." (in xdigit "_"))
+                       (opt (any "eE") (1+ xdigit))
+                       (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
+                       symbol-end))
+    (oct-number . ,(rx symbol-start
+                       (1+ (in "0-7_"))
+                       (opt "." (in "0-7_"))
+                       (opt (any "eE") (1+ "0-7_"))
+                       (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
+                       symbol-end))
+    (bin-number . ,(rx symbol-start
+                       (1+ (in "0-1_"))
+                       (opt "." (in "0-1_"))
+                       (opt (any "eE") (1+ "0-1_"))
+                       (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
+                       symbol-end))
+    (open-paren           . ,(rx (or "{" "[" "(")))
+    (close-paren          . ,(rx (or "}" "]" ")")))
+    (simple-operator      . ,(rx (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%)))
+    ;; FIXME: rx should support (not simple-operator).
+    (not-simple-operator  . ,(rx
+                              (not
+                               (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%))))
+    ;; FIXME: Use regexp-opt.
+    (operator             . ,(rx (or (1+ (in "-=+*/<>@$~&%|!?^.:\\"))
+                                     (and
+                                      symbol-start
+                                      (or
+                                       "and" "or" "not" "xor" "shl"
+                                       "shr" "div" "mod" "in" "notin" "is"
+                                       "isnot")
+                                      symbol-end))))
+    ;; FIXME: Use regexp-opt.
+    (assignment-operator  . ,(rx (* (in "-=+*/<>@$~&%|!?^.:\\")) "="))
+    (string-delimiter . ,(rx (and
+                              ;; Match even number of backslashes.
+                              (or (not (any ?\\ ?\' ?\")) point
+                                  ;; Quotes might be preceded by a escaped quote.
+                                  (and (or (not (any ?\\)) point) ?\\
+                                       (* ?\\ ?\\) (any ?\' ?\")))
+                              (* ?\\ ?\\)
+                              ;; Match single or triple quotes of any kind.
+                              (group (or  "\"" "\"\"\"" "'" "'''"))))))
+  "Additional Nim specific sexps for `nim-rx'")
 
-  (defmacro nim-rx (&rest regexps)
-    "Nim mode specialized rx macro.
+(defmacro nim-rx (&rest regexps)
+  "Nim mode specialized rx macro.
 This variant of `rx' supports common nim named REGEXPS."
-    (let ((rx-constituents (append nim-rx-constituents rx-constituents)))
-      (cond ((null regexps)
-             (error "No regexp"))
-            ((cdr regexps)
-             (rx-to-string `(and ,@regexps) t))
-            (t
-             (rx-to-string (car regexps) t))))))
-
-;; Free memory
-(defvar nim-keywords nil)
-(defvar nim-types nil)
-(defvar nim-exceptions nil)
-(defvar nim-constants nil)
-(defvar nim-builtins nil)
-(defvar nim-operators nil)
-
+  (let ((rx-constituents (append nim-rx-constituents rx-constituents)))
+    (cond ((null regexps)
+           (error "No regexp"))
+          ((cdr regexps)
+           (rx-to-string `(and ,@regexps) t))
+          (t
+           (rx-to-string (car regexps) t)))))
 
 (defconst nim-font-lock-keywords
   `(  ;; note the BACKTICK, `
@@ -876,14 +866,10 @@ Returns non-nil if and only if there are enclosing parentheses."
     (define-key map "\C-c>" 'nim-indent-shift-right)
     map))
 
-(define-derived-mode nim-mode prog-mode
-  "nim mode"
+;;;###autoload
+(define-derived-mode nim-mode prog-mode "Nim"
   "A major mode for the Nim programming language."
-
-  (setq mode-name "Nim")  ;; This will display in the mode line.
-
-  (set (make-local-variable 'font-lock-defaults)
-       '(nim-font-lock-keywords nil t))
+  (setq font-lock-defaults '(nim-font-lock-keywords nil t))
 
   ;; modify the keymap
   (set (make-local-variable 'indent-line-function) 'nim-indent-line-function)
@@ -908,7 +894,7 @@ Returns non-nil if and only if there are enclosing parentheses."
   (modify-syntax-entry ?\] ")["  nim-mode-syntax-table)
 
   (setq indent-tabs-mode nil) ;; Always indent with SPACES!
-)
+  )
 
 (defcustom nim-compiled-buffer-name "*nim-js*"
   "The name of the scratch buffer used to compile Javascript from Nim."
@@ -924,30 +910,6 @@ the nim executable is inside your PATH."
 (defcustom nim-args-compile '()
   "The arguments to pass to `nim-command' to compile a file."
   :type 'list
-  :group 'nim)
-
-(defcustom nim-type-abbrevs '(
-                                 ("skProc" . "f")
-                                 ("skIterator" . "i")
-                                 ("skTemplate" . "T")
-                                 ("skType" . "t")
-                                 ("skMethod" . "f")
-                                 ("skEnumField" . "e")
-                                 ("skGenericParam" . "p")
-                                 ("skParam" . "p")
-                                 ("skModule" . "m")
-                                 ("skConverter" . "C")
-                                 ("skMacro" . "M")
-                                 ("skField" . "F")
-                                 ("skForVar" . "v")
-                                 ("skVar" . "v")
-                                 ("skLet" . "v")
-                                 ("skLabel" . "l")
-                                 ("skConst" . "c")
-                                 ("skResult" . "r")
-                                 )
-  "Abbrevs for auto-complete."
-  :type 'assoc
   :group 'nim)
 
 (defvar nim-idetools-modes '(suggest def context usages)
@@ -983,10 +945,10 @@ filename of the compiled file."
         (erase-buffer)
         (let ((default-directory tmpdir))
           (nim-compile '("js" "tmp.nim")
-                          (lambda () (with-current-buffer buffer
-                                  (insert-file
-                                   (concat tmpdir (file-name-as-directory "nimcache") "tmp.js"))
-                                  (display-buffer buffer)))))))))
+                       (lambda () (with-current-buffer buffer
+                               (insert-file-contents
+                                (concat tmpdir (file-name-as-directory "nimcache") "tmp.js"))
+                               (display-buffer buffer)))))))))
 
 (defun nim-compile (args &optional on-success)
   "Invokes the compiler and calls on-success in case of
@@ -1006,77 +968,6 @@ successful compile."
              ((string= status "exited abnormally with code 1\n")
               (display-buffer "*nim-compile*"))
              (t (error status)))))))
-
-(defun nim-ac-enable ()
-  "Enable Autocompletion. Default settings. If you don't like
-them, kick this hook with
- `(remove-hook 'nim-mode-hook 'nim-ac-enable)`
-and write your own. I discurage using autostart, as the
-completion candidates need to be loaded from outside emacs."
-  (when (not (executable-find nim-command))
-    (error "Nim executable not found. Please customize nim-command"))
-
-  (make-local-variable 'ac-sources)
-  (setq ac-sources '(ac-source-nim-completions))
-
-  (make-local-variable 'ac-use-comphist)
-  (setq ac-use-comphist nil)
-
-  (make-local-variable 'ac-use-quick-help)
-  (setq ac-use-quick-help t)
-
-  (make-local-variable 'ac-delete-dups)
-  (setq ac-delete-dups nil)
-
-  (make-local-variable 'ac-ignore-case)
-  (setq ac-ignore-case t)
-
-  (make-local-variable 'ac-auto-show-menu)
-  (setq ac-auto-show-menu 0.5)
-
-  (make-local-variable 'ac-auto-start)
-  (setq ac-auto-start nil)
-
-  (make-local-variable 'ac-trigger-key)
-  (setq ac-trigger-key "TAB")
-
-  (auto-complete-mode)
-)
-
-(add-hook 'nim-mode-hook 'nim-ac-enable)
-
-;;; Some copy/paste from ensime.
-(ac-define-source nim-completions
-  '((candidates . (nim-ac-completion-candidates ac-prefix))
-    (prefix . nim-ac-completion-prefix)
-    (action . (lambda ()))                   ; TODO
-    (requires . 0)
-    ))
-
-(defun nim-ac-completion-prefix ()
-  "Starting at current point, find the point of completion."
-  (let ((point (re-search-backward "\\(\\W\\|[\t ]\\)\\([^\\. ]*\\)?"
-                   (point-at-bol) t)))
-    (if point (1+ point))))
-
-(defun nim-ac-completion-candidates (prefix)
-  (let ((suggestions (nim-call-and-parse-idetools 'suggest)))
-    (mapcar (lambda (entry)
-              (propertize (nim-ide-name entry)
-                          'value entry
-                          'symbol (assoc-default (nim-ide-type entry)
-                                                 nim-type-abbrevs)
-                          'type-sig (nim-ide-signature entry)
-                          'summary (nim-ac-trunc-summary (nim-ide-comment entry))
-                          ))
-            suggestions)))
-
-;;; Copy/pasted from ensime
-(defun nim-ac-trunc-summary (str)
-  (let ((len (length str)))
-    (if (> len 40)
-    (concat (substring str 0 40) "...")
-      str)))
 
 (defun nim-call-and-parse-idetools (mode)
   "Call idetools and get `nim-ide' structs back."
@@ -1189,7 +1080,8 @@ directory."
   (let ((def (first (nim-call-and-parse-idetools 'def))))
     (when (not def) (error "Symbol not found."))
     (find-file (nim-ide-path def))
-    (goto-line (nim-ide-line def))))
+    (goto-char (point-min))
+    (forward-line (1- (nim-ide-line def)))))
 
 ;; compilation error
 (eval-after-load 'compile
@@ -1200,6 +1092,7 @@ directory."
 
 (provide 'nim-mode)
 
+;;;###autoload
 (setq auto-mode-alist (cons '("\\.nim$" . nim-mode) auto-mode-alist))
 
 ;;; nim-mode.el ends here
