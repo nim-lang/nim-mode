@@ -971,10 +971,10 @@ filename of the compiled file."
         (erase-buffer)
         (let ((default-directory tmpdir))
           (nim-compile '("js" "tmp.nim")
-                          (lambda () (with-current-buffer buffer
-                                  (insert-file
-                                   (concat tmpdir (file-name-as-directory "nimcache") "tmp.js"))
-                                  (display-buffer buffer)))))))))
+                       (lambda () (with-current-buffer buffer
+                               (insert-file-contents
+                                (concat tmpdir (file-name-as-directory "nimcache") "tmp.js"))
+                               (display-buffer buffer)))))))))
 
 (defun nim-compile (args &optional on-success)
   "Invokes the compiler and calls on-success in case of
@@ -1177,7 +1177,8 @@ directory."
   (let ((def (first (nim-call-and-parse-idetools 'def))))
     (when (not def) (error "Symbol not found."))
     (find-file (nim-ide-path def))
-    (goto-line (nim-ide-line def))))
+    (goto-char (point-min))
+    (forward-line (1- (nim-ide-line def)))))
 
 ;; compilation error
 (eval-after-load 'compile
