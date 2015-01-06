@@ -879,8 +879,7 @@ Returns non-nil if and only if there are enclosing parentheses."
 ;;;###autoload
 (define-derived-mode nim-mode prog-mode "Nim"
   "A major mode for the Nim programming language."
-  (set (make-local-variable 'font-lock-defaults)
-       '(nim-font-lock-keywords nil t))
+  (setq font-lock-defaults '(nim-font-lock-keywords nil t))
 
   ;; modify the keymap
   (set (make-local-variable 'indent-line-function) 'nim-indent-line-function)
