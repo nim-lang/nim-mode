@@ -7,7 +7,7 @@
 ;; Version: 0.1.5
 ;; Keywords: nim
 ;; Compatibility: GNU Emacs 24
-;; Package-Requires: ((auto-complete "1.4"))
+;; Package-Requires: ((auto-complete "1.4") (emacs "24"))
 ;;
 ;; Taken over from James H. Fisher <jameshfisher@gmail.com>
 ;;
