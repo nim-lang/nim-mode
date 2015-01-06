@@ -5,7 +5,7 @@
 ;; Author: Simon Hafner
 ;; Maintainer: Simon Hafner <hafnersimon@gmail.com>
 ;; Version: 0.1.5
-;; Keywords: nim
+;; Keywords: nim languages
 ;; Compatibility: GNU Emacs 24
 ;; Package-Requires: ((auto-complete "1.4") (emacs "24"))
 ;;
