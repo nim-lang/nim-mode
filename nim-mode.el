@@ -877,12 +877,8 @@ Returns non-nil if and only if there are enclosing parentheses."
     map))
 
 ;;;###autoload
-(define-derived-mode nim-mode prog-mode
-  "nim mode"
+(define-derived-mode nim-mode prog-mode "Nim"
   "A major mode for the Nim programming language."
-
-  (setq mode-name "Nim")  ;; This will display in the mode line.
-
   (set (make-local-variable 'font-lock-defaults)
        '(nim-font-lock-keywords nil t))
 
@@ -909,7 +905,7 @@ Returns non-nil if and only if there are enclosing parentheses."
   (modify-syntax-entry ?\] ")["  nim-mode-syntax-table)
 
   (setq indent-tabs-mode nil) ;; Always indent with SPACES!
-)
+  )
 
 (defcustom nim-compiled-buffer-name "*nim-js*"
   "The name of the scratch buffer used to compile Javascript from Nim."
