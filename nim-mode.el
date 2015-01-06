@@ -69,7 +69,7 @@
 ;; Define keywords, etc.
 ;; ---------------------
 
-(defvar nim-keywords
+(defconst nim-keywords
   (split-string "
 addr and as asm atomic
 bind block break
