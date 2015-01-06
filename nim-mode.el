@@ -876,6 +876,7 @@ Returns non-nil if and only if there are enclosing parentheses."
     (define-key map "\C-c>" 'nim-indent-shift-right)
     map))
 
+;;;###autoload
 (define-derived-mode nim-mode prog-mode
   "nim mode"
   "A major mode for the Nim programming language."
@@ -1200,6 +1201,7 @@ directory."
 
 (provide 'nim-mode)
 
+;;;###autoload
 (setq auto-mode-alist (cons '("\\.nim$" . nim-mode) auto-mode-alist))
 
 ;;; nim-mode.el ends here
