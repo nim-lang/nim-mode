@@ -7,7 +7,7 @@
 ;; Version: 0.1.5
 ;; Keywords: nim languages
 ;; Compatibility: GNU Emacs 24
-;; Package-Requires: ((auto-complete "1.4") (emacs "24"))
+;; Package-Requires: ((emacs "24"))
 ;;
 ;; Taken over from James H. Fisher <jameshfisher@gmail.com>
 ;;
@@ -45,8 +45,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;; Code:
-
-(require 'auto-complete)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;                                Helpers                                     ;;
@@ -914,30 +912,6 @@ the nim executable is inside your PATH."
   :type 'list
   :group 'nim)
 
-(defcustom nim-type-abbrevs '(
-                                 ("skProc" . "f")
-                                 ("skIterator" . "i")
-                                 ("skTemplate" . "T")
-                                 ("skType" . "t")
-                                 ("skMethod" . "f")
-                                 ("skEnumField" . "e")
-                                 ("skGenericParam" . "p")
-                                 ("skParam" . "p")
-                                 ("skModule" . "m")
-                                 ("skConverter" . "C")
-                                 ("skMacro" . "M")
-                                 ("skField" . "F")
-                                 ("skForVar" . "v")
-                                 ("skVar" . "v")
-                                 ("skLet" . "v")
-                                 ("skLabel" . "l")
-                                 ("skConst" . "c")
-                                 ("skResult" . "r")
-                                 )
-  "Abbrevs for auto-complete."
-  :type 'assoc
-  :group 'nim)
-
 (defvar nim-idetools-modes '(suggest def context usages)
   "Which modes are available to use with the idetools.")
 
@@ -994,77 +968,6 @@ successful compile."
              ((string= status "exited abnormally with code 1\n")
               (display-buffer "*nim-compile*"))
              (t (error status)))))))
-
-(defun nim-ac-enable ()
-  "Enable Autocompletion. Default settings. If you don't like
-them, kick this hook with
- `(remove-hook 'nim-mode-hook 'nim-ac-enable)`
-and write your own. I discurage using autostart, as the
-completion candidates need to be loaded from outside emacs."
-  (when (not (executable-find nim-command))
-    (error "Nim executable not found. Please customize nim-command"))
-
-  (make-local-variable 'ac-sources)
-  (setq ac-sources '(ac-source-nim-completions))
-
-  (make-local-variable 'ac-use-comphist)
-  (setq ac-use-comphist nil)
-
-  (make-local-variable 'ac-use-quick-help)
-  (setq ac-use-quick-help t)
-
-  (make-local-variable 'ac-delete-dups)
-  (setq ac-delete-dups nil)
-
-  (make-local-variable 'ac-ignore-case)
-  (setq ac-ignore-case t)
-
-  (make-local-variable 'ac-auto-show-menu)
-  (setq ac-auto-show-menu 0.5)
-
-  (make-local-variable 'ac-auto-start)
-  (setq ac-auto-start nil)
-
-  (make-local-variable 'ac-trigger-key)
-  (setq ac-trigger-key "TAB")
-
-  (auto-complete-mode)
-)
-
-(add-hook 'nim-mode-hook 'nim-ac-enable)
-
-;;; Some copy/paste from ensime.
-(ac-define-source nim-completions
-  '((candidates . (nim-ac-completion-candidates ac-prefix))
-    (prefix . nim-ac-completion-prefix)
-    (action . (lambda ()))                   ; TODO
-    (requires . 0)
-    ))
-
-(defun nim-ac-completion-prefix ()
-  "Starting at current point, find the point of completion."
-  (let ((point (re-search-backward "\\(\\W\\|[\t ]\\)\\([^\\. ]*\\)?"
-                   (point-at-bol) t)))
-    (if point (1+ point))))
-
-(defun nim-ac-completion-candidates (prefix)
-  (let ((suggestions (nim-call-and-parse-idetools 'suggest)))
-    (mapcar (lambda (entry)
-              (propertize (nim-ide-name entry)
-                          'value entry
-                          'symbol (assoc-default (nim-ide-type entry)
-                                                 nim-type-abbrevs)
-                          'type-sig (nim-ide-signature entry)
-                          'summary (nim-ac-trunc-summary (nim-ide-comment entry))
-                          ))
-            suggestions)))
-
-;;; Copy/pasted from ensime
-(defun nim-ac-trunc-summary (str)
-  (let ((len (length str)))
-    (if (> len 40)
-    (concat (substring str 0 40) "...")
-      str)))
 
 (defun nim-call-and-parse-idetools (mode)
   "Call idetools and get `nim-ide' structs back."
