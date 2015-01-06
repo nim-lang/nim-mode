@@ -178,99 +178,98 @@ Magic functions."
 ;;                            Nim specialized rx                           ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(eval-when-compile
-  (defconst nim-rx-constituents
-    `((keyword . ,(rx symbol-start (eval (cons 'or nim-keywords)) symbol-end))
-      (type . ,(rx symbol-start (eval (cons 'or nim-types)) symbol-end))
-      (exception . ,(rx symbol-start (eval (cons 'or nim-exceptions)) symbol-end))
-      (constant . ,(rx symbol-start (eval (cons 'or nim-constants)) symbol-end))
-      (builtin . ,(rx symbol-start (eval (cons 'or nim-builtins)) symbol-end))
-      (decl-block . ,(rx symbol-start
-                         (or "type" "const" "var" "let")
-                         symbol-end
-                         (* space)
-                         (or "#" eol)))
-      (block-start          . ,(rx (or (and symbol-start
-                                            (or "type" "const" "var" "let")
-                                            symbol-end
-                                            (* space)
-                                            (or "#" eol))
-                                       (and symbol-start
-                                            (or "proc" "method" "converter" "iterator"
-                                                "template" "macro"
-                                                "if" "elif" "else" "when" "while" "for"
-                                                "try" "except" "finally"
-                                                "with" "block"
-                                                "enum" "tuple" "object")
-                                            symbol-end))))
-      (defun                 . ,(rx symbol-start
-                                    (or "proc" "method" "converter"
-                                        "iterator" "template" "macro")
-                                    symbol-end))
-      (symbol-name          . ,(rx (any letter ?_) (* (any word ?_))))
-      (dec-number . ,(rx symbol-start
-                         (1+ (in digit "_"))
-                         (opt "." (in digit "_"))
-                         (opt (any "eE") (1+ digit))
-                         (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
-                         symbol-end))
-      (hex-number . ,(rx symbol-start
-                         (1+ (in xdigit "_"))
-                         (opt "." (in xdigit "_"))
-                         (opt (any "eE") (1+ xdigit))
-                         (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
-                         symbol-end))
-      (oct-number . ,(rx symbol-start
-                         (1+ (in "0-7_"))
-                         (opt "." (in "0-7_"))
-                         (opt (any "eE") (1+ "0-7_"))
-                         (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
-                         symbol-end))
-      (bin-number . ,(rx symbol-start
-                         (1+ (in "0-1_"))
-                         (opt "." (in "0-1_"))
-                         (opt (any "eE") (1+ "0-1_"))
-                         (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
-                         symbol-end))
-      (open-paren           . ,(rx (or "{" "[" "(")))
-      (close-paren          . ,(rx (or "}" "]" ")")))
-      (simple-operator      . ,(rx (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%)))
-      ;; FIXME: rx should support (not simple-operator).
-      (not-simple-operator  . ,(rx
-                                (not
-                                 (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%))))
-      ;; FIXME: Use regexp-opt.
-      (operator             . ,(rx (or (1+ (in "-=+*/<>@$~&%|!?^.:\\"))
-                                       (and
-                                        symbol-start
-                                        (or
-                                         "and" "or" "not" "xor" "shl"
-                                         "shr" "div" "mod" "in" "notin" "is"
-                                         "isnot")
-                                        symbol-end))))
-      ;; FIXME: Use regexp-opt.
-      (assignment-operator  . ,(rx (* (in "-=+*/<>@$~&%|!?^.:\\")) "="))
-      (string-delimiter . ,(rx (and
-                                ;; Match even number of backslashes.
-                                (or (not (any ?\\ ?\' ?\")) point
-                                    ;; Quotes might be preceded by a escaped quote.
-                                    (and (or (not (any ?\\)) point) ?\\
-                                         (* ?\\ ?\\) (any ?\' ?\")))
-                                (* ?\\ ?\\)
-                                ;; Match single or triple quotes of any kind.
-                                (group (or  "\"" "\"\"\"" "'" "'''"))))))
-    "Additional Nim specific sexps for `nim-rx'")
+(defconst nim-rx-constituents
+  `((keyword . ,(rx symbol-start (eval (cons 'or nim-keywords)) symbol-end))
+    (type . ,(rx symbol-start (eval (cons 'or nim-types)) symbol-end))
+    (exception . ,(rx symbol-start (eval (cons 'or nim-exceptions)) symbol-end))
+    (constant . ,(rx symbol-start (eval (cons 'or nim-constants)) symbol-end))
+    (builtin . ,(rx symbol-start (eval (cons 'or nim-builtins)) symbol-end))
+    (decl-block . ,(rx symbol-start
+                       (or "type" "const" "var" "let")
+                       symbol-end
+                       (* space)
+                       (or "#" eol)))
+    (block-start          . ,(rx (or (and symbol-start
+                                          (or "type" "const" "var" "let")
+                                          symbol-end
+                                          (* space)
+                                          (or "#" eol))
+                                     (and symbol-start
+                                          (or "proc" "method" "converter" "iterator"
+                                              "template" "macro"
+                                              "if" "elif" "else" "when" "while" "for"
+                                              "try" "except" "finally"
+                                              "with" "block"
+                                              "enum" "tuple" "object")
+                                          symbol-end))))
+    (defun                 . ,(rx symbol-start
+                                  (or "proc" "method" "converter"
+                                      "iterator" "template" "macro")
+                                  symbol-end))
+    (symbol-name          . ,(rx (any letter ?_) (* (any word ?_))))
+    (dec-number . ,(rx symbol-start
+                       (1+ (in digit "_"))
+                       (opt "." (in digit "_"))
+                       (opt (any "eE") (1+ digit))
+                       (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
+                       symbol-end))
+    (hex-number . ,(rx symbol-start
+                       (1+ (in xdigit "_"))
+                       (opt "." (in xdigit "_"))
+                       (opt (any "eE") (1+ xdigit))
+                       (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
+                       symbol-end))
+    (oct-number . ,(rx symbol-start
+                       (1+ (in "0-7_"))
+                       (opt "." (in "0-7_"))
+                       (opt (any "eE") (1+ "0-7_"))
+                       (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
+                       symbol-end))
+    (bin-number . ,(rx symbol-start
+                       (1+ (in "0-1_"))
+                       (opt "." (in "0-1_"))
+                       (opt (any "eE") (1+ "0-1_"))
+                       (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
+                       symbol-end))
+    (open-paren           . ,(rx (or "{" "[" "(")))
+    (close-paren          . ,(rx (or "}" "]" ")")))
+    (simple-operator      . ,(rx (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%)))
+    ;; FIXME: rx should support (not simple-operator).
+    (not-simple-operator  . ,(rx
+                              (not
+                               (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%))))
+    ;; FIXME: Use regexp-opt.
+    (operator             . ,(rx (or (1+ (in "-=+*/<>@$~&%|!?^.:\\"))
+                                     (and
+                                      symbol-start
+                                      (or
+                                       "and" "or" "not" "xor" "shl"
+                                       "shr" "div" "mod" "in" "notin" "is"
+                                       "isnot")
+                                      symbol-end))))
+    ;; FIXME: Use regexp-opt.
+    (assignment-operator  . ,(rx (* (in "-=+*/<>@$~&%|!?^.:\\")) "="))
+    (string-delimiter . ,(rx (and
+                              ;; Match even number of backslashes.
+                              (or (not (any ?\\ ?\' ?\")) point
+                                  ;; Quotes might be preceded by a escaped quote.
+                                  (and (or (not (any ?\\)) point) ?\\
+                                       (* ?\\ ?\\) (any ?\' ?\")))
+                              (* ?\\ ?\\)
+                              ;; Match single or triple quotes of any kind.
+                              (group (or  "\"" "\"\"\"" "'" "'''"))))))
+  "Additional Nim specific sexps for `nim-rx'")
 
-  (defmacro nim-rx (&rest regexps)
-    "Nim mode specialized rx macro.
+(defmacro nim-rx (&rest regexps)
+  "Nim mode specialized rx macro.
 This variant of `rx' supports common nim named REGEXPS."
-    (let ((rx-constituents (append nim-rx-constituents rx-constituents)))
-      (cond ((null regexps)
-             (error "No regexp"))
-            ((cdr regexps)
-             (rx-to-string `(and ,@regexps) t))
-            (t
-             (rx-to-string (car regexps) t))))))
+  (let ((rx-constituents (append nim-rx-constituents rx-constituents)))
+    (cond ((null regexps)
+           (error "No regexp"))
+          ((cdr regexps)
+           (rx-to-string `(and ,@regexps) t))
+          (t
+           (rx-to-string (car regexps) t)))))
 
 ;; Free memory
 (defvar nim-keywords nil)
