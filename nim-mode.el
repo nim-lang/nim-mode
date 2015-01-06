@@ -271,15 +271,6 @@ This variant of `rx' supports common nim named REGEXPS."
           (t
            (rx-to-string (car regexps) t)))))
 
-;; Free memory
-(defvar nim-keywords nil)
-(defvar nim-types nil)
-(defvar nim-exceptions nil)
-(defvar nim-constants nil)
-(defvar nim-builtins nil)
-(defvar nim-operators nil)
-
-
 (defconst nim-font-lock-keywords
   `(  ;; note the BACKTICK, `
     ;; (,(nim-rx (1+ "\t")) . nim-tab-face) ;; TODO: make work!
