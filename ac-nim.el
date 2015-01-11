@@ -62,7 +62,7 @@
 
 ;;;###autoload
 (eval-after-load 'auto-complete
-  (add-to-list 'ac-modes 'nim-mode))
+  '(add-to-list 'ac-modes 'nim-mode))
 
 ;;;###autoload
 (defun ac-nim-enable ()
