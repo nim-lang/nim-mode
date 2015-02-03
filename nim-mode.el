@@ -160,6 +160,11 @@ Magic functions."
 ;; Custom faces
 ;; ------------
 
+(defgroup nim nil
+  "A major mode for the Nim programming language."
+  :link '(url-link "http://nim-lang.org/")
+  :group 'languages)
+
 ;; TODO: make work!?
 (defface nim-tab-face
   '((((class color) (background dark))
@@ -168,7 +173,7 @@ Magic functions."
      (:background "beige"  :foreground "lightgray"))
     (t (:inverse-video t)))
   "Face used to visualize TAB."
-  :group 'whitespace)
+  :group 'nim)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -868,6 +873,8 @@ Returns non-nil if and only if there are enclosing parentheses."
 ;;;###autoload
 (define-derived-mode nim-mode prog-mode "Nim"
   "A major mode for the Nim programming language."
+  :group 'nim
+
   (setq font-lock-defaults '(nim-font-lock-keywords nil t))
 
   ;; modify the keymap
@@ -908,7 +915,7 @@ You don't need to set this if the nim executable is inside your PATH."
 
 (defcustom nim-args-compile '()
   "The arguments to pass to `nim-command' to compile a file."
-  :type 'list
+  :type '(repeat string)
   :group 'nim)
 
 (defvar nim-idetools-modes '(suggest def context usages)
