@@ -1097,9 +1097,9 @@ directory."
      (add-to-list 'compilation-error-regexp-alist-alist
                   '(nim "^\\s-*\\(.*\\)(\\([0-9]+\\),\\s-*\\([0-9]+\\))\\s-+\\(?:Error\\|\\(Hint\\)\\):" 1 2 3 (4)))))
 
-(provide 'nim-mode)
-
 ;;;###autoload
-(setq auto-mode-alist (cons '("\\.nim$" . nim-mode) auto-mode-alist))
+(add-to-list 'auto-mode-alist '("\\.nim\\'" . nim-mode))
+
+(provide 'nim-mode)
 
 ;;; nim-mode.el ends here
