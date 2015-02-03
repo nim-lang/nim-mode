@@ -51,11 +51,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun nim-glue-strings (glue strings)
-  "Given a list of strings and some glue, concatenate."
+  "Concatenate some GLUE and a list of STRINGS."
   (mapconcat 'identity strings glue))
 
 (defun nim-regexp-choice (strings)
-  "Given a list of strings, construct a regexp multiple-choice."
+  "Construct a regexp multiple-choice from a list of STRINGS."
   (concat "\\(" (nim-glue-strings "\\|" strings) "\\)"))
 
 
@@ -90,9 +90,10 @@ when while with without
 xor
 yield
 ")
-  "Nim keywords. The above string is taken from
-<http://force7.de/nim/manual.html#identifiers-keywords>,
-for easy updating.")
+  "Nim keywords.
+The above string is taken from URL
+`http://nim-lang.org/manual.html#identifiers-keywords', for easy
+updating.")
 
 (defvar nim-types
   '("int" "int8" "int16" "int32" "int64" "float" "float32" "float64"
@@ -104,9 +105,7 @@ for easy updating.")
     "cint" "clong" "clonglong" "cfloat" "cdouble" "clongdouble"
     "cstringarray" "pfloat32" "pfloat64" "pint64" "pint32"
     "tgc_strategy" "tfile" "tfilemode")
-  "Nim types defined in <lib/system.nim>."
-
-  )
+  "Nim types defined in <lib/system.nim>.")
 
 (defvar nim-exceptions
   '("e_base" "easynch" "esynch" "esystem" "eio" "eos"
@@ -256,7 +255,7 @@ Magic functions."
                               (* ?\\ ?\\)
                               ;; Match single or triple quotes of any kind.
                               (group (or  "\"" "\"\"\"" "'" "'''"))))))
-  "Additional Nim specific sexps for `nim-rx'")
+  "Additional Nim specific sexps for `nim-rx'.")
 
 (defmacro nim-rx (&rest regexps)
   "Nim mode specialized rx macro.
@@ -307,7 +306,7 @@ This variant of `rx' supports common nim named REGEXPS."
                  (and "object" (+ whitespace) "of" (+ whitespace) symbol-name)))
   "Regular expression matching the end of line after with a block starts.
 If the end of a line matches this regular expression, the next
-line is considered an indented block. Whitespaces at the end of a
+line is considered an indented block.  Whitespaces at the end of a
 line are ignored.")
 
 (defvar nim-indent-dedenters
@@ -357,20 +356,20 @@ Context information is returned with a cons with the form:
     \(STATUS . START)
 
 Where status can be any of the following symbols:
- * inside-paren: If point in between (), {} or []. START is the
+ * inside-paren: If point in between (), {} or [].  START is the
    position of the opening parenthesis.
- * inside-string: If point is inside a string. START is the
+ * inside-string: If point is inside a string.  START is the
    beginning of the string.
  * after-beginning-of-block: Point is after beginning of
-   block. START is the beginning position of line that starts the
+   block.  START is the beginning position of line that starts the
    new block.
  * after-operator: Previous line ends in an operator or current
    line starts with an operator.  START is the position of the
    operator.
- * after-line: Point is after normal line. START is the beginning
+ * after-line: Point is after normal line.  START is the beginning
    of the line.
  * no-indent: Point is at beginning of buffer or other special
-   case. START is the position of point."
+   case.  START is the position of point."
   (save-restriction
     (widen)
     ;; restrict to the enclosing parentheses, if any
@@ -781,7 +780,7 @@ Optional argument DIRECTION defines the direction to move to."
   "Move point backward to the beginning of the current statement.
 Point is moved to the beginning of the first symbol that is
 either the first on a line or the first after a
-semicolon. Balanced parentheses, strings and comments are
+semicolon.  Balanced parentheses, strings and comments are
 skipped."
   (let ((level (nth 0 (syntax-ppss))))
     (save-restriction
@@ -818,7 +817,7 @@ Returns non-nil if and only if there are enclosing parentheses."
       (scan-error nil))))
 
 (defun nim-util-real-current-column ()
-  "Returns the current column without narrowing."
+  "Return the current column without narrowing."
   (+ (current-column)
      (if (= (line-beginning-position) (point-min))
          (save-excursion
@@ -829,7 +828,7 @@ Returns non-nil if and only if there are enclosing parentheses."
        0)))
 
 (defun nim-util-real-current-indentation ()
-  "Returns the indentation without narrowing."
+  "Return the indentation without narrowing."
   (+ (current-indentation)
      (if (= (line-beginning-position) (point-min))
          (save-excursion
@@ -902,8 +901,8 @@ Returns non-nil if and only if there are enclosing parentheses."
   :group 'nim)
 
 (defcustom nim-command "nim"
-  "Path to the nim executable. You don't need to set this if
-the nim executable is inside your PATH."
+  "Path to the nim executable.
+You don't need to set this if the nim executable is inside your PATH."
   :type 'string
   :group 'nim)
 
@@ -916,11 +915,11 @@ the nim executable is inside your PATH."
   "Which modes are available to use with the idetools.")
 
 (defun nim-compile-file-to-js (&optional callback)
-  "Saves current file and compiles it. Uses the project
-directory, so it will work best with external libraries where
-`nim-compile-region-to-js` does not. Returns the filename of
-the compiled file. The callback is executed on success with the
-filename of the compiled file."
+  "Save current file and compiles it.
+Use the project directory, so it will work best with external
+libraries where `nim-compile-region-to-js' does not.  Return the
+filename of the compiled file.  The CALLBACK is executed on
+success with the filename of the compiled file."
   (interactive)
   (save-buffer)
   (let ((default-directory (or (nim-get-project-root) default-directory)))
@@ -933,7 +932,8 @@ filename of the compiled file."
                                                         ".js"))))))))
 
 (defun nim-compile-region-to-js (start end)
-  "Compiles the current region to javascript into the buffer
+  "Compile the current region to javascript.
+The result is written into the buffer
 `nim-compiled-buffer-name'."
   (interactive "r")
 
@@ -951,8 +951,7 @@ filename of the compiled file."
                                (display-buffer buffer)))))))))
 
 (defun nim-compile (args &optional on-success)
-  "Invokes the compiler and calls on-success in case of
-successful compile."
+  "Invoke the compiler and call ON-SUCCESS in case of successful compilation."
   (lexical-let ((on-success (or on-success (lambda () (message "Compilation successful.")))))
     (if (bufferp "*nim-compile*")
         (with-current-buffer "*nim-compile*"
@@ -976,7 +975,7 @@ successful compile."
 (defstruct nim-ide type namespace name signature path line column comment)
 
 (defun nim-parse-idetools-buffer (buffer)
-  "Returns a list of `nim-ide' structs, based on the contents of `buffer'."
+  "Return a list of `nim-ide' structs, based on the contents of BUFFER."
   (with-current-buffer buffer
     (mapcar (lambda (line)
               (destructuring-bind (_ type fn sig path line col comment) (split-string line "\t")
@@ -993,10 +992,10 @@ successful compile."
             (split-string (buffer-string) "[\r\n]" t))))
 
 (defun nim-call-idetools (mode)
-  "ARGS should be one of `nim-idetools-modes'. Grab the data
-from the returned buffer."
+  "Grab the data from the returned buffer.
+MODE should be one of `nim-idetools-modes'."
   (when (not (memq mode nim-idetools-modes))
-    (error (concat mode " not one from `nim-idetools-modes'.")))
+    (error "Mode %s not one from `nim-idetools-modes'" mode))
   (let ((tempfile (nim-save-buffer-temporarly))
         (file (buffer-file-name))
         (buffer (get-buffer-create (format "*nim-idetools-%s*" mode))))
@@ -1022,8 +1021,8 @@ from the returned buffer."
     buffer))
 
 (defun nim-save-buffer-temporarly ()
-  "This saves the current buffer and returns the location, so we
-  can pass it to idetools."
+  "Save the current buffer and return the location, so we
+can pass it to idetools."
   (let* ((dirname (make-temp-file "nim-suggest" t))
          (filename (concat (file-name-as-directory dirname)
                            (file-name-nondirectory (buffer-file-name)))))
@@ -1056,7 +1055,8 @@ hierarchy, starting from CURRENT-DIR"
                      ".nim"))))
 
 (defun nim-get-project-root ()
-  "Get the project root. Uses `nim-get-project-main-file' or git. "
+  "Get the project root.
+Uses `nim-get-project-main-file' or git."
   (or (let ((main-file (nim-get-project-main-file)))
         (when main-file (file-name-directory main-file)))
       (let ((git-output (replace-regexp-in-string "\n$" ""
@@ -1069,8 +1069,8 @@ hierarchy, starting from CURRENT-DIR"
           nil))))
 
 (defun nim-format-cursor-position (file tempfile)
-  "Formats the position of the cursor to a nice little
---trackDirty statement, referencing the file in the temprorary
+  "Format the position of the cursor to a nice little
+--trackDirty statement, referencing the FILE in the TEMPFILE
 directory."
   (format "--trackDirty:%s,%s,%d,%d" tempfile file (line-number-at-pos) (current-column)))
 
@@ -1078,7 +1078,7 @@ directory."
   "Go to the definition of the symbol currently under the cursor."
   (interactive)
   (let ((def (first (nim-call-and-parse-idetools 'def))))
-    (when (not def) (error "Symbol not found."))
+    (when (not def) (error "Symbol not found"))
     (find-file (nim-ide-path def))
     (goto-char (point-min))
     (forward-line (1- (nim-ide-line def)))))
