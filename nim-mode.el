@@ -262,9 +262,8 @@ Magic functions."
                                 (* ?\\ ?\\)
                                 ;; Match single or triple quotes of any kind.
                                 (group (or  "\"" "\"\"\"" "'" "'''"))))))
-    "Additional Nim specific sexps for `nim-rx'."))
+    "Additional Nim specific sexps for `nim-rx'.")
 
-(eval-and-compile
   (defmacro nim-rx (&rest regexps)
     "Nim mode specialized rx macro.
 This variant of `rx' supports common nim named REGEXPS."
@@ -274,9 +273,8 @@ This variant of `rx' supports common nim named REGEXPS."
             ((cdr regexps)
              (rx-to-string `(and ,@regexps) t))
             (t
-             (rx-to-string (car regexps) t))))))
+             (rx-to-string (car regexps) t)))))
 
-(eval-and-compile
   (defconst nim-font-lock-keywords
     `(  ;; note the BACKTICK, `
       ;; (,(nim-rx (1+ "\t")) . nim-tab-face) ;; TODO: make work!
@@ -292,9 +290,8 @@ This variant of `rx' supports common nim named REGEXPS."
       (,(nim-rx symbol-name (* whitespace) ":" (* whitespace) (group symbol-name))
        . (1 font-lock-type-face))
       )
-    "Font lock expressions for Nim mode."))
+    "Font lock expressions for Nim mode.")
 
-(eval-and-compile
   (put 'nim-mode 'font-lock-defaults '(nim-font-lock-keywords nil t)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
