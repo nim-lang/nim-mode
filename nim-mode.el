@@ -982,7 +982,7 @@ The result is written into the buffer
   "Call idetools and get `nim-ide' structs back."
   (nim-parse-idetools-buffer (nim-call-idetools mode)))
 
-(defstruct nim-ide type namespace name signature path line column comment)
+(cl-defstruct nim-ide type namespace name signature path line column comment)
 
 (defun nim-parse-idetools-buffer (buffer)
   "Return a list of `nim-ide' structs, based on the contents of BUFFER."
