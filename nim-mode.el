@@ -49,6 +49,12 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;                                Helpers                                     ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(unless (fboundp 'first) 
+  (defun first (list) 
+    "A wrapper for car to make it compatible with earlier lisp variants"
+    (car list)
+    )
+  )
 
 (defun nim-glue-strings (glue strings)
   "Concatenate some GLUE and a list of STRINGS."
@@ -338,7 +344,7 @@ will be dedented relative to the previous block.")
 TYPE can be `comment', `string' or `paren'.  It returns the start
 character address of the specified TYPE."
   (let ((ppss (or syntax-ppss (syntax-ppss))))
-    (pcase type
+    (cl-case type
       (comment (and (nth 4 ppss) (nth 8 ppss)))
       (string (and (not (nth 4 ppss)) (nth 8 ppss)))
       (paren (nth 1 ppss))
@@ -456,17 +462,17 @@ Where status can be any of the following symbols:
       ;; restrict to enclosing parentheses, if any
       (nim-util-narrow-to-paren)
       (save-excursion
-        (pcase context-status
-          (`no-indent 0)
+        (cl-case context-status
+          ('no-indent 0)
           ;; When point is after beginning of block just add one level
           ;; of indentation relative to the context-start
-          (`after-beginning-of-block
+          ('after-beginning-of-block
            (goto-char context-start)
            (+ (nim-util-real-current-column) nim-indent-offset))
           ;; When after a simple line just use previous line
           ;; indentation, in the case current line starts with a
           ;; `nim-indent-dedenters' de-indent one level.
-          (`after-line
+          ('after-line
            (-
             (save-excursion
               (goto-char context-start)
@@ -482,11 +488,11 @@ Where status can be any of the following symbols:
           ;; When inside of a string, do nothing. just use the current
           ;; indentation.  XXX: perhaps it would be a good idea to
           ;; invoke standard text indentation here
-          (`inside-string
+          ('inside-string
            (goto-char context-start)
            (nim-util-real-current-indentation))
           ;; When point is after an operator line, there are several cases
-          (`after-operator
+          ('after-operator
            (save-excursion
              (nim-nav-beginning-of-statement)
              (cond
@@ -517,7 +523,7 @@ Where status can be any of the following symbols:
                (+ (nim-util-real-current-column) nim-indent-offset)))))
           ;; When inside a paren there's a need to handle nesting
           ;; correctly
-          (`inside-paren
+          ('inside-paren
            (cond
             ;; If current line closes the outermost open paren use the
             ;; current indentation of the context-start line.
