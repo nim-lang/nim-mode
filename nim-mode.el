@@ -338,7 +338,7 @@ will be dedented relative to the previous block.")
 TYPE can be `comment', `string' or `paren'.  It returns the start
 character address of the specified TYPE."
   (let ((ppss (or syntax-ppss (syntax-ppss))))
-    (case type
+    (cl-case type
       (comment (and (nth 4 ppss) (nth 8 ppss)))
       (string (and (not (nth 4 ppss)) (nth 8 ppss)))
       (paren (nth 1 ppss))
@@ -456,7 +456,7 @@ Where status can be any of the following symbols:
       ;; restrict to enclosing parentheses, if any
       (nim-util-narrow-to-paren)
       (save-excursion
-        (case context-status
+        (cl-case context-status
           ('no-indent 0)
           ;; When point is after beginning of block just add one level
           ;; of indentation relative to the context-start
