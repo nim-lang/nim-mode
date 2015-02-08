@@ -52,6 +52,12 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;                                Helpers                                     ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(unless (fboundp 'first) 
+  (defun first (list) 
+    "A wrapper for car to make it compatible with earlier lisp variants"
+    (car list)
+    )
+  )
 
 (defun nim-glue-strings (glue strings)
   "Concatenate some GLUE and a list of STRINGS."
