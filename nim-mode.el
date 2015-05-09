@@ -983,7 +983,7 @@ The result is written into the buffer
 (defun nim-parse-epc (list)
   (message "%S" list)
   (mapcar (lambda (sublist) (apply #'make-nim-epc
-                              (mapcar* #'list nim-epc-order sublist)))
+                              (mapcan #'list nim-epc-order sublist)))
           list))
 
 (setq nim-epc-processes-alist nil)
@@ -991,16 +991,14 @@ The result is written into the buffer
 (defun nim-find-or-create-epc ()
   "Get the epc responsible for the current buffer."
   (let ((main-file (or (nim-get-project-main-file)
-                           (buffer-file-name)))
-        (project-name (or (nim-get-project-root)
-                              epc-main-file)))
-    (or (let ((epc-process (cdr (assoc project-name nim-epc-processes-alist))))
+                           (buffer-file-name))))
+    (or (let ((epc-process (cdr (assoc main-file nim-epc-processes-alist))))
           (if (eq 'run (epc:manager-status-server-process epc-process))
               epc-process
-            (progn (setq nim-epc-processes-alist (assq-delete-all project-name nim-epc-processes-alist))
+            (progn (setq nim-epc-processes-alist (assq-delete-all main-file nim-epc-processes-alist))
                    nil)))
         (let ((epc-process (epc:start-epc nim-nimsuggest-path (list "--epc" main-file))))
-          (push (cons project-name epc-process) nim-epc-processes-alist)
+          (push (cons main-file epc-process) nim-epc-processes-alist)
           epc-process))))
 
 (defun nim-call-epc (method)
