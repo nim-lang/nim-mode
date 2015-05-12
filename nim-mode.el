@@ -990,7 +990,7 @@ The result is written into the buffer
 
 (defun nim-find-or-create-epc ()
   "Get the epc responsible for the current buffer."
-  (let ((main-file (or (nim-get-project-main-file)
+  (let ((main-file (or (nim-find-project-main-file)
                            (buffer-file-name))))
     (or (let ((epc-process (cdr (assoc main-file nim-epc-processes-alist))))
           (if (eq 'run (epc:manager-status-server-process epc-process))
@@ -1001,7 +1001,7 @@ The result is written into the buffer
           (push (cons main-file epc-process) nim-epc-processes-alist)
           epc-process))))
 
-(defun nim-call-epc (method)
+(defun nim-call-epc (method callback)
   "Call the nimsuggest process on point.
 
 Call the nimsuggest process responsible for the current buffer.
@@ -1011,22 +1011,29 @@ one of:
 sug: suggest a symbol
 con: suggest, but called at fun(_ <-
 def: where the is defined
-use: where the symbol is used"
-  (nim-parse-epc
-   (epc:call-sync
-    (nim-find-or-create-epc)
-    method
-    (list (buffer-file-name)
-          (line-number-at-pos)
-          (current-column)
-          (nim-save-buffer-temporarly)))))
+use: where the symbol is used
+
+The callback is called with a list of nim-epc structs."
+  (lexical-let ((tempfile (nim-save-buffer-temporarly))
+                (cb callback))
+    (deferred:$
+      (epc:call-deferred
+       (nim-find-or-create-epc)
+       method
+       (list (buffer-file-name)
+             (line-number-at-pos)
+             (current-column)
+             tempfile))
+      (deferred:nextc it
+        (lambda (x) (funcall cb (nim-parse-epc x))))
+      (deferred:watch it (delete-directory (file-name-directory tempfile) t)))))
 
 (defun nim-save-buffer-temporarly ()
   "Save the current buffer and return the location, so we
 can pass it to epc."
   (let* ((dirname (make-temp-file "nim-dirty" t))
-         (filename (concat (file-name-as-directory dirname)
-                           (file-name-nondirectory (buffer-file-name)))))
+         (filename (expand-file-name (file-name-nondirectory (buffer-file-name))
+                                     (file-name-as-directory dirname))))
     (save-restriction
       (widen)
       (write-region (point-min) (point-max) filename) nil 'foo)
@@ -1046,7 +1053,7 @@ hierarchy, starting from CURRENT-DIR"
       (when parent
         (nim-find-file-in-heirarchy parent pattern)))))
 
-(defun nim-get-project-main-file ()
+(defun nim-find-project-main-file ()
   "Get the main file for the project."
   (let ((main-file (nim-find-file-in-heirarchy
                 (file-name-directory (buffer-file-name))
@@ -1055,30 +1062,16 @@ hierarchy, starting from CURRENT-DIR"
                      (replace-regexp-in-string "\.nim\.cfg$" "" (first main-file))
                      ".nim"))))
 
-(defun nim-get-project-root ()
-  "Get the project root.
-Uses `nim-get-project-main-file' or git."
-  (or (let ((main-file (nim-get-project-main-file)))
-        (when main-file (file-name-directory main-file)))
-      (let ((git-output
-             (replace-regexp-in-string
-              "\n$" ""
-              (with-output-to-string
-                (with-current-buffer
-                    standard-output
-                  (process-file shell-file-name nil (list t nil) nil shell-command-switch "git rev-parse --show-toplevel"))))))
-        (if (< 0 (length git-output))
-            git-output
-          nil))))
-
 (defun nim-goto-sym ()
   "Go to the definition of the symbol currently under the cursor."
   (interactive)
-  (let ((def (first (nim-call-epc 'def))))
-    (when (not def) (error "Symbol not found"))
-    (find-file (nim-epc-filePath def))
-    (goto-char (point-min))
-    (forward-line (1- (nim-epc-line def)))))
+  (nim-call-epc 'def
+                (lambda (defs)
+                  (let ((def (first defs)))
+                    (when (not def) (error "Symbol not found"))
+                    (find-file (nim-epc-filePath def))
+                    (goto-char (point-min))
+                    (forward-line (1- (nim-epc-line def)))))))
 
 ;; compilation error
 (eval-after-load 'compile
