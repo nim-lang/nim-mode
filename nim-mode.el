@@ -1026,7 +1026,7 @@ The callback is called with a list of nim-epc structs."
              tempfile))
       (deferred:nextc it
         (lambda (x) (funcall cb (nim-parse-epc x))))
-      (deferred:watch it (delete-directory (file-name-directory tempfile) t)))))
+      (deferred:nextc it (delete-directory (file-name-directory tempfile) t)))))
 
 (defun nim-save-buffer-temporarly ()
   "Save the current buffer and return the location, so we
