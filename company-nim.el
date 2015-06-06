@@ -98,15 +98,16 @@
               (string-to-list candidate)))
 
 (defun company-nim (command &optional arg &rest ignored)
+  "`company-mode` backend for nimsuggest."
   (interactive (list 'interactive))
-  (case command
+  (cl-case command
     (interactive (company-begin-backend 'company-nim))
     (prefix (company-nim-prefix))
-    (candidates (cons :async
-                      (lambda (cb) (company-nim-candidates arg cb))))
     (annotation (company-nim-annotation arg))
     (doc-buffer (company-nim-doc-buffer arg))
     (meta (company-nim-meta arg))
+    (candidates (lexical-let ((local-arg arg))
+                  (cons :async (lambda (cb) (company-nim-candidates local-arg cb)))))
     (ignore-case t)
     (sorted t)
     ))
