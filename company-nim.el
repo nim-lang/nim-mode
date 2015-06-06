@@ -40,12 +40,12 @@
 (defun nim-company-attach-as-text-property (epc-returns)
   "Converts nim-epc to string with nim-epc attached."
   (mapcar (lambda (epc-value)
-            (let ((s (last (nim-epc-qualifiedPath epc-value))))
+            (let ((s (car (last (nim-epc-qualifiedPath epc-value)))))
               (put-text-property 0 (length s) 'nim-epc epc-value s)
               s))))
 
 (defun nim-company-format-location (text)
-  "Grabs the text-property and returns the cons for copany."
+  "Grabs the text-property and returns the cons for company."
   (let ((nim-epc (get-text-property 0 'nim-epc text)))
     ((nim-epc-filePath nim-epc) . (nim-epc-line nim-epc))))
 
