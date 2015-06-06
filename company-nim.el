@@ -1,4 +1,4 @@
-;;; company-nim.el --- company source for nim
+;;; company-nim.el --- company backend for nim
 
 ;; Copyright (C) 2015  Simon Hafner
 
@@ -23,47 +23,155 @@
 
 ;;; Commentary:
 
-;; Provides an auto-complete source for nim using the "nim" executable.
-;; To enable this auto-complete source in nim-mode, use code like the
-;; following:
+;; It contains company backend with nimsuggest support.
+;; You have to add it to company-backends like:
 ;;
-;; (eval-after-load 'nim-mode
-;;   '(add-hook 'nim-mode-hook 'ac-nim-enable))
+;; (add-to-list 'company-backends 'company-nim)
 ;;
+;; then you have to start server like:
+;;
+;; M-x nim:start-nimsuggest
 
 ;;; Code:
 
-(require 'nim-mode)
 (require 'epc)
-(require 'company)
 
-(defun nim-company-attach-as-text-property (epc-returns)
-  "Converts nim-epc to string with nim-epc attached."
-  (mapcar (lambda (epc-value)
-            (let ((s (last (nim-epc-qualifiedPath epc-value))))
-              (put-text-property 0 (length s) 'nim-epc epc-value s)
-              s))))
 
-(defun nim-company-format-location (text)
-  "Grabs the text-property and returns the cons for copany."
-  (let ((nim-epc (get-text-property 0 'nim-epc text)))
-    ((nim-epc-filePath nim-epc) . (nim-epc-line nim-epc))))
+(defcustom nim:nimsuggest-path "nimsuggest"
+  "Path where nimsuggest is set it to valid.")
 
-(defun nim-company-format-def (definitions)
-  (let ((definition (first definitions)))
-    (cons (nim-epc-filePath definition) (nim-epc-line definition))))
+(defvar nim:epc nil)
+(make-variable-buffer-local 'nim:epc)
 
-;;;###autoload
+(defvar nim:nimsuggest-main-file nil
+  "Used to keep project file available to functions.")
+(make-variable-buffer-local 'nim:nimsuggest-main-file)
+
+(defun nim:start-nimsuggest ()
+  "Starts nimsuggest epc server, asks for project file."
+  ;; TODO: handle multiple servers
+  (interactive)
+  (setq nim:nimsuggest-main-file (read-file-name "Project file: "))
+  (setq nim:epc (epc:start-epc
+                 nim:nimsuggest-path
+                 (list "--epc" nim:nimsuggest-main-file))))
+
+
+(defun nim:stop-nimsuggest ()
+  "Stops previously started nimsuggest epc server"
+  (interactive)
+  (epc:stop-epc nim:epc)
+  (setq nim:epc nil))
+
+
+(defun nim:restart-nimsuggest ()
+  "Restarts  previously started nimsuggest epc server."
+  (interactive)
+  (epc:stop-epc nim:epc)
+  (setq nim:epc (epc:start-epc
+                 nim:nimsuggest-path
+                 (list "--epc" nim:nimsuggest-main-file))))
+
+(defun company-nim--format-candidate (cand)
+  "Formats candidate for company, attaches properties to text."
+  ; FIXME: looks strange
+  (propertize (car (last (nth 2 cand)))
+              :nim-location-line (nth 5 cand)
+              :nim-location-column (nth 6 cand)
+              :nim-type (nth 4 cand)
+              :nim-doc (nth 7 cand)
+              :nim-file (nth 2 cand)
+              :nim-sk (nth 1 cand))
+  )
+
+(defun company-nim--format-candidates (arg candidates)
+  "Filters candidates, and returns formatted candadates lists."
+  (mapcar #'company-nim--format-candidate
+          (remove-if-not
+           (lambda (c) (company-nim-fuzzy-match arg (car (last (nth 2 c)))))
+           candidates)))
+
+
+;; (defun company-nim-candidates (callback)
+;;   (message "starting")
+;;   (when (eq major-mode 'nim-mode)
+;;     (deferred:$
+;;       (epc:call-deferred
+;;        nim
+;;        'sug
+;;        (list (buffer-file-name)
+;;              (line-number-at-pos)
+;;              (current-column)
+;;              (nim-save-buffer-temporarly)))
+;;       (deferred:nextc it
+;;         (lambda (x) (company-nim--format-candidates x))
+;;         )
+;;       (deferred:nextc it
+;;         ; FIXME: for some reason callback isn't the right callback there
+;;         (lambda (x) (funcall callback x))
+;;         )
+;;       )))
+
+
+(defun company-nim-candidates-sync (arg)
+  "Calls epc server in sync mode."
+  (when (derived-mode-p 'nim-mode)
+    (company-nim--format-candidates arg (epc:call-sync
+                                     nim:epc
+                                     'sug
+                                     (list (buffer-file-name)
+                                           (line-number-at-pos)
+                                           (current-column)
+                                           (nim-save-buffer-temporarly))))
+    ))
+
+
+(defun company-nim-prefix ()
+  (when (derived-mode-p 'nim-mode)
+    (company-grab-symbol)))
+
+
+(defun company-nim-annotation (cand)
+  (format " %s"
+          (get-text-property 0 :nim-type cand)
+          ;; (get-text-property 0 :nim-type cand)
+          ))
+
+(defun company-nim-meta (cand)
+  (let ((doc (get-text-property 0 :nim-doc cand)))
+    (if (eq doc "")
+        (get-text-property 0 :nim-type cand)
+      doc)))
+
+
+(defun company-nim-doc-buffer (cand)
+  (get-text-property 0 :nim-doc cand))
+
+(defun company-nim-location (cand)
+  (let ((line (get-text-property 0 :nim-location-line cand))
+        (path (get-text-property 0 :nim-file cand)))
+    (cons path line)))
+
+
+(defun company-nim-fuzzy-match (prefix candidate)
+  "Basic fuzzy match for completions."
+  (cl-subsetp (string-to-list prefix)
+              (string-to-list candidate)))
+
 (defun company-nim (command &optional arg &rest ignored)
-  "`company-mode' completion backend for nim."
-  (interactive (list 'iteractive))
+  (interactive (list 'interactive))
   (cl-case command
     (interactive (company-begin-backend 'company-nim))
-    (init (when (not nim-nimsuggest-path) (error "company-nim requires nim-nimsuggest-path to be set")))
-    (prefix (derived-mode-p 'nim-mode))
-    (candidates (nim-company-attach-as-text-property (nim-call-epc 'sug)))
-    (duplicates nil)
-    ;; (annotation)
-    (location (nim-company-format-location arg))))
+    (prefix (company-nim-prefix))
+    (candidates (company-nim-candidates-sync arg))
+    (annotation (company-nim-annotation arg))
+    (doc-buffer (company-nim-doc-buffer arg))
+    (meta (company-nim-meta arg))
+    (ignore-case t)
+    (sorted t)
+    ;; (candidates (cons :async #'company-nim-candidates))
+  ))
 
 (provide 'company-nim)
+
+;;; company-nim.el ends here
