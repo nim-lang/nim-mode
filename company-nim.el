@@ -28,102 +28,41 @@
 ;;
 ;; (add-to-list 'company-backends 'company-nim)
 ;;
-;; then you have to start server like:
+;; Also you should add company mode to nim-mode
 ;;
-;; M-x nim:start-nimsuggest
+;; (add-hook 'nim-mode-hook 'company-mode)
+
 
 ;;; Code:
 
 (require 'epc)
-
-
-(defcustom nim:nimsuggest-path "nimsuggest"
-  "Path where nimsuggest is set it to valid.")
-
-(defvar nim:epc nil)
-(make-variable-buffer-local 'nim:epc)
-
-(defvar nim:nimsuggest-main-file nil
-  "Used to keep project file available to functions.")
-(make-variable-buffer-local 'nim:nimsuggest-main-file)
-
-(defun nim:start-nimsuggest ()
-  "Starts nimsuggest epc server, asks for project file."
-  ;; TODO: handle multiple servers
-  (interactive)
-  (setq nim:nimsuggest-main-file (read-file-name "Project file: "))
-  (setq nim:epc (epc:start-epc
-                 nim:nimsuggest-path
-                 (list "--epc" nim:nimsuggest-main-file))))
-
-
-(defun nim:stop-nimsuggest ()
-  "Stops previously started nimsuggest epc server"
-  (interactive)
-  (epc:stop-epc nim:epc)
-  (setq nim:epc nil))
-
-
-(defun nim:restart-nimsuggest ()
-  "Restarts  previously started nimsuggest epc server."
-  (interactive)
-  (epc:stop-epc nim:epc)
-  (setq nim:epc (epc:start-epc
-                 nim:nimsuggest-path
-                 (list "--epc" nim:nimsuggest-main-file))))
+(require 'nim-mode)
+(require 'company)
 
 (defun company-nim--format-candidate (cand)
   "Formats candidate for company, attaches properties to text."
-  ; FIXME: looks strange
-  (propertize (car (last (nth 2 cand)))
-              :nim-location-line (nth 5 cand)
-              :nim-location-column (nth 6 cand)
-              :nim-type (nth 4 cand)
-              :nim-doc (nth 7 cand)
-              :nim-file (nth 2 cand)
-              :nim-sk (nth 1 cand))
+  (propertize (car (last (nim-epc-qualifiedPath cand)))
+              :nim-location-line (nim-epc-line cand)
+              :nim-location-column (nim-epc-column cand)
+              :nim-type (nim-epc-forth cand)
+              :nim-doc (nim-epc-doc cand)
+              :nim-file (nim-epc-filePath cand)
+              :nim-sk (nim-epc-symkind cand))
   )
 
 (defun company-nim--format-candidates (arg candidates)
   "Filters candidates, and returns formatted candadates lists."
   (mapcar #'company-nim--format-candidate
           (remove-if-not
-           (lambda (c) (company-nim-fuzzy-match arg (car (last (nth 2 c)))))
+           (lambda (c) (company-nim-fuzzy-match arg (car (last (nim-epc-qualifiedPath c)))))
            candidates)))
 
 
-;; (defun company-nim-candidates (callback)
-;;   (message "starting")
-;;   (when (eq major-mode 'nim-mode)
-;;     (deferred:$
-;;       (epc:call-deferred
-;;        nim
-;;        'sug
-;;        (list (buffer-file-name)
-;;              (line-number-at-pos)
-;;              (current-column)
-;;              (nim-save-buffer-temporarly)))
-;;       (deferred:nextc it
-;;         (lambda (x) (company-nim--format-candidates x))
-;;         )
-;;       (deferred:nextc it
-;;         ; FIXME: for some reason callback isn't the right callback there
-;;         (lambda (x) (funcall callback x))
-;;         )
-;;       )))
-
-
-(defun company-nim-candidates-sync (arg)
-  "Calls epc server in sync mode."
+(defun company-nim-candidates (arg callback)
   (when (derived-mode-p 'nim-mode)
-    (company-nim--format-candidates arg (epc:call-sync
-                                     nim:epc
-                                     'sug
-                                     (list (buffer-file-name)
-                                           (line-number-at-pos)
-                                           (current-column)
-                                           (nim-save-buffer-temporarly))))
-    ))
+    (lexical-let ((cb callback)
+                  (local-arg arg))
+      (nim-call-epc 'sug (lambda (x) (funcall cb (company-nim--format-candidates local-arg x)))))))
 
 
 (defun company-nim-prefix ()
@@ -160,17 +99,17 @@
 
 (defun company-nim (command &optional arg &rest ignored)
   (interactive (list 'interactive))
-  (cl-case command
+  (case command
     (interactive (company-begin-backend 'company-nim))
     (prefix (company-nim-prefix))
-    (candidates (company-nim-candidates-sync arg))
+    (candidates (cons :async
+                      (lambda (cb) (company-nim-candidates arg cb))))
     (annotation (company-nim-annotation arg))
     (doc-buffer (company-nim-doc-buffer arg))
     (meta (company-nim-meta arg))
     (ignore-case t)
     (sorted t)
-    ;; (candidates (cons :async #'company-nim-candidates))
-  ))
+    ))
 
 (provide 'company-nim)
 
