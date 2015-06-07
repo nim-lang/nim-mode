@@ -971,7 +971,7 @@ The result is written into the buffer
 
 ;;; Completion
 
-(defvar nim-nimsuggest-path nil "Path to the nimsuggest binary.")
+(defcustom nim-nimsuggest-path nil "Path to the nimsuggest binary.")
 
 (require 'epc)
 
