@@ -66,8 +66,22 @@
 
 
 (defun company-nim-prefix ()
-  (when (derived-mode-p 'nim-mode)
-    (company-grab-symbol)))
+  "slightly changed code from emacs-company-jedi"
+  (ignore-errors
+    (and (derived-mode-p 'nim-mode)
+         (let ((face (get-text-property (point) 'face))
+               (bounds (or (bounds-of-thing-at-point 'symbol)
+                           (and (eq (char-before) ?.)
+                                (cons (1- (point)) (point)))))
+               (thing 'stop))
+           (and bounds
+                (if (eq face 'font-lock-comment-face)
+                    nil t)
+                (if (eq face 'font-lock-string-face)
+                    nil t)
+                (setq thing (buffer-substring-no-properties (car bounds)
+                                                            (cdr bounds))))
+           thing))))
 
 
 (defun company-nim-annotation (cand)
