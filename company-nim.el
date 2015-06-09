@@ -87,16 +87,18 @@
 
 
 (defun company-nim-annotation (cand)
-  (format " %s"
-          (get-text-property 0 :nim-type cand)
-          ;; (get-text-property 0 :nim-type cand)
-          ))
+  (let ((ann (get-text-property 0 :nim-type cand)))
+    (format " %s" (substring ann 0  (search "{" ann)))))
+
+;; :nim-type is frequently way too big to display in meta
+;; (defun company-nim-meta (cand)
+;;   (let ((doc (get-text-property 0 :nim-doc cand)))
+;;     (if (eq doc "")
+;;         (get-text-property 0 :nim-type cand)
+;;       doc)))
 
 (defun company-nim-meta (cand)
-  (let ((doc (get-text-property 0 :nim-doc cand)))
-    (if (eq doc "")
-        (get-text-property 0 :nim-type cand)
-      doc)))
+  (get-text-property 0 :nim-type cand))
 
 
 (defun company-nim-doc-buffer (cand)
