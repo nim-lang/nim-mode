@@ -184,7 +184,7 @@ Magic functions."
 ;;                            Nim specialized rx                           ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(eval-and-compile 
+(eval-and-compile
   (defconst nim-rx-constituents
     `((keyword . ,(rx symbol-start (eval (cons 'or nim-keywords)) symbol-end))
       (type . ,(rx symbol-start (eval (cons 'or nim-types)) symbol-end))
@@ -981,7 +981,7 @@ The result is written into the buffer
 
 (cl-defstruct nim-epc section symkind qualifiedPath filePath forth line column doc)
 (defun nim-parse-epc (list)
-  (message "%S" list)
+  ;; (message "%S" list)
   (mapcar (lambda (sublist) (apply #'make-nim-epc
                               (mapcan #'list nim-epc-order sublist)))
           list))
