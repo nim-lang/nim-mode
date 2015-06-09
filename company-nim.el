@@ -53,9 +53,11 @@
 (defun company-nim--format-candidates (arg candidates)
   "Filters candidates, and returns formatted candadates lists."
   (mapcar #'company-nim--format-candidate
-          (remove-if-not
-           (lambda (c) (company-nim-fuzzy-match arg (car (last (nim-epc-qualifiedPath c)))))
-           candidates)))
+          (if (string-equal arg ".")
+              candidates
+            (remove-if-not
+             (lambda (c) (company-nim-fuzzy-match arg (car (last (nim-epc-qualifiedPath c)))))
+             candidates))))
 
 
 (defun company-nim-candidates (arg callback)
