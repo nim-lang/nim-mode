@@ -152,6 +152,7 @@
     (annotation (company-nim-annotation arg))
     (doc-buffer (company-nim-doc-buffer arg))
     (meta (company-nim-meta arg))
+    (location (company-nim-location arg))
     (candidates (lexical-let ((local-arg arg))
                   (cons :async (lambda (cb) (company-nim-candidates local-arg cb)))))
     (ignore-case t)
