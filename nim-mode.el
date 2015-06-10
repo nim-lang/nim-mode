@@ -996,7 +996,6 @@ The result is written into the buffer
 
 (defun nim-doc-buffer (element)
   "Displays documentation buffer with element contents"
-  (interactive)
   (let ((buf (get-buffer-create "*nim-doc*")))
     (with-current-buffer buf
       (view-mode -1)
