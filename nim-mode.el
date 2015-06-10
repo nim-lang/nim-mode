@@ -969,6 +969,31 @@ The result is written into the buffer
     ))
 
 
+(defcustom nim-type-abbrevs '(
+                                 ("skProc" . "f")
+                                 ("skIterator" . "i")
+                                 ("skTemplate" . "T")
+                                 ("skType" . "t")
+                                 ("skMethod" . "f")
+                                 ("skEnumField" . "e")
+                                 ("skGenericParam" . "p")
+                                 ("skParam" . "p")
+                                 ("skModule" . "m")
+                                 ("skConverter" . "C")
+                                 ("skMacro" . "M")
+                                 ("skField" . "F")
+                                 ("skForVar" . "v")
+                                 ("skVar" . "v")
+                                 ("skLet" . "v")
+                                 ("skLabel" . "l")
+                                 ("skConst" . "c")
+                                 ("skResult" . "r")
+                                 )
+  "Abbrevs for nim-mode (used by company)"
+  :type 'assoc
+  :group 'nim)
+
+
 (defun nim-doc-buffer (element)
   "Displays documentation buffer with element contents"
   (interactive)

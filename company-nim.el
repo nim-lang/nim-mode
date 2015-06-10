@@ -40,46 +40,9 @@
 (require 'company)
 
 
-(defcustom company-nim-type-abbrevs '(
-                                 ("skProc" . "f")
-                                 ("skIterator" . "i")
-                                 ("skTemplate" . "T")
-                                 ("skType" . "t")
-                                 ("skMethod" . "f")
-                                 ("skEnumField" . "e")
-                                 ("skGenericParam" . "p")
-                                 ("skParam" . "p")
-                                 ("skModule" . "m")
-                                 ("skConverter" . "C")
-                                 ("skMacro" . "M")
-                                 ("skField" . "F")
-                                 ("skForVar" . "v")
-                                 ("skVar" . "v")
-                                 ("skLet" . "v")
-                                 ("skLabel" . "l")
-                                 ("skConst" . "c")
-                                 ("skResult" . "r")
-                                 )
-  "Abbrevs for company."
-  :type 'assoc
-  :group 'nim)
-
-
-(defun company-nim--format-candidate (cand)
-  "Formats candidate for company, attaches properties to text."
-  (propertize (car (last (nim-epc-qualifiedPath cand)))
-              :nim-location-line (nim-epc-line cand)
-              :nim-location-column (nim-epc-column cand)
-              :nim-type (nim-epc-forth cand)
-              :nim-doc (nim-epc-doc cand)
-              :nim-file (nim-epc-filePath cand)
-              :nim-sk (nim-epc-symkind cand)
-              :nim-sig (assoc-default (nim-epc-symkind cand) company-nim-type-abbrevs))
-  )
-
 (defun company-nim--format-candidates (arg candidates)
   "Filters candidates, and returns formatted candadates lists."
-  (mapcar #'company-nim--format-candidate
+  (mapcar #'nim-nimsuggest--format-candidate
           (if (string-equal arg ".")
               candidates
             (remove-if-not
