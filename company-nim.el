@@ -39,6 +39,32 @@
 (require 'nim-mode)
 (require 'company)
 
+
+(defcustom company-nim-type-abbrevs '(
+                                 ("skProc" . "f")
+                                 ("skIterator" . "i")
+                                 ("skTemplate" . "T")
+                                 ("skType" . "t")
+                                 ("skMethod" . "f")
+                                 ("skEnumField" . "e")
+                                 ("skGenericParam" . "p")
+                                 ("skParam" . "p")
+                                 ("skModule" . "m")
+                                 ("skConverter" . "C")
+                                 ("skMacro" . "M")
+                                 ("skField" . "F")
+                                 ("skForVar" . "v")
+                                 ("skVar" . "v")
+                                 ("skLet" . "v")
+                                 ("skLabel" . "l")
+                                 ("skConst" . "c")
+                                 ("skResult" . "r")
+                                 )
+  "Abbrevs for company."
+  :type 'assoc
+  :group 'nim)
+
+
 (defun company-nim--format-candidate (cand)
   "Formats candidate for company, attaches properties to text."
   (propertize (car (last (nim-epc-qualifiedPath cand)))
@@ -47,7 +73,8 @@
               :nim-type (nim-epc-forth cand)
               :nim-doc (nim-epc-doc cand)
               :nim-file (nim-epc-filePath cand)
-              :nim-sk (nim-epc-symkind cand))
+              :nim-sk (nim-epc-symkind cand)
+              :nim-sig (assoc-default (nim-epc-symkind cand) company-nim-type-abbrevs))
   )
 
 (defun company-nim--format-candidates (arg candidates)
@@ -87,8 +114,9 @@
 
 
 (defun company-nim-annotation (cand)
-  (let ((ann (get-text-property 0 :nim-type cand)))
-    (format " %s" (substring ann 0 (search "{" ann)))))
+  (let ((ann (get-text-property 0 :nim-type cand))
+        (symbol (get-text-property 0 :nim-sig cand)))
+    (format " %s [%s]" (substring ann 0 (search "{" ann)) symbol)))
 
 ;; :nim-type is frequently way too big to display in meta
 ;; (defun company-nim-meta (cand)
