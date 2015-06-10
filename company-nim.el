@@ -88,7 +88,7 @@
 
 (defun company-nim-annotation (cand)
   (let ((ann (get-text-property 0 :nim-type cand)))
-    (format " %s" (substring ann 0  (search "{" ann)))))
+    (format " %s" (substring ann 0 (search "{" ann)))))
 
 ;; :nim-type is frequently way too big to display in meta
 ;; (defun company-nim-meta (cand)
