@@ -130,7 +130,9 @@
 
 
 (defun company-nim-doc-buffer (cand)
-  (get-text-property 0 :nim-doc cand))
+  (let ((doc
+         (get-text-property 0 :nim-doc cand)))
+    (and (not (eq doc "")) (nim-doc-buffer cand))))
 
 (defun company-nim-location (cand)
   (let ((line (get-text-property 0 :nim-location-line cand))

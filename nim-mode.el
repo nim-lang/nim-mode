@@ -969,6 +969,18 @@ The result is written into the buffer
     ))
 
 
+(defun nim-doc-buffer (element)
+  "Displays documentation buffer with element contents"
+  (interactive)
+  (let ((buf (get-buffer-create "*nim-doc*")))
+    (with-current-buffer buf
+      (view-mode -1)
+      (erase-buffer)
+      (insert (get-text-property 0 :nim-doc element))
+      (goto-char (point-min))
+      (view-mode 1)
+      buf)))
+
 ;;; Completion
 
 (defcustom nim-nimsuggest-path nil "Path to the nimsuggest binary."
