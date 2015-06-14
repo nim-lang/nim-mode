@@ -4,7 +4,7 @@
 ;; Description: A major mode for the Nim programming language
 ;; Author: Simon Hafner
 ;; Maintainer: Simon Hafner <hafnersimon@gmail.com>
-;; Version: 0.1.5
+;; Version: 0.2.0
 ;; Keywords: nim languages
 ;; Compatibility: GNU Emacs 24
 ;; Package-Requires: ((emacs "24"))
@@ -184,7 +184,7 @@ Magic functions."
 ;;                            Nim specialized rx                           ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(eval-and-compile 
+(eval-and-compile
   (defconst nim-rx-constituents
     `((keyword . ,(rx symbol-start (eval (cons 'or nim-keywords)) symbol-end))
       (type . ,(rx symbol-start (eval (cons 'or nim-types)) symbol-end))
@@ -924,9 +924,6 @@ You don't need to set this if the nim executable is inside your PATH."
   :type '(repeat string)
   :group 'nim)
 
-(defvar nim-idetools-modes '(suggest def context usages)
-  "Which modes are available to use with the idetools.")
-
 (defun nim-compile-file-to-js (&optional callback)
   "Save current file and compiles it.
 Use the project directory, so it will work best with external
@@ -969,79 +966,115 @@ The result is written into the buffer
     (if (bufferp "*nim-compile*")
         (with-current-buffer "*nim-compile*"
           (erase-buffer)))
-    (set-process-sentinel
-     (apply
-      (apply-partially 'start-file-process "nim" "*nim-compile*" nim-command)
-      (append nim-args-compile args))
-     (lambda (process-name status)
-       (cond ((string= status "finished\n")
-              (when on-success
-                (funcall on-success)))
-             ((string= status "exited abnormally with code 1\n")
-              (display-buffer "*nim-compile*"))
-             (t (error status)))))))
+    ))
 
-(defun nim-call-and-parse-idetools (mode)
-  "Call idetools and get `nim-ide' structs back."
-  (nim-parse-idetools-buffer (nim-call-idetools mode)))
 
-(cl-defstruct nim-ide type namespace name signature path line column comment)
+(defcustom nim-type-abbrevs '(
+                                 ("skProc" . "f")
+                                 ("skIterator" . "i")
+                                 ("skTemplate" . "T")
+                                 ("skType" . "t")
+                                 ("skMethod" . "f")
+                                 ("skEnumField" . "e")
+                                 ("skGenericParam" . "p")
+                                 ("skParam" . "p")
+                                 ("skModule" . "m")
+                                 ("skConverter" . "C")
+                                 ("skMacro" . "M")
+                                 ("skField" . "F")
+                                 ("skForVar" . "v")
+                                 ("skVar" . "v")
+                                 ("skLet" . "v")
+                                 ("skLabel" . "l")
+                                 ("skConst" . "c")
+                                 ("skResult" . "r")
+                                 )
+  "Abbrevs for nim-mode (used by company)"
+  :type 'assoc
+  :group 'nim)
 
-(defun nim-parse-idetools-buffer (buffer)
-  "Return a list of `nim-ide' structs, based on the contents of BUFFER."
-  (with-current-buffer buffer
-    (mapcar (lambda (line)
-              (destructuring-bind (_ type fn sig path line col comment) (split-string line "\t")
-                (string-match "^\\(?:\\(.*\\)\\.\\)?\\([^.]*\\)$" fn)
-                (make-nim-ide
-                 :type type
-                 :namespace (match-string 1 fn)
-                 :name (match-string 2 fn)
-                 :signature sig
-                 :path path
-                 :line (string-to-number line)
-                 :column (string-to-number col)
-                 :comment comment)))
-            (split-string (buffer-string) "[\r\n]" t))))
 
-(defun nim-call-idetools (mode)
-  "Grab the data from the returned buffer.
-MODE should be one of `nim-idetools-modes'."
-  (when (not (memq mode nim-idetools-modes))
-    (error "Mode %s not one from `nim-idetools-modes'" mode))
-  (let ((tempfile (nim-save-buffer-temporarly))
-        (file (buffer-file-name))
-        (buffer (get-buffer-create (format "*nim-idetools-%s*" mode))))
-    ;; There can only be one. Useful for suggest, not sure about the
-    ;; other modes. Change as needed.
-    (when (bufferp buffer)
-      (with-current-buffer buffer
-        (erase-buffer)))
-    (let ((args (append (list nim-command nil (list buffer (concat temporary-file-directory "nim-idetools-stderr")) nil)
-                   (remove nil (list
-                                "idetools"
-                                "--stdout"
-                                (nim-format-cursor-position file tempfile) ; --trackDirty
-                                (when (nim-get-project-root)
-                                  (format "--include:%s" (nim-get-project-root)))
-                                (concat "--" (symbol-name mode))
-                                ;; in case of no project main file, use the tempfile. Might be
-                                ;; useful for repl.
-                                (or (nim-get-project-main-file) tempfile))))))
-      ;; (message (format "%S" args))      ; Debugging
-      (apply 'call-process args))
-    (delete-directory (file-name-directory tempfile) t)
-    buffer))
+(defun nim-doc-buffer (element)
+  "Displays documentation buffer with element contents"
+  (let ((buf (get-buffer-create "*nim-doc*")))
+    (with-current-buffer buf
+      (view-mode -1)
+      (erase-buffer)
+      (insert (get-text-property 0 :nim-doc element))
+      (goto-char (point-min))
+      (view-mode 1)
+      buf)))
+
+;;; Completion
+
+(defcustom nim-nimsuggest-path nil "Path to the nimsuggest binary."
+  :type 'string
+  :group 'nim)
+
+(require 'epc)
+
+;;; If you change the order here, make sure to change it over in
+;;; nimsuggest.nim too.
+(defconst nim-epc-order '(:section :symkind :qualifiedPath :filePath :forth :line :column :doc))
+
+(cl-defstruct nim-epc section symkind qualifiedPath filePath forth line column doc)
+(defun nim-parse-epc (list)
+  ;; (message "%S" list)
+  (mapcar (lambda (sublist) (apply #'make-nim-epc
+                              (mapcan #'list nim-epc-order sublist)))
+          list))
+
+(setq nim-epc-processes-alist nil)
+
+(defun nim-find-or-create-epc ()
+  "Get the epc responsible for the current buffer."
+  (let ((main-file (or (nim-find-project-main-file)
+                           (buffer-file-name))))
+    (or (let ((epc-process (cdr (assoc main-file nim-epc-processes-alist))))
+          (if (eq 'run (epc:manager-status-server-process epc-process))
+              epc-process
+            (progn (setq nim-epc-processes-alist (assq-delete-all main-file nim-epc-processes-alist))
+                   nil)))
+        (let ((epc-process (epc:start-epc nim-nimsuggest-path (list "--epc" main-file))))
+          (push (cons main-file epc-process) nim-epc-processes-alist)
+          epc-process))))
+
+(defun nim-call-epc (method callback)
+  "Call the nimsuggest process on point.
+
+Call the nimsuggest process responsible for the current buffer.
+All commands work with the current cursor position. METHOD can be
+one of:
+
+sug: suggest a symbol
+con: suggest, but called at fun(_ <-
+def: where the is defined
+use: where the symbol is used
+
+The callback is called with a list of nim-epc structs."
+  (lexical-let ((tempfile (nim-save-buffer-temporarly))
+                (cb callback))
+    (deferred:$
+      (epc:call-deferred
+       (nim-find-or-create-epc)
+       method
+       (list (buffer-file-name)
+             (line-number-at-pos)
+             (current-column)
+             tempfile))
+      (deferred:nextc it
+        (lambda (x) (funcall cb (nim-parse-epc x))))
+      (deferred:watch it (lambda (x) (delete-directory (file-name-directory tempfile) t))))))
 
 (defun nim-save-buffer-temporarly ()
   "Save the current buffer and return the location, so we
-can pass it to idetools."
-  (let* ((dirname (make-temp-file "nim-suggest" t))
-         (filename (concat (file-name-as-directory dirname)
-                           (file-name-nondirectory (buffer-file-name)))))
+can pass it to epc."
+  (let* ((dirname (make-temp-file "nim-dirty" t))
+         (filename (expand-file-name (file-name-nondirectory (buffer-file-name))
+                                     (file-name-as-directory dirname))))
     (save-restriction
       (widen)
-      (write-region (point-min) (point-max) filename) nil 'foo)
+      (write-region (point-min) (point-max) filename nil 1))
     filename))
 
 ;; From http://stackoverflow.com/questions/14095189/walk-up-the-directory-tree
@@ -1058,7 +1091,7 @@ hierarchy, starting from CURRENT-DIR"
       (when parent
         (nim-find-file-in-heirarchy parent pattern)))))
 
-(defun nim-get-project-main-file ()
+(defun nim-find-project-main-file ()
   "Get the main file for the project."
   (let ((main-file (nim-find-file-in-heirarchy
                 (file-name-directory (buffer-file-name))
@@ -1067,34 +1100,16 @@ hierarchy, starting from CURRENT-DIR"
                      (replace-regexp-in-string "\.nim\.cfg$" "" (first main-file))
                      ".nim"))))
 
-(defun nim-get-project-root ()
-  "Get the project root.
-Uses `nim-get-project-main-file' or git."
-  (or (let ((main-file (nim-get-project-main-file)))
-        (when main-file (file-name-directory main-file)))
-      (let ((git-output (replace-regexp-in-string "\n$" ""
-                                        (with-output-to-string
-                                          (with-current-buffer
-                                              standard-output
-                                            (process-file shell-file-name nil (list t nil) nil shell-command-switch "git rev-parse --show-toplevel"))))))
-        (if (< 0 (length git-output))
-            git-output
-          nil))))
-
-(defun nim-format-cursor-position (file tempfile)
-  "Format the position of the cursor to a nice little
---trackDirty statement, referencing the FILE in the TEMPFILE
-directory."
-  (format "--trackDirty:%s,%s,%d,%d" tempfile file (line-number-at-pos) (current-column)))
-
 (defun nim-goto-sym ()
   "Go to the definition of the symbol currently under the cursor."
   (interactive)
-  (let ((def (first (nim-call-and-parse-idetools 'def))))
-    (when (not def) (error "Symbol not found"))
-    (find-file (nim-ide-path def))
-    (goto-char (point-min))
-    (forward-line (1- (nim-ide-line def)))))
+  (nim-call-epc 'def
+                (lambda (defs)
+                  (let ((def (first defs)))
+                    (when (not def) (error "Symbol not found"))
+                    (find-file (nim-epc-filePath def))
+                    (goto-char (point-min))
+                    (forward-line (1- (nim-epc-line def)))))))
 
 ;; compilation error
 (eval-after-load 'compile
