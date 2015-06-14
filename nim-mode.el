@@ -213,7 +213,7 @@ Magic functions."
                                     (or "proc" "method" "converter"
                                         "iterator" "template" "macro")
                                     symbol-end))
-      (symbol-name          . ,(rx (any letter ?_) (* (any word ?_))))
+      (symbol-name          . ,(rx (any letter ?_ ?–) (* (any word ?_ ?–))))
       (dec-number . ,(rx symbol-start
                          (1+ (in digit "_"))
                          (opt "." (in digit "_"))
