@@ -95,7 +95,7 @@
 
 
 (defun company-nim-prefix ()
-  "returns valid prefix for company"
+  "checks if company-nim can complete here"
   (when (derived-mode-p 'nim-mode)
     (let ((thing 'stop))
       (and
