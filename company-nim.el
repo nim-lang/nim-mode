@@ -38,11 +38,48 @@
 (require 'epc)
 (require 'nim-mode)
 (require 'company)
+(require 'cl-lib)
 
+(defcustom company-nim-type-abbrevs '(
+                                 ("skProc" . "f")
+                                 ("skIterator" . "i")
+                                 ("skTemplate" . "T")
+                                 ("skType" . "t")
+                                 ("skMethod" . "f")
+                                 ("skEnumField" . "e")
+                                 ("skGenericParam" . "p")
+                                 ("skParam" . "p")
+                                 ("skModule" . "m")
+                                 ("skConverter" . "C")
+                                 ("skMacro" . "M")
+                                 ("skField" . "F")
+                                 ("skForVar" . "v")
+                                 ("skVar" . "v")
+                                 ("skLet" . "v")
+                                 ("skLabel" . "l")
+                                 ("skConst" . "c")
+                                 ("skResult" . "r")
+                                 )
+  "Abbrevs for nim-mode (used by company)"
+  :type 'assoc
+  :group 'nim)
+
+
+(defun company-nim--format-candidate (cand)
+  "Formats candidate for company, attaches properties to text."
+  (propertize (car (last (nim-epc-qualifiedPath cand)))
+              :nim-location-line (nim-epc-line cand)
+              :nim-location-column (nim-epc-column cand)
+              :nim-type (nim-epc-forth cand)
+              :nim-doc (nim-epc-doc cand)
+              :nim-file (nim-epc-filePath cand)
+              :nim-sk (nim-epc-symkind cand)
+              :nim-sig (assoc-default (nim-epc-symkind cand) company-nim-type-abbrevs))
+  )
 
 (defun company-nim--format-candidates (arg candidates)
   "Filters candidates, and returns formatted candadates lists."
-  (mapcar #'nim-nimsuggest--format-candidate
+  (mapcar #'company-nim--format-candidate
           (if (string-equal arg ".")
               candidates
             (remove-if-not
@@ -58,22 +95,14 @@
 
 
 (defun company-nim-prefix ()
-  "slightly changed code from emacs-company-jedi"
-  (ignore-errors
-    (and (derived-mode-p 'nim-mode)
-         (let ((face (get-text-property (point) 'face))
-               (bounds (or (bounds-of-thing-at-point 'symbol)
-                           (and (eq (char-before) ?.)
-                                (cons (1- (point)) (point)))))
-               (thing 'stop))
-           (and bounds
-                (if (eq face 'font-lock-comment-face)
-                    nil t)
-                (if (eq face 'font-lock-string-face)
-                    nil t)
-                (setq thing (buffer-substring-no-properties (car bounds)
-                                                            (cdr bounds))))
-           thing))))
+  "checks if company-nim can complete here"
+  (when (derived-mode-p 'nim-mode)
+    (let ((thing 'stop))
+      (and
+       (if (company-in-string-or-comment)
+           nil t)
+       (setq thing (substring-no-properties (company-grab-symbol)))
+       (cons thing t)))))
 
 
 (defun company-nim-annotation (cand)
