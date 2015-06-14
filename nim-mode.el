@@ -184,7 +184,7 @@ Magic functions."
 ;;                            Nim specialized rx                           ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(eval-and-compile 
+(eval-and-compile
   (defconst nim-rx-constituents
     `((keyword . ,(rx symbol-start (eval (cons 'or nim-keywords)) symbol-end))
       (type . ,(rx symbol-start (eval (cons 'or nim-types)) symbol-end))
@@ -969,9 +969,47 @@ The result is written into the buffer
     ))
 
 
+(defcustom nim-type-abbrevs '(
+                                 ("skProc" . "f")
+                                 ("skIterator" . "i")
+                                 ("skTemplate" . "T")
+                                 ("skType" . "t")
+                                 ("skMethod" . "f")
+                                 ("skEnumField" . "e")
+                                 ("skGenericParam" . "p")
+                                 ("skParam" . "p")
+                                 ("skModule" . "m")
+                                 ("skConverter" . "C")
+                                 ("skMacro" . "M")
+                                 ("skField" . "F")
+                                 ("skForVar" . "v")
+                                 ("skVar" . "v")
+                                 ("skLet" . "v")
+                                 ("skLabel" . "l")
+                                 ("skConst" . "c")
+                                 ("skResult" . "r")
+                                 )
+  "Abbrevs for nim-mode (used by company)"
+  :type 'assoc
+  :group 'nim)
+
+
+(defun nim-doc-buffer (element)
+  "Displays documentation buffer with element contents"
+  (let ((buf (get-buffer-create "*nim-doc*")))
+    (with-current-buffer buf
+      (view-mode -1)
+      (erase-buffer)
+      (insert (get-text-property 0 :nim-doc element))
+      (goto-char (point-min))
+      (view-mode 1)
+      buf)))
+
 ;;; Completion
 
-(defvar nim-nimsuggest-path nil "Path to the nimsuggest binary.")
+(defcustom nim-nimsuggest-path nil "Path to the nimsuggest binary."
+  :type 'string
+  :group 'nim)
 
 (require 'epc)
 
@@ -981,7 +1019,7 @@ The result is written into the buffer
 
 (cl-defstruct nim-epc section symkind qualifiedPath filePath forth line column doc)
 (defun nim-parse-epc (list)
-  (message "%S" list)
+  ;; (message "%S" list)
   (mapcar (lambda (sublist) (apply #'make-nim-epc
                               (mapcan #'list nim-epc-order sublist)))
           list))
@@ -1036,7 +1074,7 @@ can pass it to epc."
                                      (file-name-as-directory dirname))))
     (save-restriction
       (widen)
-      (write-region (point-min) (point-max) filename) nil 'foo)
+      (write-region (point-min) (point-max) filename nil 1))
     filename))
 
 ;; From http://stackoverflow.com/questions/14095189/walk-up-the-directory-tree
