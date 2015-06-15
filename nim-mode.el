@@ -7,7 +7,7 @@
 ;; Version: 0.2.0
 ;; Keywords: nim languages
 ;; Compatibility: GNU Emacs 24
-;; Package-Requires: ((emacs "24"))
+;; Package-Requires: ((emacs "24") (epc "0.1.1"))
 ;;
 ;; Taken over from James H. Fisher <jameshfisher@gmail.com>
 ;;
