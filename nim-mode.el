@@ -405,7 +405,7 @@ Where status can be any of the following symbols:
                                      (back-to-indentation)
                                      (looking-at (nim-rx decl-block)))
                                    (memq (char-before) '(?: ?=))
-                                   (looking-back nim-indent-indenters)))
+                                   (looking-back nim-indent-indenters nil)))
                          (cond
                           ((= (char-before) ?:)
                            (nim-util-backward-stmt)
