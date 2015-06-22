@@ -989,13 +989,13 @@ The result is written into the buffer
                                  ("skConst" . "c")
                                  ("skResult" . "r")
                                  )
-  "Abbrevs for nim-mode (used by company)"
+  "Abbrevs for nim-mode (used by company)."
   :type 'assoc
   :group 'nim)
 
 
 (defun nim-doc-buffer (element)
-  "Displays documentation buffer with element contents"
+  "Displays documentation buffer with ELEMENT contents."
   (let ((buf (get-buffer-create "*nim-doc*")))
     (with-current-buffer buf
       (view-mode -1)
@@ -1043,7 +1043,7 @@ The result is written into the buffer
   "Call the nimsuggest process on point.
 
 Call the nimsuggest process responsible for the current buffer.
-All commands work with the current cursor position. METHOD can be
+All commands work with the current cursor position.  METHOD can be
 one of:
 
 sug: suggest a symbol
