@@ -659,6 +659,18 @@ point is  not in between the indentation."
     (backward-delete-char-untabify arg)))
 (put 'nim-indent-dedent-line-backspace 'delete-selection 'supersede)
 
+(defsubst nim-syntax-count-quotes (quote-char &optional point limit)
+  "Count number of quotes around point (max is 3).
+QUOTE-CHAR is the quote char to count.  Optional argument POINT is
+the point where scan starts (defaults to current point), and LIMIT
+is used to limit the scan."
+  (let ((i 0))
+    (while (and (< i 3)
+                (or (not limit) (< (+ point i) limit))
+                (eq (char-after (+ point i)) quote-char))
+      (setq i (1+ i)))
+    i))
+
 (defun nim-indent-region (start end)
   "Indent a nim region automagically.
 
@@ -923,6 +935,11 @@ You don't need to set this if the nim executable is inside your PATH."
   "The arguments to pass to `nim-command' to compile a file."
   :type '(repeat string)
   :group 'nim)
+
+;; FIXME
+(defun nim-get-project-root ()
+  "Implement me."
+  nil)
 
 (defun nim-compile-file-to-js (&optional callback)
   "Save current file and compiles it.
