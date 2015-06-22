@@ -1114,9 +1114,10 @@ hierarchy, starting from CURRENT-DIR"
 ;; compilation error
 (eval-after-load 'compile
   '(progn
-     (add-to-list 'compilation-error-regexp-alist 'nim)
-     (add-to-list 'compilation-error-regexp-alist-alist
-                  '(nim "^\\s-*\\(.*\\)(\\([0-9]+\\),\\s-*\\([0-9]+\\))\\s-+\\(?:Error\\|\\(Hint\\)\\):" 1 2 3 (4)))))
+     (with-no-warnings
+       (add-to-list 'compilation-error-regexp-alist 'nim)
+       (add-to-list 'compilation-error-regexp-alist-alist
+                    '(nim "^\\s-*\\(.*\\)(\\([0-9]+\\),\\s-*\\([0-9]+\\))\\s-+\\(?:Error\\|\\(Hint\\)\\):" 1 2 3 (4))))))
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.nim\\'" . nim-mode))
