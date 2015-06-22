@@ -1024,7 +1024,7 @@ The result is written into the buffer
                                (cl-mapcan #'list nim-epc-order sublist)))
           list))
 
-(setq nim-epc-processes-alist nil)
+(defvar nim-epc-processes-alist nil)
 
 (defun nim-find-or-create-epc ()
   "Get the epc responsible for the current buffer."
