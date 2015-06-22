@@ -1020,8 +1020,8 @@ The result is written into the buffer
 (cl-defstruct nim-epc section symkind qualifiedPath filePath forth line column doc)
 (defun nim-parse-epc (list)
   ;; (message "%S" list)
-  (mapcar (lambda (sublist) (apply #'make-nim-epc
-                              (mapcan #'list nim-epc-order sublist)))
+  (cl-mapcar (lambda (sublist) (apply #'make-nim-epc
+                               (cl-mapcan #'list nim-epc-order sublist)))
           list))
 
 (setq nim-epc-processes-alist nil)
