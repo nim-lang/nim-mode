@@ -46,7 +46,7 @@
 ;;
 ;;; Code:
 
-(eval-and-compile
+(eval-when-compile
   (require 'cl))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -405,7 +405,7 @@ Where status can be any of the following symbols:
                                      (back-to-indentation)
                                      (looking-at (nim-rx decl-block)))
                                    (memq (char-before) '(?: ?=))
-                                   (looking-back nim-indent-indenters)))
+                                   (looking-back nim-indent-indenters nil)))
                          (cond
                           ((= (char-before) ?:)
                            (nim-util-backward-stmt)
@@ -989,13 +989,13 @@ The result is written into the buffer
                                  ("skConst" . "c")
                                  ("skResult" . "r")
                                  )
-  "Abbrevs for nim-mode (used by company)"
+  "Abbrevs for nim-mode (used by company)."
   :type 'assoc
   :group 'nim)
 
 
 (defun nim-doc-buffer (element)
-  "Displays documentation buffer with element contents"
+  "Displays documentation buffer with ELEMENT contents."
   (let ((buf (get-buffer-create "*nim-doc*")))
     (with-current-buffer buf
       (view-mode -1)
@@ -1020,11 +1020,11 @@ The result is written into the buffer
 (cl-defstruct nim-epc section symkind qualifiedPath filePath forth line column doc)
 (defun nim-parse-epc (list)
   ;; (message "%S" list)
-  (mapcar (lambda (sublist) (apply #'make-nim-epc
-                              (mapcan #'list nim-epc-order sublist)))
+  (cl-mapcar (lambda (sublist) (apply #'make-nim-epc
+                               (cl-mapcan #'list nim-epc-order sublist)))
           list))
 
-(setq nim-epc-processes-alist nil)
+(defvar nim-epc-processes-alist nil)
 
 (defun nim-find-or-create-epc ()
   "Get the epc responsible for the current buffer."
@@ -1043,7 +1043,7 @@ The result is written into the buffer
   "Call the nimsuggest process on point.
 
 Call the nimsuggest process responsible for the current buffer.
-All commands work with the current cursor position. METHOD can be
+All commands work with the current cursor position.  METHOD can be
 one of:
 
 sug: suggest a symbol
@@ -1114,9 +1114,10 @@ hierarchy, starting from CURRENT-DIR"
 ;; compilation error
 (eval-after-load 'compile
   '(progn
-     (add-to-list 'compilation-error-regexp-alist 'nim)
-     (add-to-list 'compilation-error-regexp-alist-alist
-                  '(nim "^\\s-*\\(.*\\)(\\([0-9]+\\),\\s-*\\([0-9]+\\))\\s-+\\(?:Error\\|\\(Hint\\)\\):" 1 2 3 (4)))))
+     (with-no-warnings
+       (add-to-list 'compilation-error-regexp-alist 'nim)
+       (add-to-list 'compilation-error-regexp-alist-alist
+                    '(nim "^\\s-*\\(.*\\)(\\([0-9]+\\),\\s-*\\([0-9]+\\))\\s-+\\(?:Error\\|\\(Hint\\)\\):" 1 2 3 (4))))))
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.nim\\'" . nim-mode))
