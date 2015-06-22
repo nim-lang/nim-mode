@@ -322,7 +322,7 @@ line are ignored.")
 
 (defvar nim-indent-dedenters
   (nim-rx symbol-start
-             (or "else" "elif" "finally" "except")
+             (or "else" "elif" "of" "finally" "except")
              symbol-end
              (* (not (in "\n")))
              ":" (* space) (or "#" eol))
