@@ -936,10 +936,15 @@ You don't need to set this if the nim executable is inside your PATH."
   :type '(repeat string)
   :group 'nim)
 
+(defcustom nim-project-root-regex "\\(\.git\\|\.nim\.cfg\\|\.nimble\\)$"
+  "Regex to find project root directory."
+  :type 'string
+  :group 'nim)
+
 (defun nim-get-project-root ()
   "Return project directory."
   (file-name-directory
-   (nim-find-file-in-heirarchy (file-name-directory (buffer-file-name)) "\\(\.git\\|\.nim\.cfg\\|\.nimble\\)$")))
+   (nim-find-file-in-heirarchy (file-name-directory (buffer-file-name)) nim-project-root-regex)))
 
 (defun nim-compile-file-to-js (&optional callback)
   "Save current file and compiles it.
