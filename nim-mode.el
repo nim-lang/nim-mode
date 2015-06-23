@@ -659,6 +659,18 @@ point is  not in between the indentation."
     (backward-delete-char-untabify arg)))
 (put 'nim-indent-dedent-line-backspace 'delete-selection 'supersede)
 
+(defsubst nim-syntax-count-quotes (quote-char &optional point limit)
+  "Count number of quotes around point (max is 3).
+QUOTE-CHAR is the quote char to count.  Optional argument POINT is
+the point where scan starts (defaults to current point), and LIMIT
+is used to limit the scan."
+  (let ((i 0))
+    (while (and (< i 3)
+                (or (not limit) (< (+ point i) limit))
+                (eq (char-after (+ point i)) quote-char))
+      (setq i (1+ i)))
+    i))
+
 (defun nim-indent-region (start end)
   "Indent a nim region automagically.
 
@@ -924,6 +936,16 @@ You don't need to set this if the nim executable is inside your PATH."
   :type '(repeat string)
   :group 'nim)
 
+(defcustom nim-project-root-regex "\\(\.git\\|\.nim\.cfg\\|\.nimble\\)$"
+  "Regex to find project root directory."
+  :type 'string
+  :group 'nim)
+
+(defun nim-get-project-root ()
+  "Return project directory."
+  (file-name-directory
+   (nim-find-file-in-heirarchy (file-name-directory (buffer-file-name)) nim-project-root-regex)))
+
 (defun nim-compile-file-to-js (&optional callback)
   "Save current file and compiles it.
 Use the project directory, so it will work best with external
@@ -1077,28 +1099,22 @@ can pass it to epc."
       (write-region (point-min) (point-max) filename nil 1))
     filename))
 
-;; From http://stackoverflow.com/questions/14095189/walk-up-the-directory-tree
-
-(defun nim-parent-directory (dir)
-  (unless (equal "/" dir)
-    (file-name-directory (directory-file-name dir))))
-
 (defun nim-find-file-in-heirarchy (current-dir pattern)
   "Search for a file matching PATTERN upwards through the directory
 hierarchy, starting from CURRENT-DIR"
-  (let ((parent (nim-parent-directory (expand-file-name current-dir))))
-    (or (directory-files current-dir t pattern nil)
-      (when parent
-        (nim-find-file-in-heirarchy parent pattern)))))
+  (catch 'found
+    (locate-dominating-file
+     current-dir
+     (lambda (dir)
+       (let ((file (first (directory-files dir t pattern nil))))
+         (when file (throw 'found file)))))))
 
 (defun nim-find-project-main-file ()
   "Get the main file for the project."
   (let ((main-file (nim-find-file-in-heirarchy
                 (file-name-directory (buffer-file-name))
                 ".*\.nim\.cfg")))
-    (when main-file (concat
-                     (replace-regexp-in-string "\.nim\.cfg$" "" (first main-file))
-                     ".nim"))))
+    (when main-file (file-name-base main-file))))
 
 (defun nim-goto-sym ()
   "Go to the definition of the symbol currently under the cursor."
