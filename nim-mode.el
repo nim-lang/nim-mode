@@ -1094,19 +1094,15 @@ can pass it to epc."
       (write-region (point-min) (point-max) filename nil 1))
     filename))
 
-;; From http://stackoverflow.com/questions/14095189/walk-up-the-directory-tree
-
-(defun nim-parent-directory (dir)
-  (unless (equal "/" dir)
-    (file-name-directory (directory-file-name dir))))
-
 (defun nim-find-file-in-heirarchy (current-dir pattern)
   "Search for a file matching PATTERN upwards through the directory
 hierarchy, starting from CURRENT-DIR"
-  (let ((parent (nim-parent-directory (expand-file-name current-dir))))
-    (or (directory-files current-dir t pattern nil)
-      (when parent
-        (nim-find-file-in-heirarchy parent pattern)))))
+  (catch 'found
+    (locate-dominating-file
+     current-dir
+     (lambda (dir)
+       (let ((file (directory-files dir t pattern nil)))
+         (when file (throw 'found file)))))))
 
 (defun nim-find-project-main-file ()
   "Get the main file for the project."
