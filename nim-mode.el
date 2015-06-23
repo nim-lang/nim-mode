@@ -1113,9 +1113,7 @@ hierarchy, starting from CURRENT-DIR"
   (let ((main-file (nim-find-file-in-heirarchy
                 (file-name-directory (buffer-file-name))
                 ".*\.nim\.cfg")))
-    (when main-file (concat
-                     (replace-regexp-in-string "\.nim\.cfg$" "" (first main-file))
-                     ".nim"))))
+    (when main-file (file-name-base (first main-file)))))
 
 (defun nim-goto-sym ()
   "Go to the definition of the symbol currently under the cursor."
