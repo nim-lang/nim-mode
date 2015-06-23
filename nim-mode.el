@@ -936,10 +936,10 @@ You don't need to set this if the nim executable is inside your PATH."
   :type '(repeat string)
   :group 'nim)
 
-;; FIXME
 (defun nim-get-project-root ()
-  "Implement me."
-  nil)
+  "Return project directory."
+  (file-name-directory
+   (nim-find-file-in-heirarchy (file-name-directory (buffer-file-name)) "\\(\.git\\|\.nim\.cfg\\|\.nimble\\)$")))
 
 (defun nim-compile-file-to-js (&optional callback)
   "Save current file and compiles it.
