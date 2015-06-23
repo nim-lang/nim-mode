@@ -1101,7 +1101,7 @@ hierarchy, starting from CURRENT-DIR"
     (locate-dominating-file
      current-dir
      (lambda (dir)
-       (let ((file (directory-files dir t pattern nil)))
+       (let ((file (first (directory-files dir t pattern nil))))
          (when file (throw 'found file)))))))
 
 (defun nim-find-project-main-file ()
@@ -1109,7 +1109,7 @@ hierarchy, starting from CURRENT-DIR"
   (let ((main-file (nim-find-file-in-heirarchy
                 (file-name-directory (buffer-file-name))
                 ".*\.nim\.cfg")))
-    (when main-file (file-name-base (first main-file)))))
+    (when main-file (file-name-base main-file))))
 
 (defun nim-goto-sym ()
   "Go to the definition of the symbol currently under the cursor."
