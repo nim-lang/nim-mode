@@ -944,7 +944,7 @@ You don't need to set this if the nim executable is inside your PATH."
 (defun nim-get-project-root ()
   "Return project directory."
   (file-name-directory
-   (nim-find-file-in-heirarchy (file-name-directory (buffer-file-name)) nim-project-root-regex)))
+   (nim-find-file-in-hierarchy (file-name-directory (buffer-file-name)) nim-project-root-regex)))
 
 (defun nim-compile-file-to-js (&optional callback)
   "Save current file and compiles it.
@@ -1099,7 +1099,7 @@ can pass it to epc."
       (write-region (point-min) (point-max) filename nil 1))
     filename))
 
-(defun nim-find-file-in-heirarchy (current-dir pattern)
+(defun nim-find-file-in-hierarchy (current-dir pattern)
   "Search for a file matching PATTERN upwards through the directory
 hierarchy, starting from CURRENT-DIR"
   (catch 'found
@@ -1111,7 +1111,7 @@ hierarchy, starting from CURRENT-DIR"
 
 (defun nim-find-project-main-file ()
   "Get the main file for the project."
-  (let ((main-file (nim-find-file-in-heirarchy
+  (let ((main-file (nim-find-file-in-hierarchy
                 (file-name-directory (buffer-file-name))
                 ".*\.nim\.cfg")))
     (when main-file (file-name-base main-file))))
