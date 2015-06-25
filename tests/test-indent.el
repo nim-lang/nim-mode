@@ -15,9 +15,9 @@
     (kill-buffer (get-buffer-create "*Test*")))
 
   (it "should indent #30 correctly"
-    (insert-file-literally "tests/samples/actual-30.nim")
+    (insert-file-literally "tests/samples/30-actual.nim")
     (indent-region (point-min) (point-max))
 
     (expect (buffer-string)
             :to-equal
-            (file-to-string "tests/samples/expected-30.nim"))))
+            (file-to-string "tests/samples/30-expected.nim"))))
