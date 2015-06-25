@@ -1,3 +1,5 @@
+(require 'nim-mode)
+
 (defun file-to-string (filename)
   (with-temp-buffer
     (insert-file-literally filename)
