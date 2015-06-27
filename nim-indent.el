@@ -427,8 +427,7 @@ point is not in between the indentation."
 (put 'nim-indent-dedent-line-backspace 'delete-selection 'supersede)
 
 (defun nim-indent-region (start end)
-  "Indent a Nim region automagically.
-
+  "Indent a nim region automagically.
 Called from a program, START and END specify the region to indent."
   (let ((deactivate-mark nil))
     (save-excursion
@@ -438,35 +437,24 @@ Called from a program, START and END specify the region to indent."
       (or (bolp) (forward-line 1))
       (while (< (point) end)
         (or (and (bolp) (eolp))
-            (when (and
-                   ;; Skip if previous line is empty or a comment.
-                   (save-excursion
-                     (let ((line-is-comment-p
-                            (nim-info-current-line-comment-p)))
-                       (forward-line -1)
-                       (not
-                        (or (and (nim-info-current-line-comment-p)
-                                 ;; Unless this line is a comment too.
-                                 (not line-is-comment-p))
-                            (nim-info-current-line-empty-p)))))
-                   ;; Don't mess with strings, unless it's the
-                   ;; enclosing set of quotes or a docstring.
-                   (or (not (nim-syntax-context 'string))
-                       (eq
-                        (syntax-after
-                         (+ (1- (point))
-                            (current-indentation)
-                            (nim-syntax-count-quotes (char-after) (point))))
-                        (string-to-syntax "|"))
-                       (nim-info-docstring-p))
-                   ;; Skip if current line is a block start, a
-                   ;; dedenter or block ender.
-                   (save-excursion
-                     (back-to-indentation)
-                     (not (looking-at
-                           (nim-rx
-                            (or block-start dedenter block-ender))))))
-              (nim-indent-line)))
+            (let (word)
+              (forward-line -1)
+              (back-to-indentation)
+              (setq word (current-word))
+              (forward-line 1)
+              (when (and word
+                         ;; Don't mess with strings, unless it's the
+                         ;; enclosing set of quotes.
+                         (or (not (nim-syntax-context 'string))
+                             (eq
+                              (syntax-after
+                               (+ (1- (point))
+                                  (current-indentation)
+                                  (nim-syntax-count-quotes (char-after) (point))))
+                              (string-to-syntax "|"))))
+                (beginning-of-line)
+                (delete-horizontal-space)
+                (indent-to (nim-indent-calculate-indentation)))))
         (forward-line 1))
       (move-marker end nil))))
 
