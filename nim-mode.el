@@ -49,6 +49,8 @@
 (eval-when-compile
   (require 'cl))
 
+(require 'nim-vars)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;                                Helpers                                     ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -62,246 +64,28 @@
   (concat "\\(" (nim-glue-strings "\\|" strings) "\\)"))
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;                             Simple keywords                                ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-;; Define keywords, etc.
-;; ---------------------
-
-(eval-and-compile
-  (defconst nim-keywords
-    (split-string "
-addr and as asm atomic
-bind block break
-case cast const continue converter
-discard distinct div do
-elif else end enum except export
-finally for from
-generic
-if import in include interface is isnot iterator
-lambda let
-macro method mixin mod
-nil not notin
-object of or out
-proc ptr
-raise ref return
-shared shl shr static
-template try tuple type
-var
-when while with without
-xor
-yield
-")
-    "Nim keywords.
-The above string is taken from URL
-`http://nim-lang.org/manual.html#identifiers-keywords', for easy
-updating.")
-
-  (defconst nim-types
-    '("int" "int8" "int16" "int32" "int64" "float" "float32" "float64"
-      "bool" "char" "string" "cstring" "pointer" "ordinal" "nil" "expr"
-      "stmt" "typedesc" "range" "array" "openarray" "seq" "set"
-      "tgenericseq" "pgenericseq" "nimstringdesc" "nimstring" "byte"
-      "natural" "positive" "tobject" "pobject" "tresult" "tendian"
-      "taddress" "biggestint" "biggestfloat" "cchar" "cschar" "cshort"
-      "cint" "clong" "clonglong" "cfloat" "cdouble" "clongdouble"
-      "cstringarray" "pfloat32" "pfloat64" "pint64" "pint32"
-      "tgc_strategy" "tfile" "tfilemode")
-    "Nim types defined in <lib/system.nim>.")
-
-  (defconst nim-exceptions
-    '("e_base" "easynch" "esynch" "esystem" "eio" "eos"
-      "einvalidlibrary" "eresourceexhausted" "earithmetic" "edivbyzero"
-      "eoverflow" "eaccessviolation" "eassertionfailed" "econtrolc"
-      "einvalidvalue" "eoutofmemory" "einvalidindex" "einvalidfield"
-      "eoutofrange" "estackoverflow" "enoexceptiontoreraise"
-      "einvalidobjectassignment" "einvalidobjectconversion"
-      "efloatingpoint" "efloatinginvalidop" "efloatdivbyzero"
-      "efloatoverflow" "efloatunderflow" "efloatinexact")
-    "Nim exceptions defined in <lib/system.nim>.")
-
-  (defconst nim-constants
-    '("ismainmodule" "compiledate" "compiletime" "nimversion"
-      "nimmajor" "nimminor" "nimpatch" "cpuendian" "hostos"
-      "hostcpu" "apptype" "inf" "neginf" "nan" "quitsuccess"
-      "quitfailure" "stdin" "stdout" "stderr" "true" "false" )
-    "Nim constants defined in <lib/system.nim>.")
-
-  (defconst nim-builtins
-    '("defined" "definedinscope" "not" "+" "-" "=" "<" ">" "@" "&" "*"
-      ">=" "<=" "$" ">=%" ">%" "<%" "<=%" "," ":" "==" "/"  "div" "mod"
-      "shr" "shl" "and" "or" "xor" "abs" "+%" "-%" "*%" "/%" "%%" "-+-"
-      "not_in" "is_not" "cmp" "high" "low" "sizeof" "succ" "pred" "inc"
-      "dec" "newseq" "len" "incl" "excl" "card" "ord" "chr" "ze" "ze64"
-      "tou8" "tou16" "tou32" "min" "max" "setlen" "newstring" "add"
-      "compileoption" "del" "delete" "insert" "repr" "tofloat"
-      "tobiggestfloat" "toint" "tobiggestint" "addquitproc" "copy"
-      "zeromem" "copymem" "movemem" "equalmem" "alloc" "alloc0"
-      "realloc" "dealloc" "assert" "swap" "getrefcount" "getoccupiedmem"
-      "getfreemem" "gettotalmem" "countdown" "countup" "items"
-      "enumerate" "isnil" "find" "contains" "pop" "each" "gc_disable"
-      "gc_enable" "gc_fullcollect" "gc_setstrategy"
-      "gc_enablemarkandsweep" "gc_disablemarkandsweep"
-      "gc_getstatistics" "gc_ref" "gc_unref" "accumulateresult" "echo"
-      "newexception" "quit" "open" "reopen" "close" "endoffile"
-      "readchar" "flushfile" "readfile" "write" "readline" "writeln"
-      "getfilesize" "readbytes" "readchars" "readbuffer" "writebytes"
-      "writechars" "writebuffer" "setfilepos" "getfilepos" "lines"
-      "filehandle" "cstringarraytoseq" "getdiscriminant" "selectbranch"
-      "getcurrentexception" "getcurrentexceptionmsg" "likely" "unlikely"
-      )
-    "Standard library functions fundamental enough to count as builtins.
-Magic functions."
+(defconst nim-font-lock-keywords
+  `(  ;; note the BACKTICK, `
+    ;; (,(nim-rx (1+ "\t")) . nim-tab-face) ;; TODO: make work!
+    (,(nim-rx defun (1+ whitespace) (group symbol-name))
+     . (1 font-lock-function-name-face))
+    (,(nim-rx (or "var" "let") (1+ whitespace) (group symbol-name))
+     . (1 font-lock-variable-name-face))
+    (,(nim-rx (or exception type)) . font-lock-type-face)
+    (,(nim-rx constant) . font-lock-constant-face)
+    (,(nim-rx builtin) . font-lock-builtin-face)
+    (,(nim-rx keyword) . font-lock-keyword-face)
+    (,(nim-rx "{." (1+ any) ".}") . font-lock-preprocessor-face)
+    (,(nim-rx symbol-name (* whitespace) ":" (* whitespace) (group symbol-name))
+     . (1 font-lock-type-face))
     )
+  "Font lock expressions for Nim mode.")
 
-  (defconst nim-operators
-    '( "`" "{." ".}" "[" "]" "{" "}" "(" ")" )
-    "Nim standard operators."))
-
-
-;; Custom faces
-;; ------------
-
-(defgroup nim nil
-  "A major mode for the Nim programming language."
-  :link '(url-link "http://nim-lang.org/")
-  :group 'languages)
-
-;; TODO: make work!?
-(defface nim-tab-face
-  '((((class color) (background dark))
-     (:background "grey22" :foreground "darkgray"))
-    (((class color) (background light))
-     (:background "beige"  :foreground "lightgray"))
-    (t (:inverse-video t)))
-  "Face used to visualize TAB."
-  :group 'nim)
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;                            Nim specialized rx                           ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(eval-and-compile
-  (defconst nim-rx-constituents
-    `((keyword . ,(rx symbol-start (eval (cons 'or nim-keywords)) symbol-end))
-      (type . ,(rx symbol-start (eval (cons 'or nim-types)) symbol-end))
-      (exception . ,(rx symbol-start (eval (cons 'or nim-exceptions)) symbol-end))
-      (constant . ,(rx symbol-start (eval (cons 'or nim-constants)) symbol-end))
-      (builtin . ,(rx symbol-start (eval (cons 'or nim-builtins)) symbol-end))
-      (decl-block . ,(rx symbol-start
-                         (or "type" "const" "var" "let")
-                         symbol-end
-                         (* space)
-                         (or "#" eol)))
-      (block-start          . ,(rx (or (and symbol-start
-                                            (or "type" "const" "var" "let")
-                                            symbol-end
-                                            (* space)
-                                            (or "#" eol))
-                                       (and symbol-start
-                                            (or "proc" "method" "converter" "iterator"
-                                                "template" "macro"
-                                                "if" "elif" "else" "when" "while" "for"
-                                                "try" "except" "finally"
-                                                "with" "block"
-                                                "enum" "tuple" "object")
-                                            symbol-end))))
-      (defun                 . ,(rx symbol-start
-                                    (or "proc" "method" "converter"
-                                        "iterator" "template" "macro")
-                                    symbol-end))
-      (symbol-name          . ,(rx (any letter ?_ ?–) (* (any word ?_ ?–))))
-      (dec-number . ,(rx symbol-start
-                         (1+ (in digit "_"))
-                         (opt "." (in digit "_"))
-                         (opt (any "eE") (1+ digit))
-                         (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
-                         symbol-end))
-      (hex-number . ,(rx symbol-start
-                         (1+ (in xdigit "_"))
-                         (opt "." (in xdigit "_"))
-                         (opt (any "eE") (1+ xdigit))
-                         (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
-                         symbol-end))
-      (oct-number . ,(rx symbol-start
-                         (1+ (in "0-7_"))
-                         (opt "." (in "0-7_"))
-                         (opt (any "eE") (1+ "0-7_"))
-                         (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
-                         symbol-end))
-      (bin-number . ,(rx symbol-start
-                         (1+ (in "0-1_"))
-                         (opt "." (in "0-1_"))
-                         (opt (any "eE") (1+ "0-1_"))
-                         (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
-                         symbol-end))
-      (open-paren           . ,(rx (or "{" "[" "(")))
-      (close-paren          . ,(rx (or "}" "]" ")")))
-      (simple-operator      . ,(rx (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%)))
-      ;; FIXME: rx should support (not simple-operator).
-      (not-simple-operator  . ,(rx
-                                (not
-                                 (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%))))
-      ;; FIXME: Use regexp-opt.
-      (operator             . ,(rx (or (1+ (in "-=+*/<>@$~&%|!?^.:\\"))
-                                       (and
-                                        symbol-start
-                                        (or
-                                         "and" "or" "not" "xor" "shl"
-                                         "shr" "div" "mod" "in" "notin" "is"
-                                         "isnot")
-                                        symbol-end))))
-      ;; FIXME: Use regexp-opt.
-      (assignment-operator  . ,(rx (* (in "-=+*/<>@$~&%|!?^.:\\")) "="))
-      (string-delimiter . ,(rx (and
-                                ;; Match even number of backslashes.
-                                (or (not (any ?\\ ?\' ?\")) point
-                                    ;; Quotes might be preceded by a escaped quote.
-                                    (and (or (not (any ?\\)) point) ?\\
-                                         (* ?\\ ?\\) (any ?\' ?\")))
-                                (* ?\\ ?\\)
-                                ;; Match single or triple quotes of any kind.
-                                (group (or  "\"" "\"\"\"" "'" "'''"))))))
-    "Additional Nim specific sexps for `nim-rx'.")
-
-  (defmacro nim-rx (&rest regexps)
-    "Nim mode specialized rx macro.
-This variant of `rx' supports common nim named REGEXPS."
-    (let ((rx-constituents (append nim-rx-constituents rx-constituents)))
-      (cond ((null regexps)
-             (error "No regexp"))
-            ((cdr regexps)
-             (rx-to-string `(and ,@regexps) t))
-            (t
-             (rx-to-string (car regexps) t)))))
-
-  (defconst nim-font-lock-keywords
-    `(  ;; note the BACKTICK, `
-      ;; (,(nim-rx (1+ "\t")) . nim-tab-face) ;; TODO: make work!
-      (,(nim-rx defun (1+ whitespace) (group symbol-name))
-       . (1 font-lock-function-name-face))
-      (,(nim-rx (or "var" "let") (1+ whitespace) (group symbol-name))
-       . (1 font-lock-variable-name-face))
-      (,(nim-rx (or exception type)) . font-lock-type-face)
-      (,(nim-rx constant) . font-lock-constant-face)
-      (,(nim-rx builtin) . font-lock-builtin-face)
-      (,(nim-rx keyword) . font-lock-keyword-face)
-      (,(nim-rx "{." (1+ any) ".}") . font-lock-preprocessor-face)
-      (,(nim-rx symbol-name (* whitespace) ":" (* whitespace) (group symbol-name))
-       . (1 font-lock-type-face))
-      )
-    "Font lock expressions for Nim mode.")
-
-  (put 'nim-mode 'font-lock-defaults '(nim-font-lock-keywords nil t)))
+(put 'nim-mode 'font-lock-defaults '(nim-font-lock-keywords nil t))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;                               Indentation                                  ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defconst nim-indent-offset 2 "Number of spaces per level of indentation.")
 
 ;;; Indentation
 
@@ -879,15 +663,6 @@ Returns non-nil if and only if there are enclosing parentheses."
 ;;                             Wrap it all up ...                             ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defvar nim-mode-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "M-.") 'nim-goto-sym)
-    (define-key map (kbd "C-c h") 'nim-explain-sym)
-    (define-key map ":" 'nim-indent-electric-colon)
-    (define-key map "\C-c<" 'nim-indent-shift-left)
-    (define-key map "\C-c>" 'nim-indent-shift-right)
-    map))
-
 ;;;###autoload
 (define-derived-mode nim-mode prog-mode "Nim"
   "A major mode for the Nim programming language."
@@ -895,28 +670,12 @@ Returns non-nil if and only if there are enclosing parentheses."
 
   (setq font-lock-defaults '(nim-font-lock-keywords nil t))
 
+  ;; ;; Comment
+  ;; (set (make-local-variable 'comment-start) "# ")
+  ;; (set (make-local-variable 'comment-start-skip) "#+\\s-*")
   ;; modify the keymap
   (set (make-local-variable 'indent-line-function) 'nim-indent-line-function)
   (set (make-local-variable 'indent-region-function) #'nim-indent-region)
-
-  ;; Documentation comment highlighting
-  ;; (modify-syntax-entry ?\# ". 12b" nim-mode-syntax-table)
-  ;; (modify-syntax-entry ?\n "> b" nim-mode-syntax-table)
-
-  ;; Comment
-  (set (make-local-variable 'comment-start) "# ")
-  (set (make-local-variable 'comment-start-skip) "#+\\s-*")
-
-  ;; Comment highlighting
-  (modify-syntax-entry ?# "< b"  nim-mode-syntax-table)
-  (modify-syntax-entry ?\n "> b" nim-mode-syntax-table)
-
-  (modify-syntax-entry ?\' "w"  nim-mode-syntax-table)
-  (modify-syntax-entry ?\" "|"  nim-mode-syntax-table)
-
-  (modify-syntax-entry ?\[ "(]"  nim-mode-syntax-table)
-  (modify-syntax-entry ?\] ")["  nim-mode-syntax-table)
-
   (setq indent-tabs-mode nil) ;; Always indent with SPACES!
   )
 
@@ -989,32 +748,6 @@ The result is written into the buffer
         (with-current-buffer "*nim-compile*"
           (erase-buffer)))
     ))
-
-
-(defcustom nim-type-abbrevs '(
-                                 ("skProc" . "f")
-                                 ("skIterator" . "i")
-                                 ("skTemplate" . "T")
-                                 ("skType" . "t")
-                                 ("skMethod" . "f")
-                                 ("skEnumField" . "e")
-                                 ("skGenericParam" . "p")
-                                 ("skParam" . "p")
-                                 ("skModule" . "m")
-                                 ("skConverter" . "C")
-                                 ("skMacro" . "M")
-                                 ("skField" . "F")
-                                 ("skForVar" . "v")
-                                 ("skVar" . "v")
-                                 ("skLet" . "v")
-                                 ("skLabel" . "l")
-                                 ("skConst" . "c")
-                                 ("skResult" . "r")
-                                 )
-  "Abbrevs for nim-mode (used by company)."
-  :type 'assoc
-  :group 'nim)
-
 
 (defun nim-doc-buffer (element)
   "Displays documentation buffer with ELEMENT contents."
