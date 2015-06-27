@@ -52,6 +52,7 @@
 (require 'nim-vars)
 (require 'nim-syntax)
 (require 'nim-util)
+(require 'nim-helper)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;                                Helpers                                     ;;
@@ -505,20 +506,6 @@ automatically if needed."
         (let ((indentation (nim-indent-calculate-indentation)))
           (when (< (current-indentation) indentation)
             (indent-line-to indentation)))))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;                             Navigation functions ...                       ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defun nim-nav-beginning-of-statement ()
-  "Move to start of current statement."
-  (interactive "^")
-  (while (and (nim-util-backward-stmt)
-              (not (bobp))
-              (memq (car (nim-indent-context))
-                    '(after-operator)))
-    (end-of-line 0))
-  (point))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;                             Wrap it all up ...                             ;;
