@@ -1033,6 +1033,12 @@ The result is written into the buffer
   :type 'string
   :group 'nim)
 
+(defcustom nim-nimsuggest-stdlib-path nil
+  "Path to the stdlib. If nil, nimsuggest tries to figure it out
+by itself. May or may not work."
+  :type 'string
+  :group 'nim)
+
 (require 'epc)
 
 ;;; If you change the order here, make sure to change it over in
@@ -1057,7 +1063,9 @@ The result is written into the buffer
               epc-process
             (progn (setq nim-epc-processes-alist (assq-delete-all main-file nim-epc-processes-alist))
                    nil)))
-        (let ((epc-process (epc:start-epc nim-nimsuggest-path (list "--epc" main-file))))
+        (let ((epc-process
+               (let ((default-directory (or nim-nimsuggest-stdlib-path default-directory)))
+                 (epc:start-epc nim-nimsuggest-path (list "--epc" main-file)))))
           (push (cons main-file epc-process) nim-epc-processes-alist)
           epc-process))))
 
