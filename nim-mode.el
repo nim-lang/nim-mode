@@ -810,7 +810,7 @@ skipped."
       ;; narrow to surrounding parentheses
       (nim-util-narrow-to-paren)
       (while (progn
-               (if (re-search-backward "[,;]" (line-beginning-position) t)
+               (if (re-search-backward "[:=]" (line-beginning-position) t)
                    (forward-char)
                  (beginning-of-line))
                (let ((state (syntax-ppss)))
