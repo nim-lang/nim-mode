@@ -51,6 +51,7 @@
 
 (require 'nim-vars)
 (require 'nim-syntax)
+(require 'nim-util)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;                                Helpers                                     ;;
@@ -504,83 +505,6 @@ automatically if needed."
         (let ((indentation (nim-indent-calculate-indentation)))
           (when (< (current-indentation) indentation)
             (indent-line-to indentation)))))))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;                             Utility functions ...                          ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun nim-util-forward-comment (&optional direction)
-  "Nim mode specific version of `forward-comment'.
-Optional argument DIRECTION defines the direction to move to."
-  (let ((comment-start (nim-syntax-context 'comment))
-        (factor (if (< (or direction 0) 0)
-                    -99999
-                  99999)))
-    (when comment-start
-      (goto-char comment-start))
-    (forward-comment factor)))
-
-(defun nim-util-backward-stmt ()
-  "Move point backward to the beginning of the current statement.
-Point is moved to the beginning of the first symbol that is
-either the first on a line or the first after a
-semicolon.  Balanced parentheses, strings and comments are
-skipped."
-  (let ((level (nth 0 (syntax-ppss))))
-    (save-restriction
-      ;; narrow to surrounding parentheses
-      (nim-util-narrow-to-paren)
-      (while (progn
-               (if (re-search-backward "[,;]" (line-beginning-position) t)
-                   (forward-char)
-                 (beginning-of-line))
-               (let ((state (syntax-ppss)))
-                 (and
-                  (or (> (nth 0 state) level)
-                      (nim-syntax-comment-or-string-p state)
-                      (save-match-data
-                        (looking-at (nim-rx (* space) (group operator))))
-                      (not (looking-at (nim-rx (* space) (group symbol-name)))))
-                  (not (bobp))
-                  (prog1 t (backward-char))))))
-      (and (match-beginning 1)
-           (goto-char (match-beginning 1))))))
-
-(defun nim-util-narrow-to-paren ()
-  "Narrow buffer to content of enclosing parentheses.
-Returns non-nil if and only if there are enclosing parentheses."
-  (save-excursion
-    (condition-case nil
-        (prog1 t
-          (narrow-to-region (progn
-                              (backward-up-list)
-                              (1+ (point)))
-                            (progn
-                              (forward-list)
-                              (1- (point)))))
-      (scan-error nil))))
-
-(defun nim-util-real-current-column ()
-  "Return the current column without narrowing."
-  (+ (current-column)
-     (if (= (line-beginning-position) (point-min))
-         (save-excursion
-           (goto-char (point-min))
-           (save-restriction
-             (widen)
-             (current-column)))
-       0)))
-
-(defun nim-util-real-current-indentation ()
-  "Return the indentation without narrowing."
-  (+ (current-indentation)
-     (if (= (line-beginning-position) (point-min))
-         (save-excursion
-           (goto-char (point-min))
-           (save-restriction
-             (widen)
-             (current-column)))
-       0)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;                             Navigation functions ...                       ;;
