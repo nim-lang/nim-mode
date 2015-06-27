@@ -737,7 +737,6 @@ likely an invalid nim file."
       (when dedenter-pos
         (goto-char dedenter-pos)
         (let* ((pairs '(("elif" "elif" "if")
-                        ("else" "of" "of") ; added on nim-mode
                         ("else" "if" "elif" "except" "for" "while")
                         ("except" "except" "try")
                         ("finally" "else" "except" "try")))
