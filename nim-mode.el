@@ -76,8 +76,12 @@
 (define-derived-mode nim-mode prog-mode "Nim"
   "A major mode for the Nim programming language."
   :group 'nim
-
-  (setq font-lock-defaults '(nim-font-lock-keywords nil t))
+  ;; Font lock
+  (set (make-local-variable 'font-lock-defaults)
+       '(nim-font-lock-keywords
+         nil nil nil nil
+         (font-lock-syntactic-face-function
+          . nim-font-lock-syntactic-face-function)))
 
   ;; ;; Comment
   ;; (set (make-local-variable 'comment-start) "# ")
