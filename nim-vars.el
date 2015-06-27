@@ -135,6 +135,7 @@ Magic functions.")
 (defconst nim-rx-constituents
   (let ((predefineds-keywords
          (cl-loop for (sym . kwd) in `((keyword     . ,nim-keywords)
+                                       (dedenter    . ("elif" "else" "of" "except" "finally"))
                                        (type        . ,nim-types)
                                        (exception   . ,nim-exceptions)
                                        (constant    . ,nim-constants)

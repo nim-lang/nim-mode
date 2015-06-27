@@ -73,22 +73,6 @@
 (put 'nim-mode 'font-lock-defaults '(nim-font-lock-keywords nil t))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;                               Indentation                                  ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;;; Indentation
-
-(defvar nim-indent-dedenters
-  (nim-rx symbol-start
-             (or "else" "elif" "of" "finally" "except")
-             symbol-end
-             (* (not (in "\n")))
-             ":" (* space) (or "#" eol))
-  "Regular expression matching the end of line after which should be dedented.
-If the end of a line matches this regular expression, the line
-will be dedented relative to the previous block.")
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;                             Wrap it all up ...                             ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
