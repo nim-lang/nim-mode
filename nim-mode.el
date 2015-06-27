@@ -56,6 +56,7 @@
 (require 'nim-indent)
 (require 'nim-fill)
 (require 'nim-suggest)
+(require 'nim-compile)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;                                Helpers                                     ;;
