@@ -50,6 +50,7 @@
   (require 'cl))
 
 (require 'nim-vars)
+(require 'nim-syntax)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;                                Helpers                                     ;;
@@ -62,24 +63,6 @@
 (defun nim-regexp-choice (strings)
   "Construct a regexp multiple-choice from a list of STRINGS."
   (concat "\\(" (nim-glue-strings "\\|" strings) "\\)"))
-
-
-(defconst nim-font-lock-keywords
-  `(  ;; note the BACKTICK, `
-    ;; (,(nim-rx (1+ "\t")) . nim-tab-face) ;; TODO: make work!
-    (,(nim-rx defun (1+ whitespace) (group symbol-name))
-     . (1 font-lock-function-name-face))
-    (,(nim-rx (or "var" "let") (1+ whitespace) (group symbol-name))
-     . (1 font-lock-variable-name-face))
-    (,(nim-rx (or exception type)) . font-lock-type-face)
-    (,(nim-rx constant) . font-lock-constant-face)
-    (,(nim-rx builtin) . font-lock-builtin-face)
-    (,(nim-rx keyword) . font-lock-keyword-face)
-    (,(nim-rx "{." (1+ any) ".}") . font-lock-preprocessor-face)
-    (,(nim-rx symbol-name (* whitespace) ":" (* whitespace) (group symbol-name))
-     . (1 font-lock-type-face))
-    )
-  "Font lock expressions for Nim mode.")
 
 (put 'nim-mode 'font-lock-defaults '(nim-font-lock-keywords nil t))
 
@@ -94,15 +77,6 @@
 
 (defvar nim-indent-levels '(0)
   "Levels of indentation available for `nim-indent-line-function'.")
-
-(defvar nim-indent-indenters
-  (nim-rx (or "type" "const" "var" "let" "tuple" "object" "enum" ":"
-                 (and defun (* (not (any ?=))) "=")
-                 (and "object" (+ whitespace) "of" (+ whitespace) symbol-name)))
-  "Regular expression matching the end of line after with a block starts.
-If the end of a line matches this regular expression, the next
-line is considered an indented block.  Whitespaces at the end of a
-line are ignored.")
 
 (defvar nim-indent-dedenters
   (nim-rx symbol-start
@@ -119,31 +93,6 @@ will be dedented relative to the previous block.")
   "Commands that might trigger a `nim-indent-line' call."
   :type '(repeat symbol)
   :group 'nim)
-
-(defun nim-syntax-context (type &optional syntax-ppss)
-  "Return non-nil if point is on TYPE using SYNTAX-PPSS.
-TYPE can be `comment', `string' or `paren'.  It returns the start
-character address of the specified TYPE."
-  (let ((ppss (or syntax-ppss (syntax-ppss))))
-    (cl-case type
-      (comment (and (nth 4 ppss) (nth 8 ppss)))
-      (string (and (not (nth 4 ppss)) (nth 8 ppss)))
-      (paren (nth 1 ppss))
-      (t nil))))
-
-(defun nim-syntax-context-type (&optional syntax-ppss)
-  "Return the context type using SYNTAX-PPSS.
-The type returned can be `comment', `string' or `paren'."
-  (let ((ppss (or syntax-ppss (syntax-ppss))))
-    (cond
-     ((nth 8 ppss) (if (nth 4 ppss) 'comment 'string))
-     ((nth 1 ppss) 'paren))))
-
-(defsubst nim-syntax-comment-or-string-p (&optional syntax-ppss)
-  "Return non-nil if point is inside 'comment or 'string.
-Use the parser state at point or SYNTAX-PPSS."
-  (let ((ppss (or syntax-ppss (syntax-ppss))))
-    (nth 8 ppss)))
 
 (defun nim-indent-context ()
   "Get information on indentation context.
@@ -442,18 +391,6 @@ point is  not in between the indentation."
   (when (not (nim-indent-dedent-line))
     (backward-delete-char-untabify arg)))
 (put 'nim-indent-dedent-line-backspace 'delete-selection 'supersede)
-
-(defsubst nim-syntax-count-quotes (quote-char &optional point limit)
-  "Count number of quotes around point (max is 3).
-QUOTE-CHAR is the quote char to count.  Optional argument POINT is
-the point where scan starts (defaults to current point), and LIMIT
-is used to limit the scan."
-  (let ((i 0))
-    (while (and (< i 3)
-                (or (not limit) (< (+ point i) limit))
-                (eq (char-after (+ point i)) quote-char))
-      (setq i (1+ i)))
-    i))
 
 (defun nim-indent-region (start end)
   "Indent a nim region automagically.
