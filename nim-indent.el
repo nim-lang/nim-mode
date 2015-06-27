@@ -452,9 +452,7 @@ Called from a program, START and END specify the region to indent."
                                   (current-indentation)
                                   (nim-syntax-count-quotes (char-after) (point))))
                               (string-to-syntax "|"))))
-                (beginning-of-line)
-                (delete-horizontal-space)
-                (indent-to (nim-indent-calculate-indentation)))))
+                (nim-indent-line))))
         (forward-line 1))
       (move-marker end nil))))
 
