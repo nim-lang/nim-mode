@@ -82,15 +82,50 @@
          nil nil nil nil
          (font-lock-syntactic-face-function
           . nim-font-lock-syntactic-face-function)))
+  ;; Add """ ... """ pairing to electric-pair-mode.
+  (add-hook 'post-self-insert-hook
+            #'nim-electric-pair-string-delimiter 'append t)
+  ;; Comment
+  (set (make-local-variable 'comment-start) "# ")
+  (set (make-local-variable 'comment-start-skip) "#+\\s-*")
 
-  ;; ;; Comment
-  ;; (set (make-local-variable 'comment-start) "# ")
-  ;; (set (make-local-variable 'comment-start-skip) "#+\\s-*")
+  ;; Heavily stolen from python.el
   ;; modify the keymap
   (set (make-local-variable 'indent-line-function) 'nim-indent-line-function)
   (set (make-local-variable 'indent-region-function) #'nim-indent-region)
-  (setq indent-tabs-mode nil) ;; Always indent with SPACES!
-  )
+  ;; Always indent with SPACES!
+  (set (make-local-variable 'indent-tabs-mode) nil)
+  ;; ???
+  (set (make-local-variable 'parse-sexp-lookup-properties) t)
+  (set (make-local-variable 'parse-sexp-ignore-comments) t)
+  ;; modify the keymap
+  (set (make-local-variable 'indent-line-function)
+       #'nim-indent-line-function)
+  (set (make-local-variable 'indent-region-function) #'nim-indent-region)
+  (set (make-local-variable 'syntax-propertize-function)
+       nim-syntax-propertize-function)
+  (set (make-local-variable 'forward-sexp-function)
+       'nim-nav-forward-sexp)
+  ;; Because indentation is not redundant, we cannot safely reindent code.
+  (set (make-local-variable 'electric-indent-inhibit) t)
+  (set (make-local-variable 'electric-indent-chars)
+       (cons ?: electric-indent-chars))
+  ;; Paragraph
+  (set (make-local-variable 'paragraph-start) "\\s-*$")
+  (set (make-local-variable 'fill-paragraph-function)
+       #'nim-fill-paragraph)
+  ;; Navigation
+  (set (make-local-variable 'beginning-of-defun-function)
+       #'nim-nav-beginning-of-defun)
+  (set (make-local-variable 'end-of-defun-function)
+       #'nim-nav-end-of-defun)
+  (set (make-local-variable 'add-log-current-defun-function)
+       #'nim-info-current-defun)
+  (add-hook 'post-self-insert-hook
+            #'nim-indent-post-self-insert-function 'append 'local)
+  (add-hook 'which-func-functions #'nim-info-current-defun nil t)
+  (when nim-indent-guess-indent-offset
+    (nim-indent-guess-indent-offset)))
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.nim\\'" . nim-mode))
