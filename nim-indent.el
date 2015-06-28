@@ -19,56 +19,6 @@
 (defvar nim-indent-levels '(0)
   "Levels of indentation available for `nim-indent-line-function'.")
 
-(defcustom nim-indent-guess-indent-offset t
-  "Non-nil tells Nim mode to guess `nim-indent-offset' value."
-  :type 'boolean
-  :group 'nim
-  :safe 'booleanp)
-
-(defcustom nim-indent-guess-indent-offset-verbose t
-  "Non-nil means to emit a warning when indentation guessing fails."
-  :type 'boolean
-  :group 'nim
-  :safe' booleanp)
-
-(defun nim-indent-guess-indent-offset ()
-  "Guess and set `nim-indent-offset' for the current buffer."
-  (interactive)
-  (save-excursion
-    (save-restriction
-      (widen)
-      (goto-char (point-min))
-      (let ((block-end))
-        (while (and (not block-end)
-                    (re-search-forward
-                     (nim-rx line-start block-start) nil t))
-          (when (and
-                 (not (nim-syntax-context-type))
-                 (progn
-                   (goto-char (line-end-position))
-                   (nim-util-forward-comment -1)
-                   (if (equal (char-before) ?:)
-                       t
-                     (forward-line 1)
-                     (when (nim-info-block-continuation-line-p)
-                       (while (and (nim-info-continuation-line-p)
-                                   (not (eobp)))
-                         (forward-line 1))
-                       (nim-util-forward-comment -1)
-                       (when (equal (char-before) ?:)
-                         t)))))
-            (setq block-end (point-marker))))
-        (let ((indentation
-               (when block-end
-                 (goto-char block-end)
-                 (nim-util-forward-comment)
-                 (current-indentation))))
-          (if (and indentation (not (zerop indentation)))
-              (set (make-local-variable 'nim-indent-offset) indentation)
-            (when nim-indent-guess-indent-offset-verbose
-              (message "Can't guess nim-indent-offset, using defaults: %s"
-                       nim-indent-offset))))))))
-
 (defun nim-indent-context ()
   "Get information about the current indentation context.
 Context is returned in a cons with the form (STATUS . START).
