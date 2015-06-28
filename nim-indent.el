@@ -437,22 +437,27 @@ Called from a program, START and END specify the region to indent."
       (or (bolp) (forward-line 1))
       (while (< (point) end)
         (or (and (bolp) (eolp))
-            (let (word)
-              (forward-line -1)
-              (back-to-indentation)
-              (setq word (current-word))
-              (forward-line 1)
-              (when (and word
-                         ;; Don't mess with strings, unless it's the
-                         ;; enclosing set of quotes.
-                         (or (not (nim-syntax-context 'string))
-                             (eq
-                              (syntax-after
-                               (+ (1- (point))
-                                  (current-indentation)
-                                  (nim-syntax-count-quotes (char-after) (point))))
-                              (string-to-syntax "|"))))
-                (nim-indent-line))))
+            (when (and
+                   ;; Skip if previous line is empty or a comment.
+                   (save-excursion
+                     (let ((line-is-comment-p
+                            (nim-info-current-line-comment-p)))
+                       (forward-line -1)
+                       (not
+                        (or (and (nim-info-current-line-comment-p)
+                                 ;; Unless this line is a comment too.
+                                 (not line-is-comment-p))
+                            (nim-info-current-line-empty-p)))))
+                   ;; Don't mess with strings, unless it's the
+                   ;; enclosing set of quotes.
+                   (or (not (nim-syntax-context 'string))
+                       (eq
+                        (syntax-after
+                         (+ (1- (point))
+                            (current-indentation)
+                            (nim-syntax-count-quotes (char-after) (point))))
+                        (string-to-syntax "|"))))
+              (nim-indent-line)))
         (forward-line 1))
       (move-marker end nil))))
 
