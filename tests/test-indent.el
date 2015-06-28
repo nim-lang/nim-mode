@@ -7,8 +7,8 @@
 
 (describe
  "Indentation"
- (defun indent-and-compare (test-string actual expected)
-   (lexical-let ((act actual) (exp expected))
+ (defun indent-and-compare (test-string file-name)
+   (lexical-let ((act (concat file-name "-actual.nim")) (exp (concat file-name "-expected.nim")))
      (it test-string
          (insert-file-literally act)
          (indent-region (point-min) (point-max))
@@ -27,10 +27,17 @@
 
  (indent-and-compare
   "should indent #30 correctly"
-  "tests/samples/30-actual.nim"
-  "tests/samples/30-expected.nim")
+  "tests/samples/30")
 
  (indent-and-compare
   "should indent for x, y in foo(): correctly"
-  "tests/samples/for-pairs-actual.nim"
-  "tests/samples/for-pairs-expected.nim"))
+  "tests/samples/for-pairs")
+
+(indent-and-compare
+  "should dedent case/if correctly"
+  "tests/samples/dedenter"
+  )
+
+(indent-and-compare
+  "should dedent let/comments correctly"
+  "tests/samples/line-checking"))
