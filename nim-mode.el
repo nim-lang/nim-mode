@@ -123,9 +123,7 @@
        #'nim-info-current-defun)
   (add-hook 'post-self-insert-hook
             #'nim-indent-post-self-insert-function 'append 'local)
-  (add-hook 'which-func-functions #'nim-info-current-defun nil t)
-  (when nim-indent-guess-indent-offset
-    (nim-indent-guess-indent-offset)))
+  (add-hook 'which-func-functions #'nim-info-current-defun nil t))
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.nim\\'" . nim-mode))
