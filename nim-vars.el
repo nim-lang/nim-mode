@@ -133,87 +133,87 @@ Magic functions.")
   "Nim standard operators.")
 
 (defvar nim-rx-constituents
-  (let ((constituents1
-         (cl-loop for (sym . kwd) in `((keyword     . ,nim-keywords)
-                                       (dedenter    . ("elif" "else" "of" "except" "finally"))
-                                       (type        . ,nim-types)
-                                       (exception   . ,nim-exceptions)
-                                       (constant    . ,nim-constants)
-                                       (builtin     . ,nim-builtins)
-                                       (defun       . ("proc" "method" "converter" "iterator" "template" "macro"))
-                                       (block-ender . ("break" "continue" "raise" "return")))
-                  collect (cons sym (apply `((lambda () (rx symbol-start (or ,@kwd) symbol-end))))))))
-    (append constituents1
-            `((decl-block . ,(rx symbol-start
-                                 (or "type" "const" "var" "let" "import")
-                                 symbol-end
-                                 (* space)
-                                 (or "#" eol)))
+  (let* ((constituents1
+          (cl-loop for (sym . kwd) in `((keyword     . ,nim-keywords)
+                                        (dedenter    . ("elif" "else" "of" "except" "finally"))
+                                        (type        . ,nim-types)
+                                        (exception   . ,nim-exceptions)
+                                        (constant    . ,nim-constants)
+                                        (builtin     . ,nim-builtins)
+                                        (defun       . ("proc" "method" "converter" "iterator" "template" "macro"))
+                                        (block-ender . ("break" "continue" "raise" "return")))
+                   collect (cons sym (apply `((lambda () (rx symbol-start (or ,@kwd) symbol-end)))))))
+         (constituents2 `((decl-block . ,(rx symbol-start
+                                             (or "type" "const" "var" "let" "import")
+                                             symbol-end
+                                             (* space)
+                                             (or "#" eol)))
 
-
-              (symbol-name          . ,(rx (any letter ?_ ?–) (* (any word ?_ ?–))))
-              (dec-number . ,(rx symbol-start
-                                 (1+ (in digit "_"))
-                                 (opt "." (in digit "_"))
-                                 (opt (any "eE") (1+ digit))
-                                 (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
-                                 symbol-end))
-              (hex-number . ,(rx symbol-start
-                                 (1+ (in xdigit "_"))
-                                 (opt "." (in xdigit "_"))
-                                 (opt (any "eE") (1+ xdigit))
-                                 (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
-                                 symbol-end))
-              (oct-number . ,(rx symbol-start
-                                 (1+ (in "0-7_"))
-                                 (opt "." (in "0-7_"))
-                                 (opt (any "eE") (1+ "0-7_"))
-                                 (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
-                                 symbol-end))
-              (bin-number . ,(rx symbol-start
-                                 (1+ (in "0-1_"))
-                                 (opt "." (in "0-1_"))
-                                 (opt (any "eE") (1+ "0-1_"))
-                                 (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
-                                 symbol-end))
-              (open-paren           . ,(rx (or "{." "{" "[" "(")))
-              (close-paren          . ,(rx (or ".}" "}" "]" ")")))
-              (simple-operator      . ,(rx (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%)))
-              ;; FIXME: rx should support (not simple-operator).
-              (not-simple-operator  . ,(rx
-                                        (not
-                                         (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%))))
-              ;; FIXME: Use regexp-opt.
-              (operator             . ,(rx (or (1+ (in "-=+*/<>@$~&%|!?^.:\\"))
-                                               (and
-                                                symbol-start
+                          (symbol-name          . ,(rx (any letter ?_ ?–) (* (any word ?_ ?–))))
+                          (dec-number . ,(rx symbol-start
+                                             (1+ (in digit "_"))
+                                             (opt "." (in digit "_"))
+                                             (opt (any "eE") (1+ digit))
+                                             (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
+                                             symbol-end))
+                          (hex-number . ,(rx symbol-start
+                                             (1+ (in xdigit "_"))
+                                             (opt "." (in xdigit "_"))
+                                             (opt (any "eE") (1+ xdigit))
+                                             (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
+                                             symbol-end))
+                          (oct-number . ,(rx symbol-start
+                                             (1+ (in "0-7_"))
+                                             (opt "." (in "0-7_"))
+                                             (opt (any "eE") (1+ "0-7_"))
+                                             (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
+                                             symbol-end))
+                          (bin-number . ,(rx symbol-start
+                                             (1+ (in "0-1_"))
+                                             (opt "." (in "0-1_"))
+                                             (opt (any "eE") (1+ "0-1_"))
+                                             (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
+                                             symbol-end))
+                          (open-paren           . ,(rx (or "{" "[" "(")))
+                          (close-paren          . ,(rx (or "}" "]" ")")))
+                          (pragma               . ,(rx "{." (1+ any) ".}"))
+                          (simple-operator      . ,(rx (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%)))
+                          ;; FIXME: rx should support (not simple-operator).
+                          (not-simple-operator  . ,(rx
+                                                    (not
+                                                     (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%))))
+                          ;; FIXME: Use regexp-opt.
+                          (operator             . ,(rx (or (1+ (in "-=+*/<>@$~&%|!?^.:\\"))
+                                                           (and
+                                                            symbol-start
+                                                            (or
+                                                             "and" "or" "not" "xor" "shl"
+                                                             "shr" "div" "mod" "in" "notin" "is"
+                                                             "isnot")
+                                                            symbol-end))))
+                          ;; FIXME: Use regexp-opt.
+                          (assignment-operator  . ,(rx (* (in "-=+*/<>@$~&%|!?^.:\\")) "="))
+                          (string-delimiter . ,(rx (and
+                                                    ;; Match even number of backslashes.
+                                                    (or (not (any ?\\ ?\' ?\")) point
+                                                        ;; Quotes might be preceded by a escaped quote.
+                                                        (and (or (not (any ?\\)) point) ?\\
+                                                             (* ?\\ ?\\) (any ?\' ?\")))
+                                                    (* ?\\ ?\\)
+                                                    ;; Match single or triple quotes of any kind.
+                                                    (group (or  "\"" "\"\"\"" "'" "'''")))))
+                          (coding-cookie . ,(rx line-start ?# (* space)
                                                 (or
-                                                 "and" "or" "not" "xor" "shl"
-                                                 "shr" "div" "mod" "in" "notin" "is"
-                                                 "isnot")
-                                                symbol-end))))
-              ;; FIXME: Use regexp-opt.
-              (assignment-operator  . ,(rx (* (in "-=+*/<>@$~&%|!?^.:\\")) "="))
-              (string-delimiter . ,(rx (and
-                                        ;; Match even number of backslashes.
-                                        (or (not (any ?\\ ?\' ?\")) point
-                                            ;; Quotes might be preceded by a escaped quote.
-                                            (and (or (not (any ?\\)) point) ?\\
-                                                 (* ?\\ ?\\) (any ?\' ?\")))
-                                        (* ?\\ ?\\)
-                                        ;; Match single or triple quotes of any kind.
-                                        (group (or  "\"" "\"\"\"" "'" "'''")))))
-              (coding-cookie . ,(rx line-start ?# (* space)
-                                    (or
-                                     ;; # coding=<encoding name>
-                                     (: "coding" (or ?: ?=) (* space) (group-n 1 (+ (or word ?-))))
-                                     ;; # -*- coding: <encoding name> -*-
-                                     (: "-*-" (* space) "coding:" (* space)
-                                        (group-n 1 (+ (or word ?-))) (* space) "-*-")
-                                     ;; # vim: set fileencoding=<encoding name> :
-                                     (: "vim:" (* space) "set" (+ space)
-                                        "fileencoding" (* space) ?= (* space)
-                                        (group-n 1 (+ (or word ?-))) (* space) ":")))))))
+                                                 ;; # coding=<encoding name>
+                                                 (: "coding" (or ?: ?=) (* space) (group-n 1 (+ (or word ?-))))
+                                                 ;; # -*- coding: <encoding name> -*-
+                                                 (: "-*-" (* space) "coding:" (* space)
+                                                    (group-n 1 (+ (or word ?-))) (* space) "-*-")
+                                                 ;; # vim: set fileencoding=<encoding name> :
+                                                 (: "vim:" (* space) "set" (+ space)
+                                                    "fileencoding" (* space) ?= (* space)
+                                                    (group-n 1 (+ (or word ?-))) (* space) ":")))))))
+    (append constituents1 constituents2))
   "Additional Nim specific sexps for `nim-rx'.")
 
 (defmacro nim-rx (&rest regexps)
