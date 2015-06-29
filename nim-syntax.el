@@ -22,20 +22,7 @@
 ;;
 
 ;;; Code:
-(require 'nim-vars)
-
-(add-to-list 'nim-rx-constituents
-             (cons 'block-start (nim-rx (or decl-block block-start-defun))))
-
-;; Regular expression matching the end of line after with a block starts.
-;; If the end of a line matches this regular expression, the next
-;; line is considered an indented block.  Whitespaces at the end of a
-;; line are ignored.
-(add-to-list 'nim-rx-constituents
-             (cons 'line-end-indenters
-                   (nim-rx (or "type" "const" "var" "let" "tuple" "object" "enum" ":"
-                               (and defun (* (not (any ?=))) "=")
-                               (and "object" (+ whitespace) "of" (+ whitespace) symbol-name)))))
+(eval-and-compile (require 'nim-rx))
 
 (defconst nim-font-lock-keywords
   `(;; note the BACKTICK, `

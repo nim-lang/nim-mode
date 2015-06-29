@@ -49,7 +49,9 @@
 (eval-when-compile
   (require 'cl))
 
+;; Order of loading
 (require 'nim-vars)
+(eval-and-compile (require 'nim-rx))
 (require 'nim-syntax)
 (require 'nim-util)
 (require 'nim-helper)
