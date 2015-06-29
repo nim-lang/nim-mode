@@ -133,7 +133,7 @@ Magic functions.")
   "Nim standard operators.")
 
 (defvar nim-rx-constituents
-  (let ((predefineds-keywords
+  (let ((constituents1
          (cl-loop for (sym . kwd) in `((keyword     . ,nim-keywords)
                                        (dedenter    . ("elif" "else" "of" "except" "finally"))
                                        (type        . ,nim-types)
@@ -143,7 +143,7 @@ Magic functions.")
                                        (defun       . ("proc" "method" "converter" "iterator" "template" "macro"))
                                        (block-ender . ("break" "continue" "raise" "return")))
                   collect (cons sym (apply `((lambda () (rx symbol-start (or ,@kwd) symbol-end))))))))
-    (append predefineds-keywords
+    (append constituents1
             `((decl-block . ,(rx symbol-start
                                  (or "type" "const" "var" "let" "import")
                                  symbol-end
