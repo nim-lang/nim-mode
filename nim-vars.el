@@ -145,7 +145,7 @@ Magic functions.")
                   collect (cons sym (apply `((lambda () (rx symbol-start (or ,@kwd) symbol-end))))))))
     (append predefineds-keywords
             `((decl-block . ,(rx symbol-start
-                                 (or "type" "const" "var" "let")
+                                 (or "type" "const" "var" "let" "import")
                                  symbol-end
                                  (* space)
                                  (or "#" eol)))
