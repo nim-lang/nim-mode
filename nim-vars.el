@@ -132,7 +132,7 @@ Magic functions.")
   '( "`" "{." ".}" "[" "]" "{" "}" "(" ")" )
   "Nim standard operators.")
 
-(defconst nim-rx-constituents
+(defvar nim-rx-constituents
   (let ((predefineds-keywords
          (cl-loop for (sym . kwd) in `((keyword     . ,nim-keywords)
                                        (dedenter    . ("elif" "else" "of" "except" "finally"))
@@ -144,22 +144,7 @@ Magic functions.")
                                        (block-ender . ("break" "continue" "raise" "return")))
                   collect (cons sym (apply `((lambda () (rx symbol-start (or ,@kwd) symbol-end))))))))
     (append predefineds-keywords
-            `(
-              (block-start          . ,(rx (or (and symbol-start
-                                                    (or "type" "const" "var" "let")
-                                                    symbol-end
-                                                    (* space)
-                                                    (or "#" eol))
-                                               (and symbol-start
-                                                    (or "proc" "method" "converter" "iterator"
-                                                        "template" "macro"
-                                                        "if" "elif" "else" "when" "while" "for" "of"
-                                                        "try" "except" "finally"
-                                                        "with" "block"
-                                                        "enum" "tuple" "object")
-                                                    symbol-end))))
-
-              (decl-block . ,(rx symbol-start
+            `((decl-block . ,(rx symbol-start
                                  (or "type" "const" "var" "let")
                                  symbol-end
                                  (* space)

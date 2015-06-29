@@ -24,6 +24,18 @@
 ;;; Code:
 (require 'nim-vars)
 
+(add-to-list 'nim-rx-constituents
+             (cons 'block-start
+                   (nim-rx (or decl-block
+                               (and symbol-start
+                                    (or "proc" "method" "converter" "iterator"
+                                        "template" "macro"
+                                        "if" "elif" "else" "when" "while" "for" "of"
+                                        "try" "except" "finally"
+                                        "with" "block"
+                                        "enum" "tuple" "object")
+                                    symbol-end)))))
+
 (defvar nim-indent-indenters
   (nim-rx (or "type" "const" "var" "let" "tuple" "object" "enum" ":"
               (and defun (* (not (any ?=))) "=")
