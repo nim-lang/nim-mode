@@ -36,14 +36,15 @@
                                         "enum" "tuple" "object")
                                     symbol-end)))))
 
-(defvar nim-indent-indenters
-  (nim-rx (or "type" "const" "var" "let" "tuple" "object" "enum" ":"
-              (and defun (* (not (any ?=))) "=")
-              (and "object" (+ whitespace) "of" (+ whitespace) symbol-name)))
-  "Regular expression matching the end of line after with a block starts.
-If the end of a line matches this regular expression, the next
-line is considered an indented block.  Whitespaces at the end of a
-line are ignored.")
+;; Regular expression matching the end of line after with a block starts.
+;; If the end of a line matches this regular expression, the next
+;; line is considered an indented block.  Whitespaces at the end of a
+;; line are ignored.
+(add-to-list 'nim-rx-constituents
+             (cons 'line-end-indenters
+                   (nim-rx (or "type" "const" "var" "let" "tuple" "object" "enum" ":"
+                               (and defun (* (not (any ?=))) "=")
+                               (and "object" (+ whitespace) "of" (+ whitespace) symbol-name)))))
 
 (defconst nim-font-lock-keywords
   `(;; note the BACKTICK, `
