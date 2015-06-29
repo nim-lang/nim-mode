@@ -25,16 +25,7 @@
 (require 'nim-vars)
 
 (add-to-list 'nim-rx-constituents
-             (cons 'block-start
-                   (nim-rx (or decl-block
-                               (and symbol-start
-                                    (or "proc" "method" "converter" "iterator"
-                                        "template" "macro"
-                                        "if" "elif" "else" "when" "while" "for" "of"
-                                        "try" "except" "finally"
-                                        "with" "block"
-                                        "enum" "tuple" "object")
-                                    symbol-end)))))
+             (cons 'block-start (nim-rx (or decl-block block-start-defun))))
 
 ;; Regular expression matching the end of line after with a block starts.
 ;; If the end of a line matches this regular expression, the next

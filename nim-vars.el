@@ -134,14 +134,20 @@ Magic functions.")
 
 (defvar nim-rx-constituents
   (let* ((constituents1
-          (cl-loop for (sym . kwd) in `((keyword     . ,nim-keywords)
-                                        (dedenter    . ("elif" "else" "of" "except" "finally"))
-                                        (type        . ,nim-types)
-                                        (exception   . ,nim-exceptions)
-                                        (constant    . ,nim-constants)
-                                        (builtin     . ,nim-builtins)
-                                        (defun       . ("proc" "method" "converter" "iterator" "template" "macro"))
-                                        (block-ender . ("break" "continue" "raise" "return")))
+          (cl-loop for (sym . kwd) in `((keyword           . ,nim-keywords)
+                                        (dedenter          . ("elif" "else" "of" "except" "finally"))
+                                        (type              . ,nim-types)
+                                        (exception         . ,nim-exceptions)
+                                        (constant          . ,nim-constants)
+                                        (builtin           . ,nim-builtins)
+                                        (defun             . ("proc" "method" "converter" "iterator" "template" "macro"))
+                                        (block-ender       . ("break" "continue" "raise" "return"))
+                                        (block-start-defun . ("proc" "method" "converter" "iterator"
+                                                              "template" "macro"
+                                                              "if" "elif" "else" "when" "while" "for" "of"
+                                                              "try" "except" "finally"
+                                                              "with" "block"
+                                                              "enum" "tuple" "object")))
                    collect (cons sym (apply `((lambda () (rx symbol-start (or ,@kwd) symbol-end)))))))
          (constituents2 `((decl-block . ,(rx symbol-start
                                              (or "type" "const" "var" "let" "import")
