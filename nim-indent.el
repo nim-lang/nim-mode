@@ -200,7 +200,10 @@ keyword
                        (nim-util-forward-comment -1)
                        (cond ((or (member (char-before) '(?: ?=))
                                   (looking-back (nim-rx decl-block) nil))
-                              (nim-nav-beginning-of-block))))))
+                              (nim-nav-beginning-of-block))
+                             ((looking-back (nim-rx line-end-indenters) nil)
+                              (back-to-indentation)
+                              (point))))))
           (when start
             (cons :after-block-start start))))
        ;; At dedenter statement.
