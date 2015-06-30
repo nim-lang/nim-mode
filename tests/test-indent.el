@@ -44,4 +44,9 @@
 
 (indent-and-compare
  "should indent import statement's libraries correctly"
- "tests/samples/import-statement"))
+ "tests/samples/import-statement")
+
+(indent-and-compare
+ "should indent after ‘object’, ‘enum’, ‘tupel’, and ‘object of’ correctly"
+ "tests/samples/line-end-indent"))
+
