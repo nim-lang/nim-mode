@@ -50,3 +50,8 @@
  "should indent after ‘object’, ‘enum’, ‘tupel’, and ‘object of’ correctly"
  "tests/samples/line-end-indent"))
 
+;; Local Variables:
+;; no-byte-compile: t
+;; End:
+
+;;; test-indent.el ends here
