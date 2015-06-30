@@ -40,4 +40,8 @@
 
 (indent-and-compare
   "should dedent let/comments correctly"
-  "tests/samples/line-checking"))
+  "tests/samples/line-checking")
+
+(indent-and-compare
+ "should indent import statement's libraries correctly"
+ "tests/samples/import-statement"))
