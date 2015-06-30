@@ -57,7 +57,61 @@
 
 (defconst nim-indent-offset 2 "Number of spaces per level of indentation.")
 
-;; Keywords
+(defvar nim-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "M-.") 'nim-goto-sym)
+    (define-key map (kbd "C-c h") 'nim-explain-sym)
+    (define-key map ":" 'nim-indent-electric-colon)
+    (define-key map "\C-c<" 'nim-indent-shift-left)
+    (define-key map "\C-c>" 'nim-indent-shift-right)
+    map))
+
+(defconst nim-mode-syntax-table
+  (let ((table (make-syntax-table)))
+    ;; Give punctuation syntax to ASCII that normally has symbol
+    ;; syntax or has word syntax and isn't a letter.
+    (let ((symbol (string-to-syntax "_"))
+          (sst (standard-syntax-table)))
+      (dotimes (i 128)
+        (unless (= i ?_)
+          (if (equal symbol (aref sst i))
+              (modify-syntax-entry i "." table)))))
+    (modify-syntax-entry ?$ "." table)
+    (modify-syntax-entry ?% "." table)
+
+    ;; exceptions
+    (modify-syntax-entry ?# "<" table)
+    (modify-syntax-entry ?\n ">" table)
+    (modify-syntax-entry ?' "\"" table)
+    (modify-syntax-entry ?` "$" table)
+
+    ;; Parentheses
+    (modify-syntax-entry ?\[ "(]  " table)
+    (modify-syntax-entry ?\] ")[  " table)
+    (modify-syntax-entry ?\{ "(}  " table)
+    (modify-syntax-entry ?\} "){  " table)
+    (modify-syntax-entry ?\( "()  " table)
+    (modify-syntax-entry ?\) ")(  " table)
+
+    ;; ;; Documentation comment highlighting
+    ;; ;; (modify-syntax-entry ?\# ". 12b" nim-mode-syntax-table)
+    ;; ;; (modify-syntax-entry ?\n "> b" nim-mode-syntax-table)
+    ;; ;; Comment highlighting
+    ;; (modify-syntax-entry ?# "< b"  nim-mode-syntax-table)
+    ;; (modify-syntax-entry ?\n "> b" nim-mode-syntax-table)
+    ;; (modify-syntax-entry ?\' "w"  nim-mode-syntax-table)
+    ;; (modify-syntax-entry ?\" "|"  nim-mode-syntax-table)
+    table)
+  "Syntax table for Nim files.")
+
+(defvar nim-dotty-syntax-table
+  (let ((table (make-syntax-table nim-mode-syntax-table)))
+    (modify-syntax-entry ?. "w" table)
+    (modify-syntax-entry ?_ "w" table)
+    table)
+  "Dotty syntax table for Nim files.
+It makes underscores and dots word constituent chars.")
+
 (defconst nim-keywords
   '("addr" "and" "as" "asm" "atomic" "bind" "block" "break" "case"
     "cast" "const" "continue" "converter" "discard" "distinct" "div" "do"
@@ -131,171 +185,6 @@ Magic functions.")
 (defconst nim-operators
   '( "`" "{." ".}" "[" "]" "{" "}" "(" ")" )
   "Nim standard operators.")
-
-(defconst nim-rx-constituents
-  (let ((predefineds-keywords
-         (cl-loop for (sym . kwd) in `((keyword     . ,nim-keywords)
-                                       (dedenter    . ("elif" "else" "of" "except" "finally"))
-                                       (type        . ,nim-types)
-                                       (exception   . ,nim-exceptions)
-                                       (constant    . ,nim-constants)
-                                       (builtin     . ,nim-builtins)
-                                       (defun       . ("proc" "method" "converter" "iterator" "template" "macro"))
-                                       (block-ender . ("break" "continue" "raise" "return")))
-                  collect (cons sym (apply `((lambda () (rx symbol-start (or ,@kwd) symbol-end))))))))
-    (append predefineds-keywords
-            `(
-              (block-start          . ,(rx (or (and symbol-start
-                                                    (or "type" "const" "var" "let")
-                                                    symbol-end
-                                                    (* space)
-                                                    (or "#" eol))
-                                               (and symbol-start
-                                                    (or "proc" "method" "converter" "iterator"
-                                                        "template" "macro"
-                                                        "if" "elif" "else" "when" "while" "for" "of"
-                                                        "try" "except" "finally"
-                                                        "with" "block"
-                                                        "enum" "tuple" "object")
-                                                    symbol-end))))
-
-              (decl-block . ,(rx symbol-start
-                                 (or "type" "const" "var" "let")
-                                 symbol-end
-                                 (* space)
-                                 (or "#" eol)))
-
-
-              (symbol-name          . ,(rx (any letter ?_ ?–) (* (any word ?_ ?–))))
-              (dec-number . ,(rx symbol-start
-                                 (1+ (in digit "_"))
-                                 (opt "." (in digit "_"))
-                                 (opt (any "eE") (1+ digit))
-                                 (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
-                                 symbol-end))
-              (hex-number . ,(rx symbol-start
-                                 (1+ (in xdigit "_"))
-                                 (opt "." (in xdigit "_"))
-                                 (opt (any "eE") (1+ xdigit))
-                                 (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
-                                 symbol-end))
-              (oct-number . ,(rx symbol-start
-                                 (1+ (in "0-7_"))
-                                 (opt "." (in "0-7_"))
-                                 (opt (any "eE") (1+ "0-7_"))
-                                 (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
-                                 symbol-end))
-              (bin-number . ,(rx symbol-start
-                                 (1+ (in "0-1_"))
-                                 (opt "." (in "0-1_"))
-                                 (opt (any "eE") (1+ "0-1_"))
-                                 (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
-                                 symbol-end))
-              (open-paren           . ,(rx (or "{." "{" "[" "(")))
-              (close-paren          . ,(rx (or ".}" "}" "]" ")")))
-              (simple-operator      . ,(rx (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%)))
-              ;; FIXME: rx should support (not simple-operator).
-              (not-simple-operator  . ,(rx
-                                        (not
-                                         (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%))))
-              ;; FIXME: Use regexp-opt.
-              (operator             . ,(rx (or (1+ (in "-=+*/<>@$~&%|!?^.:\\"))
-                                               (and
-                                                symbol-start
-                                                (or
-                                                 "and" "or" "not" "xor" "shl"
-                                                 "shr" "div" "mod" "in" "notin" "is"
-                                                 "isnot")
-                                                symbol-end))))
-              ;; FIXME: Use regexp-opt.
-              (assignment-operator  . ,(rx (* (in "-=+*/<>@$~&%|!?^.:\\")) "="))
-              (string-delimiter . ,(rx (and
-                                        ;; Match even number of backslashes.
-                                        (or (not (any ?\\ ?\' ?\")) point
-                                            ;; Quotes might be preceded by a escaped quote.
-                                            (and (or (not (any ?\\)) point) ?\\
-                                                 (* ?\\ ?\\) (any ?\' ?\")))
-                                        (* ?\\ ?\\)
-                                        ;; Match single or triple quotes of any kind.
-                                        (group (or  "\"" "\"\"\"" "'" "'''")))))
-              (coding-cookie . ,(rx line-start ?# (* space)
-                                    (or
-                                     ;; # coding=<encoding name>
-                                     (: "coding" (or ?: ?=) (* space) (group-n 1 (+ (or word ?-))))
-                                     ;; # -*- coding: <encoding name> -*-
-                                     (: "-*-" (* space) "coding:" (* space)
-                                        (group-n 1 (+ (or word ?-))) (* space) "-*-")
-                                     ;; # vim: set fileencoding=<encoding name> :
-                                     (: "vim:" (* space) "set" (+ space)
-                                        "fileencoding" (* space) ?= (* space)
-                                        (group-n 1 (+ (or word ?-))) (* space) ":")))))))
-  "Additional Nim specific sexps for `nim-rx'.")
-
-(defmacro nim-rx (&rest regexps)
-    "Nim mode specialized rx macro.
-This variant of `rx' supports common nim named REGEXPS."
-    (let ((rx-constituents (append nim-rx-constituents rx-constituents)))
-      (cond ((null regexps)
-             (error "No regexp"))
-            ((cdr regexps)
-             (rx-to-string `(and ,@regexps) t))
-            (t
-             (rx-to-string (car regexps) t)))))
-
-(defvar nim-mode-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "M-.") 'nim-goto-sym)
-    (define-key map (kbd "C-c h") 'nim-explain-sym)
-    (define-key map ":" 'nim-indent-electric-colon)
-    (define-key map "\C-c<" 'nim-indent-shift-left)
-    (define-key map "\C-c>" 'nim-indent-shift-right)
-    map))
-
-(defconst nim-mode-syntax-table
-  (let ((table (make-syntax-table)))
-    ;; Give punctuation syntax to ASCII that normally has symbol
-    ;; syntax or has word syntax and isn't a letter.
-    (let ((symbol (string-to-syntax "_"))
-          (sst (standard-syntax-table)))
-      (dotimes (i 128)
-        (unless (= i ?_)
-          (if (equal symbol (aref sst i))
-              (modify-syntax-entry i "." table)))))
-    (modify-syntax-entry ?$ "." table)
-    (modify-syntax-entry ?% "." table)
-
-    ;; exceptions
-    (modify-syntax-entry ?# "<" table)
-    (modify-syntax-entry ?\n ">" table)
-    (modify-syntax-entry ?' "\"" table)
-    (modify-syntax-entry ?` "$" table)
-
-    ;; Parentheses
-    (modify-syntax-entry ?\[ "(]  " table)
-    (modify-syntax-entry ?\] ")[  " table)
-    (modify-syntax-entry ?\{ "(}  " table)
-    (modify-syntax-entry ?\} "){  " table)
-    (modify-syntax-entry ?\( "()  " table)
-    (modify-syntax-entry ?\) ")(  " table)
-
-    ;; ;; Documentation comment highlighting
-    ;; ;; (modify-syntax-entry ?\# ". 12b" nim-mode-syntax-table)
-    ;; ;; (modify-syntax-entry ?\n "> b" nim-mode-syntax-table)
-    ;; ;; Comment highlighting
-    ;; (modify-syntax-entry ?# "< b"  nim-mode-syntax-table)
-    ;; (modify-syntax-entry ?\n "> b" nim-mode-syntax-table)
-    ;; (modify-syntax-entry ?\' "w"  nim-mode-syntax-table)
-    ;; (modify-syntax-entry ?\" "|"  nim-mode-syntax-table)
-    table)
-  "Syntax table for Nim files.")
-
-(defvar nim-dotty-syntax-table
-  (let ((table (make-syntax-table nim-mode-syntax-table)))
-    (modify-syntax-entry ?. "w" table)
-    (modify-syntax-entry ?_ "w" table)
-    table)
-  "Dotty syntax table for Nim files.
-It makes underscores and dots word constituent chars.")
 
 (provide 'nim-vars)
 ;;; nim-vars.el ends here

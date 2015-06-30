@@ -198,10 +198,12 @@ keyword
        ((let ((start (save-excursion
                        (back-to-indentation)
                        (nim-util-forward-comment -1)
-                       (cond ((member (char-before) '(?: ?=))
+                       (cond ((or (member (char-before) '(?: ?=))
+                                  (looking-back (nim-rx decl-block) nil))
                               (nim-nav-beginning-of-block))
-                             ((re-search-backward (nim-rx decl-block) (line-beginning-position) t)
-                              (nim-nav-beginning-of-block))))))
+                             ((looking-back (nim-rx line-end-indenters) nil)
+                              (back-to-indentation)
+                              (point))))))
           (when start
             (cons :after-block-start start))))
        ;; At dedenter statement.

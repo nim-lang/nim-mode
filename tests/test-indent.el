@@ -40,4 +40,18 @@
 
 (indent-and-compare
   "should dedent let/comments correctly"
-  "tests/samples/line-checking"))
+  "tests/samples/line-checking")
+
+(indent-and-compare
+ "should indent import statement's libraries correctly"
+ "tests/samples/import-statement")
+
+(indent-and-compare
+ "should indent after ‘object’, ‘enum’, ‘tupel’, and ‘object of’ correctly"
+ "tests/samples/line-end-indent"))
+
+;; Local Variables:
+;; no-byte-compile: t
+;; End:
+
+;;; test-indent.el ends here
