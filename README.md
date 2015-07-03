@@ -6,8 +6,10 @@ An emacs major mode for the Nim programming language.
 * [Install Nim](http://nim-lang.org/download.html)
 * Install `nim-mode.el` via melpa.
 
-If you use `auto-complete` for completion, see `ac-nim.el`
-for info about how to enable a nim-specific source (experimental).
+If you use `company-mode` then add `company-nim` to `company-backends` like:
+```el
+(add-to-list 'company-backends 'company-nim)
+```
 
 If you use `auto-indent-mode` you need to add nim-mode to the list of `auto-indent-multiple-indent-modes`:
 ```el
