@@ -101,7 +101,10 @@
                                                       (group (or  "\"" "\"\"\"")))))
                             (character-delimiter . ,(rx
                                                      (not (any num))
-                                                     (group (and "'" (? ?\\) (not (any "'")) "'"))
+                                                     (group (and "'" (? ?\\)
+                                                                 ;; one bite characters' regex
+                                                                 (eval (cons 'any (list (concat (char-to-string 0) "-" (char-to-string 127)))))
+                                                                 "'"))
                                                      (not (any "i" "f" "u"))))
                             (coding-cookie . ,(rx line-start ?# (* space)
                                                   (or
