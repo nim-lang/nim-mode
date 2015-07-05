@@ -98,7 +98,11 @@
                                                                (* ?\\ ?\\) (any ?\' ?\")))
                                                       (* ?\\ ?\\)
                                                       ;; Match single or triple quotes of any kind.
-                                                      (group (or  "\"" "\"\"\"" "'" "'''")))))
+                                                      (group (or  "\"" "\"\"\"")))))
+                            (character-delimiter . ,(rx
+                                                     (not (any num))
+                                                     (group (and "'" (? ?\\) (not (any "'")) "'"))
+                                                     (not (any "i" "f" "u"))))
                             (coding-cookie . ,(rx line-start ?# (* space)
                                                   (or
                                                    ;; # coding=<encoding name>

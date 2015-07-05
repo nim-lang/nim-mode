@@ -37,7 +37,8 @@
     (,(nim-rx keyword) . font-lock-keyword-face)
     (,(nim-rx "{." (1+ any) ".}") . font-lock-preprocessor-face)
     (,(nim-rx symbol-name (* whitespace) ":" (* whitespace) (group symbol-name))
-     . (1 font-lock-type-face)))
+     . (1 font-lock-type-face))
+    (,(nim-rx character-delimiter) . (1 font-lock-string-face)))
   "Font lock expressions for Nim mode.")
 
 (defsubst nim-syntax-count-quotes (quote-char &optional point limit)
