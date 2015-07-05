@@ -105,7 +105,8 @@
                                                                  ;; one bite characters' regex
                                                                  (eval (cons 'any (list (concat (char-to-string 0) "-" (char-to-string 127)))))
                                                                  "'"))
-                                                     (not (any "i" "f" "u"))))
+                                                     (or (not (any "i" "f" "u"))
+                                                         line-end)))
                             (coding-cookie . ,(rx line-start ?# (* space)
                                                   (or
                                                    ;; # coding=<encoding name>
