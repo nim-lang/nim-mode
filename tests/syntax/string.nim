@@ -14,3 +14,5 @@ var
   f64 = 3.14'f64
 
 var charOfDoubleQuote = '"'
+# above double quote should not effect this line
+

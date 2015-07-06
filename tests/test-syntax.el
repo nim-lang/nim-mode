@@ -71,4 +71,10 @@
   "should highlight char of double quote"
   (test-concat-dir "tests/syntax/string.nim")
   '(((239 . 241) . font-lock-string-face)))
+
+ (test-faces-by-range
+  "should highlight comment correctly after char of double quote"
+  (test-concat-dir "tests/syntax/string.nim")
+  '(((245 . 291) . font-lock-comment-face)))
+
  ) ; end of describe
