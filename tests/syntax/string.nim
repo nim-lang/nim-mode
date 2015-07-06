@@ -12,3 +12,5 @@ var
   i64 = 10000'i32
   f32 = 3.14'f32
   f64 = 3.14'f64
+
+var charOfDoubleQuote = '"'

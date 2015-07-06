@@ -65,4 +65,10 @@
     (157 . font-lock-string-face)
     (175 . font-lock-string-face)
     (209 . font-lock-string-face))
-  t))
+  t)
+
+ (test-faces-by-range
+  "should highlight char of double quote"
+  (test-concat-dir "tests/syntax/string.nim")
+  '(((239 . 241) . font-lock-string-face)))
+ ) ; end of describe
