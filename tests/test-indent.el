@@ -27,28 +27,31 @@
 
  (indent-and-compare
   "should indent #30 correctly"
-  "tests/samples/30")
+  "tests/indents/30")
 
  (indent-and-compare
   "should indent for x, y in foo(): correctly"
-  "tests/samples/for-pairs")
+  "tests/indents/for-pairs")
 
 (indent-and-compare
   "should dedent case/if correctly"
-  "tests/samples/dedenter"
-  )
+  "tests/indents/dedenter")
 
 (indent-and-compare
   "should dedent let/comments correctly"
-  "tests/samples/line-checking")
+  "tests/indents/line-checking")
 
 (indent-and-compare
  "should indent import statement's libraries correctly"
- "tests/samples/import-statement")
+ "tests/indents/import-statement")
 
 (indent-and-compare
  "should indent after ‘object’, ‘enum’, ‘tupel’, and ‘object of’ correctly"
- "tests/samples/line-end-indent"))
+ "tests/indents/line-end-indent")
+
+(indent-and-compare
+ "shouldn't dedent too much after let"
+ "tests/indents/after-let"))
 
 ;; Local Variables:
 ;; no-byte-compile: t
