@@ -2,8 +2,6 @@
 
 (describe
  "Syntax"
- (before-all
-   (setq test-syntax-dir (concat (locate-dominating-file buffer-file-name ".git"))))
 
  (before-each
   (set-buffer (get-buffer-create "*Test*"))
@@ -16,6 +14,7 @@
  (defun test-concat-dir (filepath)
    (if noninteractive
        filepath
+     (defvar-local test-syntax-dir (concat (locate-dominating-file buffer-file-name ".git")))
      (concat test-syntax-dir filepath)))
 
  (defun test-faces (test-string file-name faces &optional not-equal)
