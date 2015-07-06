@@ -21,6 +21,8 @@
             :to-equal
             (cdr pos-face))))))
 
+ ;; You can check which faces are at a position with
+ ;; (text-properties-at pos (get-buffer "file.nim"))
  (test-faces
   "should highlight strings"
   "tests/syntax/string.nim"
