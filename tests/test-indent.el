@@ -52,6 +52,10 @@
  (indent-and-compare
   "shouldn't dedent too much after let"
   "tests/indents/after-let")
+
+ (indent-and-compare
+  "should indent a nested statement correctly"
+  "tests/indents/nested-statement")
  )                                      ; keep this here for less changes
 
 ;; Local Variables:
