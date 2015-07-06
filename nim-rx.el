@@ -92,13 +92,21 @@
                             (assignment-operator  . ,(rx (* (in "-=+*/<>@$~&%|!?^.:\\")) "="))
                             (string-delimiter . ,(rx (and
                                                       ;; Match even number of backslashes.
-                                                      (or (not (any ?\\ ?\' ?\")) point
+                                                      (or (not (any ?\\ ?\" ?\')) point
                                                           ;; Quotes might be preceded by a escaped quote.
-                                                          (and (or (not (any ?\\)) point) ?\\
-                                                               (* ?\\ ?\\) (any ?\' ?\")))
+                                                          (and (or (not (any ?\\ ?\')) point) ?\\
+                                                               (* ?\\ ?\\) (any ?\")))
                                                       (* ?\\ ?\\)
                                                       ;; Match single or triple quotes of any kind.
-                                                      (group (or  "\"" "\"\"\"" "'" "'''")))))
+                                                      (group (or  "\"" "\"\"\"")))))
+                            (character-delimiter . ,(rx
+                                                     (not (any num))
+                                                     (group (and "'" (? ?\\)
+                                                                 ;; one bite characters' regex
+                                                                 (eval (cons 'any (list (concat (char-to-string 0) "-" (char-to-string 127)))))
+                                                                 "'"))
+                                                     (or (not (any "i" "f" "u"))
+                                                         line-end)))
                             (coding-cookie . ,(rx line-start ?# (* space)
                                                   (or
                                                    ;; # coding=<encoding name>

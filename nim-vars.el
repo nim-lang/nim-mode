@@ -82,7 +82,6 @@
     ;; exceptions
     (modify-syntax-entry ?# "<" table)
     (modify-syntax-entry ?\n ">" table)
-    (modify-syntax-entry ?' "\"" table)
     (modify-syntax-entry ?` "$" table)
 
     ;; Parentheses
@@ -93,14 +92,10 @@
     (modify-syntax-entry ?\( "()  " table)
     (modify-syntax-entry ?\) ")(  " table)
 
-    ;; ;; Documentation comment highlighting
-    ;; ;; (modify-syntax-entry ?\# ". 12b" nim-mode-syntax-table)
-    ;; ;; (modify-syntax-entry ?\n "> b" nim-mode-syntax-table)
-    ;; ;; Comment highlighting
-    ;; (modify-syntax-entry ?# "< b"  nim-mode-syntax-table)
-    ;; (modify-syntax-entry ?\n "> b" nim-mode-syntax-table)
-    ;; (modify-syntax-entry ?\' "w"  nim-mode-syntax-table)
-    ;; (modify-syntax-entry ?\" "|"  nim-mode-syntax-table)
+    ;; note: "|" and "\"" has highlighting problem if it use as
+    ;; character delimiter. (i.e., number's type literal)
+    (modify-syntax-entry ?\' "_" table)
+    (modify-syntax-entry ?\" "_" table)
     table)
   "Syntax table for Nim files.")
 
