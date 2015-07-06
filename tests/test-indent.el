@@ -48,7 +48,11 @@
 
 (indent-and-compare
  "should indent after ‘object’, ‘enum’, ‘tupel’, and ‘object of’ correctly"
- "tests/samples/line-end-indent"))
+ "tests/samples/line-end-indent")
+
+(indent-and-compare
+ "shouldn't dedent too much after let"
+ "tests/samples/after-let"))
 
 ;; Local Variables:
 ;; no-byte-compile: t
