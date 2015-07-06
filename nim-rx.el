@@ -92,9 +92,9 @@
                             (assignment-operator  . ,(rx (* (in "-=+*/<>@$~&%|!?^.:\\")) "="))
                             (string-delimiter . ,(rx (and
                                                       ;; Match even number of backslashes.
-                                                      (or (not (any ?\\ ?\")) point
+                                                      (or (not (any ?\\ ?\" ?\')) point
                                                           ;; Quotes might be preceded by a escaped quote.
-                                                          (and (or (not (any ?\\)) point) ?\\
+                                                          (and (or (not (any ?\\ ?\')) point) ?\\
                                                                (* ?\\ ?\\) (any ?\")))
                                                       (* ?\\ ?\\)
                                                       ;; Match single or triple quotes of any kind.
