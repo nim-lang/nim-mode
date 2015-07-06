@@ -95,6 +95,7 @@
     ;; note: "|" and "\"" has highlighting problem if it use as
     ;; character delimiter. (i.e., number's type literal)
     (modify-syntax-entry ?\' "_" table)
+    (modify-syntax-entry ?\" "_" table)
     table)
   "Syntax table for Nim files.")
 
