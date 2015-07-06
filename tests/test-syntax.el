@@ -18,7 +18,7 @@
        filepath
      (concat test-syntax-dir filepath)))
 
- (defun test-faces (test-string file-name faces)
+ (defun test-faces (test-string file-name faces &optional not-equal)
    (lexical-let ((file-name file-name) (faces faces))
      (it test-string
          (insert-file-literally file-name)
@@ -26,6 +26,7 @@
          (dolist (pos-face faces)
            (expect
             (get-text-property (car pos-face) 'face)
+            (when not-equal :not)
             :to-equal
             (cdr pos-face))))))
 
@@ -54,4 +55,15 @@
  (test-faces-by-range
   "should highlight inside here document"
   (test-concat-dir "tests/syntax/string.nim")
-  '(((33 . 86) . font-lock-string-face))))
+  '(((33 . 86) . font-lock-string-face)))
+
+ (test-faces
+  "should not highlight number type literal by string face"
+  (test-concat-dir "tests/syntax/string.nim")
+  '((112 . font-lock-string-face)
+    (125 . font-lock-string-face)
+    (140 . font-lock-string-face)
+    (157 . font-lock-string-face)
+    (175 . font-lock-string-face)
+    (209 . font-lock-string-face))
+  t))
