@@ -5,3 +5,4 @@ var heredoc = """'one' ''two''
 """
 
 var charOfDoubleQuote = '"'
+# above double quote should not effect this line
