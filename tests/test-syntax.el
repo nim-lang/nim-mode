@@ -19,7 +19,7 @@
  (defun test-faces (test-string file-name faces)
    (lexical-let ((file-name file-name) (faces faces))
      (it test-string
-         (insert-file-literally file-name)
+         (insert-file-contents-literally file-name)
          (font-lock-default-fontify-buffer)
          (dolist (pos-face faces)
            (expect
@@ -30,7 +30,7 @@
  (defun test-faces-by-range (test-string file-name spec)
    (lexical-let ((file-name file-name) (spec spec))
      (it test-string
-       (insert-file-literally file-name)
+       (insert-file-contents-literally file-name)
        (font-lock-default-fontify-buffer)
        (cl-loop for (place . expected-face) in spec
                 for start = (car place)

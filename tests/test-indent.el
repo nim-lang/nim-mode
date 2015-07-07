@@ -2,7 +2,7 @@
 
 (defun file-to-string (filename)
   (with-temp-buffer
-    (insert-file-literally filename)
+    (insert-file-contents-literally filename)
     (buffer-string)))
 
 (describe
@@ -10,7 +10,7 @@
  (defun indent-and-compare (test-string file-name)
    (lexical-let ((act (concat file-name "-actual.nim")) (exp (concat file-name "-expected.nim")))
      (it test-string
-         (insert-file-literally act)
+         (insert-file-contents-literally act)
          (indent-region (point-min) (point-max))
 
          (expect (buffer-string)
