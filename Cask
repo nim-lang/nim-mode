@@ -5,5 +5,6 @@
 
 (development
  (depends-on "buttercup")
- (depends-on "epc"))
-             
+ (depends-on "epc")
+ (depends-on "cl-lib"))
+
