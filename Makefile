@@ -10,7 +10,7 @@ test: clean-elc
 	${MAKE} clean-elc
 
 compile:
-	${CASK} exec ${EMACS} -Q -batch -f batch-byte-compile *.el
+	${CASK} exec ${EMACS} -Q -batch -L . -f batch-byte-compile *.el
 
 unit:
 	${CASK} exec buttercup -L .
