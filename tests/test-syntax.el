@@ -52,4 +52,9 @@
  (test-faces-by-range
   "should highlight inside here document"
   (test-concat-dir "tests/syntax/string.nim")
-  '(((33 . 86) . font-lock-string-face))))
+  '(((33 . 86) . font-lock-string-face)))
+
+ (test-faces-by-range
+  "should highlight char of double quote"
+  (test-concat-dir "tests/syntax/string.nim")
+  '(((113 . 115) . font-lock-string-face))))
