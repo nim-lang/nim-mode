@@ -101,8 +101,6 @@
     ;; ;; Comment highlighting
     ;; (modify-syntax-entry ?# "< b"  nim-mode-syntax-table)
     ;; (modify-syntax-entry ?\n "> b" nim-mode-syntax-table)
-    ;; (modify-syntax-entry ?\' "w"  nim-mode-syntax-table)
-    ;; (modify-syntax-entry ?\" "|"  nim-mode-syntax-table)
     table)
   "Syntax table for Nim files.")
 
