@@ -82,8 +82,10 @@
     ;; exceptions
     (modify-syntax-entry ?# "<" table)
     (modify-syntax-entry ?\n ">" table)
-    (modify-syntax-entry ?' "\"" table)
     (modify-syntax-entry ?` "$" table)
+
+    ;; Use string syntax to single quote
+    (modify-syntax-entry ?\' "_" table)
 
     ;; Parentheses
     (modify-syntax-entry ?\[ "(]  " table)
