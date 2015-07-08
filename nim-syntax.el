@@ -55,6 +55,11 @@ is used to limit the scan."
 ;; from python?
 (defconst nim-syntax-propertize-function
   (syntax-propertize-rules
+   ;; char
+   ((nim-rx character-delimiter)
+    (1 "\"")  ; opening quote
+    (2 "\"")) ; closing quote
+   ;; string
    ((nim-rx string-delimiter)
     (0 (ignore (nim-syntax-stringify))))))
 
