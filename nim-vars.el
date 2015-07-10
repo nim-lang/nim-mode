@@ -84,7 +84,8 @@
     (modify-syntax-entry ?\n ">" table)
     (modify-syntax-entry ?` "$" table)
 
-    ;; Use string syntax to single quote
+    ;; Use _ syntax to single quote
+    ;; See also `nim-syntax-propertize-function'.
     (modify-syntax-entry ?\' "_" table)
 
     ;; Parentheses

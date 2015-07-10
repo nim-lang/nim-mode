@@ -55,11 +55,13 @@ is used to limit the scan."
 ;; from python?
 (defconst nim-syntax-propertize-function
   (syntax-propertize-rules
-   ;; char
+   ;; Char
+   ;; Put syntax entry("\"") for character type to highlight
+   ;; when only the character-delimiter regex matched.
    ((nim-rx character-delimiter)
     (1 "\"")  ; opening quote
     (2 "\"")) ; closing quote
-   ;; string
+   ;; String
    ((nim-rx string-delimiter)
     (0 (ignore (nim-syntax-stringify))))))
 
