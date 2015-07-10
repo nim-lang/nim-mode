@@ -35,11 +35,16 @@
        (cl-loop for (place . expected-face) in spec
                 for start = (car place)
                 for end   = (cdr place)
-                do (cl-loop for pos from start to end
-                            do (expect
-                                (get-text-property pos 'face)
-                                :to-equal
-                                expected-face))))))
+                do (test-helper-range-expect start end expected-face)))))
+
+ (defun test-helper-range-expect (start end face &optional not)
+   "Expect FACE between START and END positions."
+   (cl-loop for pos from start to end
+            do (expect
+                (get-text-property pos 'face)
+                (when not :not)
+                :to-equal
+                face)))
 
  ;; You can check which faces are at a position with
  ;; (text-properties-at pos (get-buffer "file.nim"))
