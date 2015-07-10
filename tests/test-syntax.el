@@ -27,15 +27,15 @@
             :to-equal
             (cdr pos-face))))))
 
- (defun test-faces-by-range (test-string file-name spec)
-   (lexical-let ((file-name file-name) (spec spec))
+ (defun test-faces-by-range (test-string file-name spec &optional not)
+   (lexical-let ((file-name file-name) (spec spec) (not not))
      (it test-string
        (insert-file-contents-literally file-name)
        (font-lock-default-fontify-buffer)
        (cl-loop for (place . expected-face) in spec
                 for start = (car place)
                 for end   = (cdr place)
-                do (test-helper-range-expect start end expected-face)))))
+                do (test-helper-range-expect start end expected-face not)))))
 
  (defun test-helper-range-expect (start end face &optional not)
    "Expect FACE between START and END positions."
@@ -130,5 +130,12 @@
  (test-characters
   "should highlight characters correctly"
   (test-concat-dir "tests/syntax/char.nim"))
+
+ ;; Number
+ (test-faces-by-range
+  "should not highlight numbers by string-face"
+  (test-concat-dir "tests/syntax/number.nim")
+  '(((1 . 167) . font-lock-string-face))
+  t)
 
  ) ; end of describe function
