@@ -5,3 +5,4 @@ var heredoc = """'one' ''two''
 """
 
 var endOfQuote = "foo'"
+# this line should be comment face

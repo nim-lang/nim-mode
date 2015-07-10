@@ -95,7 +95,10 @@
          (font-lock-default-fontify-buffer)
          (goto-char (point-min))
          (when (search-forward start-string nil t)
-           (test-helper-range-expect (point) (1- (point-at-eol)) 'font-lock-string-face)))))
+           (test-helper-range-expect (point) (1- (point-at-eol)) 'font-lock-string-face))
+         (line-move 1)
+         ;; comment line should not be highlighted by 'font-lock-string-face
+         (test-helper-range-expect (1+ (point-at-bol)) (1- (point-at-eol)) 'font-lock-comment-face))))
 
  ;; You can check which faces are at a position with
  ;; (text-properties-at pos (get-buffer "file.nim"))
