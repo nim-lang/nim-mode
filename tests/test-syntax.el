@@ -100,16 +100,6 @@
   (test-concat-dir "tests/syntax/string.nim")
   '(((33 . 86) . font-lock-string-face)))
 
- (test-faces-by-range
-  "should highlight char of double quote"
-  (test-concat-dir "tests/syntax/string.nim")
-  '(((113 . 115) . font-lock-string-face)))
-
- (test-faces-by-range
-  "should highlight comment correctly after char of double quote"
-  (test-concat-dir "tests/syntax/string.nim")
-  '(((119 . 165) . font-lock-comment-face)))
-
  (test-characters
   "should highlight characters correctly"
   (test-concat-dir "tests/syntax/char.nim"))
