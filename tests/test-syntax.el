@@ -87,6 +87,16 @@
            ;; (print (reverse checked-characters))
            ))))
 
+ (defun test-double-quote-and-next-line (test-string file-name start-string)
+   (lexical-let ((file-name file-name)
+                 (start-string start-string))
+     (it test-string
+         (insert-file-contents-literally file-name)
+         (font-lock-default-fontify-buffer)
+         (goto-char (point-min))
+         (when (search-forward start-string nil t)
+           (test-helper-range-expect (point) (1- (point-at-eol)) 'font-lock-string-face)))))
+
  ;; You can check which faces are at a position with
  ;; (text-properties-at pos (get-buffer "file.nim"))
  (test-faces
@@ -99,6 +109,11 @@
   "should highlight inside here document"
   (test-concat-dir "tests/syntax/string.nim")
   '(((33 . 86) . font-lock-string-face)))
+
+ (test-double-quote-and-next-line
+  "should highlight double quoted string with single quotes"
+  (test-concat-dir "tests/syntax/string.nim")
+  "var endOfQuote = ")
 
  (test-characters
   "should highlight characters correctly"
