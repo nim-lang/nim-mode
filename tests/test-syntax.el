@@ -87,18 +87,23 @@
            ;; (print (reverse checked-characters))
            ))))
 
- (defun test-double-quote-and-next-line (test-string file-name start-string)
+ (defun test-double-quote-and-next-line (test-string file-name start-strings)
    (lexical-let ((file-name file-name)
-                 (start-string start-string))
+                 (start-strings start-strings)
+                 (check-highlight
+                  (lambda (string)
+                    (goto-char (point-min))
+                    (if (search-forward string nil t)
+                        (test-helper-range-expect (point) (1- (point-at-eol)) 'font-lock-string-face)
+                      (error (format "Failed to find start string: %s" string)))
+                    (line-move 1)
+                    ;; comment line should not be highlighted by 'font-lock-string-face
+                    (test-helper-range-expect (1+ (point-at-bol)) (1- (point-at-eol)) 'font-lock-comment-face))))
      (it test-string
          (insert-file-contents-literally file-name)
          (font-lock-default-fontify-buffer)
-         (goto-char (point-min))
-         (when (search-forward start-string nil t)
-           (test-helper-range-expect (point) (1- (point-at-eol)) 'font-lock-string-face))
-         (line-move 1)
-         ;; comment line should not be highlighted by 'font-lock-string-face
-         (test-helper-range-expect (1+ (point-at-bol)) (1- (point-at-eol)) 'font-lock-comment-face))))
+         (cl-loop for string in start-strings
+                  do (funcall check-highlight string)))))
 
  ;; You can check which faces are at a position with
  ;; (text-properties-at pos (get-buffer "file.nim"))
@@ -116,7 +121,11 @@
  (test-double-quote-and-next-line
   "should highlight double quoted string with single quotes"
   (test-concat-dir "tests/syntax/string.nim")
-  "var endOfQuote = ")
+  '("var endOfQuote = "         "var endOfQuote2 = "
+    "var beginningOfQuote = "   "var beginningOfQuote2 = "
+    "var enclosedQuote = "      "var enclosedQuote2 = "
+    "var escapedSingleQuote = " "var escapedSingleQuote2 = "
+    "var escapedDoubleQuote = " "var escapedDoubleQuote2 = "))
 
  (test-characters
   "should highlight characters correctly"

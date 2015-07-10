@@ -6,3 +6,25 @@ var heredoc = """'one' ''two''
 
 var endOfQuote = "foo'"
 # this line should be comment face
+var endOfQuote2 = """foo'"""
+# this line should be comment face
+
+var beginningOfQuote = "'foo"
+# this line should be comment face
+var beginningOfQuote2 = """'foo"""
+# this line should be comment face
+
+var enclosedQuote = "'foo'"
+# this line should be comment face
+var enclosedQuote2 = """'foo'"""
+# this line should be comment face
+
+var escapedSingleQuote = "foo\'"
+# this line should be comment face
+var escapedSingleQuote2 = """foo\'"""
+# this line should be comment face
+
+var escapedDoubleQuote = "foo\""
+# this line should be comment face
+var escapedDoubleQuote2 = """foo\""""
+# this line should be comment face
