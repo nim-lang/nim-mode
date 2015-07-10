@@ -105,9 +105,10 @@
          (cl-loop for string in start-strings
                   do (funcall check-highlight string)))))
 
- ;; You can check which faces are at a position with
- ;; (text-properties-at pos (get-buffer "file.nim"))
+ ;; String
  (test-faces
+  ;; You can check which faces are at a position with
+  ;; (text-properties-at pos (get-buffer "file.nim"))
   "should highlight strings"
   (test-concat-dir "tests/syntax/string.nim")
   '((10 . font-lock-string-face)
@@ -127,6 +128,7 @@
     "var escapedSingleQuote = " "var escapedSingleQuote2 = "
     "var escapedDoubleQuote = " "var escapedDoubleQuote2 = "))
 
+ ;; Character
  (test-characters
   "should highlight characters correctly"
   (test-concat-dir "tests/syntax/char.nim"))
