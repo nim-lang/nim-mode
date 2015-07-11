@@ -56,6 +56,10 @@
  (indent-and-compare
   "should indent a nested statement correctly"
   "tests/indents/nested-statement")
+
+ (indent-and-compare
+  "should indent case statement correctly"
+  "tests/indents/case-stmt")
  )                                      ; keep this here for less changes
 
 ;; Local Variables:
