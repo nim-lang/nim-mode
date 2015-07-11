@@ -67,7 +67,7 @@ is used to limit the scan."
 
 ;; python?
 (defun nim-syntax-stringify ()
-  "Put `syntax-table' property correctly on single/triple quotes."
+  "Put `syntax-table' property correctly on single/triple double quotes."
   (let* ((num-quotes (length (match-string-no-properties 1)))
          (ppss (prog2
                    (backward-char num-quotes)
@@ -90,8 +90,14 @@ is used to limit the scan."
                               'syntax-table (string-to-syntax "|")))
           ((= num-quotes num-closing-quotes)
            ;; This set of quotes delimit the end of a string.
-           (put-text-property (1- quote-ending-pos) quote-ending-pos
-                              'syntax-table (string-to-syntax "|")))
+           ;; If there are some double quotes after quote-ending-pos,
+           ;; shift the point to right number of `extra-quotes' times.
+           (let* ((extra-quotes 0))
+             (while (eq 34 (char-after (+ quote-ending-pos extra-quotes)))
+               (setq extra-quotes (1+ extra-quotes)))
+             (put-text-property (+ (1- quote-ending-pos) extra-quotes)
+                                (+ quote-ending-pos      extra-quotes)
+                                'syntax-table (string-to-syntax "|"))))
           ((> num-quotes num-closing-quotes)
            ;; This may only happen whenever a triple quote is closing
            ;; a single quoted string. Add string delimiter syntax to
