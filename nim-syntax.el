@@ -93,8 +93,11 @@ is used to limit the scan."
            ;; If there are some double quotes after quote-ending-pos,
            ;; shift the point to right number of `extra-quotes' times.
            (let* ((extra-quotes 0))
-             (while (eq 34 (char-after (+ quote-ending-pos extra-quotes)))
-               (setq extra-quotes (1+ extra-quotes)))
+             ;; Only count extra quotes when the double quotes is 3 to prevent
+             ;; wrong highlight for r"foo""bar" forms.
+             (when (eq num-quotes 3)
+               (while (eq 34 (char-after (+ quote-ending-pos extra-quotes)))
+                 (setq extra-quotes (1+ extra-quotes))))
              (put-text-property (+ (1- quote-ending-pos) extra-quotes)
                                 (+ quote-ending-pos      extra-quotes)
                                 'syntax-table (string-to-syntax "|"))))
