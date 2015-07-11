@@ -132,6 +132,7 @@
     "var escapedDoubleQuote = " "var escapedDoubleQuote2 = "
     "var unbalancedDoubleQuote = " "var unbalancedDoubleQuote2 = "
     "var unbalancedDoubleQuote3 = " "var unbalancedDoubleQuote4 = "
+    "var rawString = r"
     ))
 
  ;; Character
