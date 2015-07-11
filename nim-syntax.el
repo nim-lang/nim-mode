@@ -55,12 +55,19 @@ is used to limit the scan."
 ;; from python?
 (defconst nim-syntax-propertize-function
   (syntax-propertize-rules
+   ;; Char
+   ;; Put syntax entry("\"") for character type to highlight
+   ;; when only the character-delimiter regex matched.
+   ((nim-rx character-delimiter)
+    (1 "\"")  ; opening quote
+    (2 "\"")) ; closing quote
+   ;; String
    ((nim-rx string-delimiter)
     (0 (ignore (nim-syntax-stringify))))))
 
 ;; python?
 (defun nim-syntax-stringify ()
-  "Put `syntax-table' property correctly on single/triple quotes."
+  "Put `syntax-table' property correctly on single/triple double quotes."
   (let* ((num-quotes (length (match-string-no-properties 1)))
          (ppss (prog2
                    (backward-char num-quotes)
@@ -83,8 +90,17 @@ is used to limit the scan."
                               'syntax-table (string-to-syntax "|")))
           ((= num-quotes num-closing-quotes)
            ;; This set of quotes delimit the end of a string.
-           (put-text-property (1- quote-ending-pos) quote-ending-pos
-                              'syntax-table (string-to-syntax "|")))
+           ;; If there are some double quotes after quote-ending-pos,
+           ;; shift the point to right number of `extra-quotes' times.
+           (let* ((extra-quotes 0))
+             ;; Only count extra quotes when the double quotes is 3 to prevent
+             ;; wrong highlight for r"foo""bar" forms.
+             (when (eq num-quotes 3)
+               (while (eq 34 (char-after (+ quote-ending-pos extra-quotes)))
+                 (setq extra-quotes (1+ extra-quotes))))
+             (put-text-property (+ (1- quote-ending-pos) extra-quotes)
+                                (+ quote-ending-pos      extra-quotes)
+                                'syntax-table (string-to-syntax "|"))))
           ((> num-quotes num-closing-quotes)
            ;; This may only happen whenever a triple quote is closing
            ;; a single quoted string. Add string delimiter syntax to
