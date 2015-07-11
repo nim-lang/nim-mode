@@ -34,10 +34,6 @@
   "tests/indents/for-pairs")
 
  (indent-and-compare
-  "should dedent case/if correctly"
-  "tests/indents/dedenter")
-
- (indent-and-compare
   "should dedent let/comments correctly"
   "tests/indents/line-checking")
 
