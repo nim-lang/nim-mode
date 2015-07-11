@@ -774,10 +774,11 @@ likely an invalid nim file."
     (when point
       (save-restriction
         (widen)
-        (message "Closes %s" (save-excursion
-                               (goto-char point)
-                               (buffer-substring
-                                (point) (line-end-position))))))))
+        (unless noninteractive ; prevent output message during testing
+          (message "Closes %s" (save-excursion
+                                 (goto-char point)
+                                 (buffer-substring
+                                  (point) (line-end-position)))))))))
 
 (defun nim-info-dedenter-statement-p ()
   "Return point if current statement is a dedenter.
