@@ -28,3 +28,12 @@ var escapedDoubleQuote = "foo\""
 # this line should be comment face
 var escapedDoubleQuote2 = """foo\""""
 # this line should be comment face
+
+var unbalancedDoubleQuote = """8 double quotes->""""""""
+# this line should be comment face
+var unbalancedDoubleQuote2 = """""<-5 double quotes 11 double quotes->"""""""""""
+# this line should be comment face
+var unbalancedDoubleQuote3 = """"<-4 double quotes"""
+# this line should be comment face
+var unbalancedDoubleQuote4 = """"enclosed double quotes""""
+# this line should be comment face

@@ -121,12 +121,18 @@
 
  (test-double-quote-and-next-line
   "should highlight double quoted string with single quotes"
+  ;; This test makes sure whether highlights after "xxx = " are
+  ;; font-lock-string-face and next lines are not affected by the string
+  ;; face.
   (test-concat-dir "tests/syntax/string.nim")
   '("var endOfQuote = "         "var endOfQuote2 = "
     "var beginningOfQuote = "   "var beginningOfQuote2 = "
     "var enclosedQuote = "      "var enclosedQuote2 = "
     "var escapedSingleQuote = " "var escapedSingleQuote2 = "
-    "var escapedDoubleQuote = " "var escapedDoubleQuote2 = "))
+    "var escapedDoubleQuote = " "var escapedDoubleQuote2 = "
+    "var unbalancedDoubleQuote = " "var unbalancedDoubleQuote2 = "
+    "var unbalancedDoubleQuote3 = " "var unbalancedDoubleQuote4 = "
+    ))
 
  ;; Character
  (test-characters
