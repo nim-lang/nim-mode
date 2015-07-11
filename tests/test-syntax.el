@@ -141,10 +141,15 @@
   (test-concat-dir "tests/syntax/char.nim"))
 
  ;; Number
- (test-faces-by-range
-  "should not highlight numbers by string-face"
+ (test-faces
+  "should not highlight numbers"
   (test-concat-dir "tests/syntax/number.nim")
-  '(((1 . 167) . font-lock-string-face))
-  t)
+  '((24  . nil)   ; unsigned int
+    (44  . nil)   ; int8
+    (66  . nil)   ; int16
+    (89  . nil)   ; int32
+    (112 . nil)   ; int64
+    (137 . nil)   ; float32
+    (162 . nil))) ; float64
 
  ) ; end of describe function
