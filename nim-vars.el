@@ -82,8 +82,11 @@
     ;; exceptions
     (modify-syntax-entry ?# "<" table)
     (modify-syntax-entry ?\n ">" table)
-    (modify-syntax-entry ?' "\"" table)
     (modify-syntax-entry ?` "$" table)
+
+    ;; Use _ syntax to single quote
+    ;; See also `nim-syntax-propertize-function'.
+    (modify-syntax-entry ?\' "_" table)
 
     ;; Parentheses
     (modify-syntax-entry ?\[ "(]  " table)
@@ -99,8 +102,6 @@
     ;; ;; Comment highlighting
     ;; (modify-syntax-entry ?# "< b"  nim-mode-syntax-table)
     ;; (modify-syntax-entry ?\n "> b" nim-mode-syntax-table)
-    ;; (modify-syntax-entry ?\' "w"  nim-mode-syntax-table)
-    ;; (modify-syntax-entry ?\" "|"  nim-mode-syntax-table)
     table)
   "Syntax table for Nim files.")
 

@@ -92,13 +92,27 @@
                             (assignment-operator  . ,(rx (* (in "-=+*/<>@$~&%|!?^.:\\")) "="))
                             (string-delimiter . ,(rx (and
                                                       ;; Match even number of backslashes.
-                                                      (or (not (any ?\\ ?\' ?\")) point
+                                                      (or (not (any ?\\ ?\")) point
                                                           ;; Quotes might be preceded by a escaped quote.
                                                           (and (or (not (any ?\\)) point) ?\\
-                                                               (* ?\\ ?\\) (any ?\' ?\")))
+                                                               (* ?\\ ?\\) (any ?\")))
                                                       (* ?\\ ?\\)
                                                       ;; Match single or triple quotes of any kind.
-                                                      (group (or  "\"" "\"\"\"" "'" "'''")))))
+                                                      (group (or  "\"" "\"\"\"")))))
+                            (character-delimiter
+                             ;; Implemented with
+                             ;; http://nim-lang.org/docs/manual.html#lexical-analysis-character-literals
+                             . ,(rx
+                                 (group "'")
+                                 (or
+                                  ;; escaped characters
+                                  (and ?\\ (or (in "a-c" "e" "f" "l" "r" "t" "v"
+                                                   "\\" "\"" "'" "0-9")
+                                               (and "x" (regex "[a-fA-F0-9]\\{2,2\\}"))))
+                                  ;; One byte characters(except single quote and control characters)
+                                  (eval (cons 'in (list (concat (char-to-string 32) "-" (char-to-string (1- ?\')))
+                                                        (concat (char-to-string (1+ ?\')) "-" (char-to-string 126))))))
+                                 (group "'")))
                             (coding-cookie . ,(rx line-start ?# (* space)
                                                   (or
                                                    ;; # coding=<encoding name>
