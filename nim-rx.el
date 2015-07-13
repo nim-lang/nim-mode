@@ -36,7 +36,7 @@
                                           (block-ender       . ("break" "continue" "raise" "return"))
                                           (block-start-defun . ("proc" "method" "converter" "iterator"
                                                                 "template" "macro"
-                                                                "if" "elif" "else" "when" "while" "for" "of"
+                                                                "if" "elif" "else" "when" "while" "for" "case" "of"
                                                                 "try" "except" "finally"
                                                                 "with" "block"
                                                                 "enum" "tuple" "object")))
