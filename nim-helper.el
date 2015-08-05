@@ -736,8 +736,9 @@ likely an invalid nim file."
     (let ((dedenter-pos (nim-info-dedenter-statement-p)))
       (when dedenter-pos
         (goto-char dedenter-pos)
-        (let* ((pairs '(("elif" "elif" "if")
-                        ("else" "if" "elif" "except" "for" "while")
+        (let* ((pairs '(("elif" "elif" "if" "of" "case")
+                        ("of" "of" "case")
+                        ("else" "if" "elif" "except" "for" "while" "of")
                         ("except" "except" "try")
                         ("finally" "else" "except" "try")))
                (dedenter (match-string-no-properties 0))
@@ -773,10 +774,11 @@ likely an invalid nim file."
     (when point
       (save-restriction
         (widen)
-        (message "Closes %s" (save-excursion
-                               (goto-char point)
-                               (buffer-substring
-                                (point) (line-end-position))))))))
+        (unless noninteractive ; prevent output message during testing
+          (message "Closes %s" (save-excursion
+                                 (goto-char point)
+                                 (buffer-substring
+                                  (point) (line-end-position)))))))))
 
 (defun nim-info-dedenter-statement-p ()
   "Return point if current statement is a dedenter.
