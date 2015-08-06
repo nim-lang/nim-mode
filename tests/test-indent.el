@@ -56,6 +56,10 @@
  (indent-and-compare
   "should indent case statement correctly"
   "tests/indents/case-stmt")
+
+ (indent-and-compare
+  "should indent when statement correctly"
+  "tests/indents/when-stmt")
  )                                      ; keep this here for less changes
 
 ;; Local Variables:

@@ -736,9 +736,9 @@ likely an invalid nim file."
     (let ((dedenter-pos (nim-info-dedenter-statement-p)))
       (when dedenter-pos
         (goto-char dedenter-pos)
-        (let* ((pairs '(("elif" "elif" "if" "of" "case")
+        (let* ((pairs '(("elif" "elif" "if" "of" "case" "when")
                         ("of" "of" "case")
-                        ("else" "if" "elif" "except" "for" "while" "of")
+                        ("else" "if" "elif" "except" "for" "while" "of" "when")
                         ("except" "except" "try")
                         ("finally" "else" "except" "try")))
                (dedenter (match-string-no-properties 0))
