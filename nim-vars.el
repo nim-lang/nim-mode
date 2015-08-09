@@ -57,7 +57,7 @@
 
 (defconst nim-indent-offset 2 "Number of spaces per level of indentation.")
 
-(defvar nim-uncompleted-condition-indent 'stmt+1
+(defvar nim-uncompleted-condition-indent 4
   "Indent behavior when condition doesn't end on one line.
 You can specify number or 'stmt+1.")
 
