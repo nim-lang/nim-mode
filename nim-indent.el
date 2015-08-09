@@ -210,6 +210,17 @@ keyword
        ((let ((start (nim-info-dedenter-statement-p)))
           (when start
             (cons :at-dedenter-block-start start))))
+       ;; After uncompleted condition
+       ((let ((start (save-excursion
+                       (back-to-indentation)
+                       (nim-util-forward-comment -1)
+                       (back-to-indentation)
+                       (when (looking-at (nim-rx (group cond-block (1+ " "))))
+                         (let ((pos (+ (point) (length (match-string 1)))))
+                           (unless (nim-helper-line-contain-p ?: (1+ pos))
+                             pos))))))
+          (when start
+            (cons :after-uncompleted-condition start))))
        ;; After normal line, comment or ender (default case).
        ((save-excursion
           (back-to-indentation)
@@ -260,6 +271,7 @@ possibilities can be narrowed to specific indentation points."
          (goto-char start)
          (+ (current-indentation) nim-indent-offset))
         (`(,(or :inside-paren
+                :after-uncompleted-condition
                 :after-backslash-block-continuation
                 :after-backslash-assignment-continuation
                 :after-backslash-dotted-continuation) . ,start)

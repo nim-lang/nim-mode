@@ -989,5 +989,16 @@ default to utf-8."
   (or (nim-info-encoding-from-cookie)
       'utf-8))
 
+(defun nim-helper-line-contain-p (char &optional pos)
+  "Return non-nil if the current line has CHAR.
+But, string's CHAR is ignored.  If you set POS the check starts from POS."
+  (save-excursion
+    (goto-char pos)
+    (while (not (eolp))
+      (when (and (not (nth 3 (syntax-ppss)))
+                 (eq char (char-before (1+ (point)))))
+        (cl-return t))
+      (forward-char))))
+
 (provide 'nim-helper)
 ;;; nim-helper.el ends here
