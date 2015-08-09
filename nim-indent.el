@@ -198,9 +198,19 @@ keyword
        ((let ((start (save-excursion
                        (back-to-indentation)
                        (nim-util-forward-comment -1)
-                       (cond ((or (member (char-before) '(?: ?=))
+                       (cond ((or (eq (char-before) ?=)
                                   (looking-back (nim-rx decl-block) nil))
                               (nim-nav-beginning-of-block))
+                             ((eq (char-before) ?:)
+                              (let (result)
+                                (if ; check uncompleted condition's colon
+                                    (save-excursion
+                                      (back-to-indentation)
+                                      (when (not (looking-at (nim-rx cond-block)))
+                                        (setq result (nim-nav-backward-block))
+                                        (looking-at (nim-rx cond-block))))
+                                    result
+                                  (nim-nav-beginning-of-block))))
                              ((looking-back (nim-rx line-end-indenters) nil)
                               (back-to-indentation)
                               (point))))))
