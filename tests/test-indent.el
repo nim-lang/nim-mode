@@ -65,7 +65,7 @@
 
  (indent-and-compare
   "should indent after uncompleted condition correctly by stmt+1 option"
-  "tests/indents/uncompleted-condition"
+  "tests/indents/uncompleted-condition-stmt+1"
   :uncompleted-indent 'stmt+1)
 
  )                                      ; keep this here for less changes
