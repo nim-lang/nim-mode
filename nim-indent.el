@@ -228,7 +228,9 @@ keyword
                        (when (looking-at (nim-rx (group cond-block (1+ " "))))
                          (let ((pos (+ (point) (length (match-string 1)))))
                            (unless (nim-helper-line-contain-p ?: (1+ pos))
-                             pos))))))
+                             (if (eq 'stmt+1 nim-uncompleted-condition-indent)
+                                 pos
+                               (+ (point) nim-uncompleted-condition-indent))))))))
           (when start
             (cons :after-uncompleted-condition start))))
        ;; After normal line, comment or ender (default case).
