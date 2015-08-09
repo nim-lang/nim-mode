@@ -60,6 +60,10 @@
  (indent-and-compare
   "should indent when statement correctly"
   "tests/indents/when-stmt")
+
+ (indent-and-compare
+  "should indent after uncompleted condition correctly"
+  "tests/indents/uncompleted-condition")
  )                                      ; keep this here for less changes
 
 ;; Local Variables:
