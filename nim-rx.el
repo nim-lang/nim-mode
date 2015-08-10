@@ -48,6 +48,7 @@
                                                (or "#" eol)))
 
                             (symbol-name          . ,(rx (any letter ?_ ?–) (* (any word ?_ ?–))))
+                            (do-declaration . ,(rx (minimal-match (* anything)) "do" (minimal-match (* anything)) ":" eol))
                             (dec-number . ,(rx symbol-start
                                                (1+ (in digit "_"))
                                                (opt "." (in digit "_"))
@@ -139,7 +140,7 @@ This variant of `rx' supports common nim named REGEXPS."
              (rx-to-string (car regexps) t)))))
 
   (add-to-list 'nim-rx-constituents
-               (cons 'block-start (nim-rx (or decl-block block-start-defun))))
+               (cons 'block-start (nim-rx (or decl-block block-start-defun do-declaration))))
 
   ;; Regular expression matching the end of line after with a block starts.
   ;; If the end of a line matches this regular expression, the next
