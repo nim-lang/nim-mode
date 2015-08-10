@@ -907,15 +907,18 @@ operator."
          (beginning-of-line 1)
          (looking-at nim-nav-beginning-of-defun-regexp))))
 
-(defun nim-info-current-line-comment-p ()
-  "Return non-nil if current line is a comment line."
-  (char-equal
-   (or (char-after (+ (line-beginning-position) (current-indentation))) ?_)
-   ?#))
-
-(defun nim-info-current-line-empty-p ()
-  "Return non-nil if current line is empty, ignoring whitespace."
+(defun nim-info-current-line-comment-p (&optional line)
+  "Return non-nil if current line's start position is comment.
+If there is the optional LINE argument, moves LINE times from current line."
   (save-excursion
+    (when line (forward-line line))
+    (eq ?# (char-after (+ (line-beginning-position) (current-indentation))))))
+
+(defun nim-info-current-line-empty-p (&optional line)
+  "Return non-nil if current line is empty, ignoring whitespace.
+If there is the optional LINE argument, moves LINE times from current line."
+  (save-excursion
+    (when line (forward-line line))
     (beginning-of-line 1)
     (looking-at
      (nim-rx line-start (* whitespace)
