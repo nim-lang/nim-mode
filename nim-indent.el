@@ -414,13 +414,8 @@ Called from a program, START and END specify the region to indent."
       (while (< (point) end)
         (or (and (bolp) (eolp))
             (when (and
-                   ;; Skip if previous line is empty or a comment.
-                   (not
-                    (or (and
-                         (nim-info-current-line-comment-p -1)
-                         ;; Unless this line is a comment too.
-                         (not (nim-info-current-line-comment-p)))
-                     (nim-info-current-line-empty-p -1)))
+                   ;; Skip if previous line is empty
+                   (not (nim-info-current-line-empty-p -1))
                    ;; Don't mess with strings, unless it's the
                    ;; enclosing set of quotes.
                    (or (not (nim-syntax-context 'string))
