@@ -53,3 +53,12 @@ if looongCondition and looongCondition and
 looongCondition and looongCondition or
 looongCondition and looongCondition:
 echo "foo"
+
+# With comment
+proc testWithComment() =
+if looongCondition and looongCondition and
+# blah blah blah
+looongCondition and looongCondition or
+# blah blah blah
+looongCondition and looongCondition:
+echo "foo"
