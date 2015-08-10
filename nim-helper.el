@@ -991,7 +991,7 @@ default to utf-8."
 
 (defun nim-helper-line-contain-p (char &optional pos)
   "Return non-nil if the current line has CHAR.
-But, string's CHAR is ignored.  If you set POS the check starts from POS."
+But, string-face's CHAR is ignored.  If you set POS, the check starts from POS."
   (save-excursion
     (goto-char pos)
     (while (not (eolp))
