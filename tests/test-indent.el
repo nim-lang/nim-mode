@@ -7,9 +7,11 @@
 
 (describe
  "Indentation"
- (defun indent-and-compare (test-string file-name)
-   (lexical-let ((act (concat file-name "-actual.nim")) (exp (concat file-name "-expected.nim")))
+ (cl-defun indent-and-compare (test-string file-name &key (uncompleted-indent 4))
+   (lexical-let ((act (concat file-name "-actual.nim")) (exp (concat file-name "-expected.nim"))
+                 (indent uncompleted-indent))
      (it test-string
+         (setq nim-uncompleted-condition-indent indent)
          (insert-file-contents-literally act)
          (indent-region (point-min) (point-max))
 
@@ -60,6 +62,17 @@
  (indent-and-compare
   "should indent when statement correctly"
   "tests/indents/when-stmt")
+
+ (indent-and-compare
+  "should indent after uncompleted condition correctly by default value"
+  "tests/indents/uncompleted-condition"
+  :uncompleted-indent 4)
+
+ (indent-and-compare
+  "should indent after uncompleted condition correctly by stmt+1 option"
+  "tests/indents/uncompleted-condition-stmt+1"
+  :uncompleted-indent 'stmt+1)
+
  )                                      ; keep this here for less changes
 
 ;; Local Variables:

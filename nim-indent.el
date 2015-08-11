@@ -198,9 +198,19 @@ keyword
        ((let ((start (save-excursion
                        (back-to-indentation)
                        (nim-util-forward-comment -1)
-                       (cond ((or (member (char-before) '(?: ?=))
+                       (cond ((or (eq (char-before) ?=)
                                   (looking-back (nim-rx decl-block) nil))
                               (nim-nav-beginning-of-block))
+                             ((eq (char-before) ?:)
+                              (let (result)
+                                (if ; check uncompleted condition's colon
+                                    (save-excursion
+                                      (back-to-indentation)
+                                      (when (not (looking-at (nim-rx cond-block)))
+                                        (setq result (nim-nav-backward-block))
+                                        (looking-at (nim-rx cond-block))))
+                                    result
+                                  (nim-nav-beginning-of-block))))
                              ((looking-back (nim-rx line-end-indenters) nil)
                               (back-to-indentation)
                               (point))))))
@@ -210,6 +220,19 @@ keyword
        ((let ((start (nim-info-dedenter-statement-p)))
           (when start
             (cons :at-dedenter-block-start start))))
+       ;; After uncompleted condition
+       ((let ((start (save-excursion
+                       (back-to-indentation)
+                       (nim-util-forward-comment -1)
+                       (back-to-indentation)
+                       (when (looking-at (nim-rx (group cond-block (1+ " "))))
+                         (let ((pos (+ (point) (length (match-string 1)))))
+                           (unless (nim-helper-line-contain-p ?: (1+ pos))
+                             (if (eq 'stmt+1 nim-uncompleted-condition-indent)
+                                 pos
+                               (+ (point) nim-uncompleted-condition-indent))))))))
+          (when start
+            (cons :after-uncompleted-condition start))))
        ;; After normal line, comment or ender (default case).
        ((save-excursion
           (back-to-indentation)
@@ -260,6 +283,7 @@ possibilities can be narrowed to specific indentation points."
          (goto-char start)
          (+ (current-indentation) nim-indent-offset))
         (`(,(or :inside-paren
+                :after-uncompleted-condition
                 :after-backslash-block-continuation
                 :after-backslash-assignment-continuation
                 :after-backslash-dotted-continuation) . ,start)
@@ -390,16 +414,8 @@ Called from a program, START and END specify the region to indent."
       (while (< (point) end)
         (or (and (bolp) (eolp))
             (when (and
-                   ;; Skip if previous line is empty or a comment.
-                   (save-excursion
-                     (let ((line-is-comment-p
-                            (nim-info-current-line-comment-p)))
-                       (forward-line -1)
-                       (not
-                        (or (and (nim-info-current-line-comment-p)
-                                 ;; Unless this line is a comment too.
-                                 (not line-is-comment-p))
-                            (nim-info-current-line-empty-p)))))
+                   ;; Skip if previous line is empty
+                   (not (nim-info-current-line-empty-p -1))
                    ;; Don't mess with strings, unless it's the
                    ;; enclosing set of quotes.
                    (or (not (nim-syntax-context 'string))

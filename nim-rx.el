@@ -48,6 +48,8 @@
                                                (or "#" eol)))
 
                             (symbol-name          . ,(rx (any letter ?_ ?–) (* (any word ?_ ?–))))
+                            (cond-block
+                             . ,(rx symbol-start (or "if" "when" "while" "elif") symbol-end))
                             (dec-number . ,(rx symbol-start
                                                (1+ (in digit "_"))
                                                (opt "." (in digit "_"))
