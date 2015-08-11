@@ -4,6 +4,7 @@ EMACS ?= emacs
 all: test
 
 test: clean-elc
+	${MAKE} install-dependencies
 	${MAKE} unit
 	${MAKE} compile
 	${MAKE} unit
@@ -15,7 +16,7 @@ compile:
 unit:
 	${CASK} exec buttercup -L .
 
-install:
+install-dependencies:
 	${CASK} install
 
 clean-elc:
