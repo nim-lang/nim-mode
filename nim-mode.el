@@ -39,7 +39,6 @@
 ;; -- Identifier following "proc" gets font-lock-function-name-face
 ;; -- Treat parameter lists separately
 ;; -- Treat pragmas inside "{." and ".}" separately
-;; -- Make double-# comments get font-lock-doc-face
 ;; -- Highlight tabs as syntax error
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

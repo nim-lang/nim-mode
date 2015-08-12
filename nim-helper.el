@@ -12,13 +12,13 @@
 The name of the defun should be grouped so it can be retrieved
 via `match-string'.")
 
-(defun nim-font-lock-syntactic-face-function (state)
-  "Return syntactic face given STATE."
-  (if (nth 3 state)
-      (if (nim-info-docstring-p state)
+(defun nim-font-lock-syntactic-face-function (syntax-ppss)
+  "Return syntactic face given SYNTAX-PPSS."
+  (if (nth 4 syntax-ppss) ; if nth 4 is exist, it means inside comment.
+      (if (nim-info-docstring-p syntax-ppss)
           font-lock-doc-face
-        font-lock-string-face)
-    font-lock-comment-face))
+        font-lock-comment-face)
+    font-lock-string-face))
 
 (defun nim-nav--beginning-of-defun (&optional arg)
   "Internal implementation of `nim-nav-beginning-of-defun'.
@@ -930,41 +930,9 @@ If there is the optional LINE argument, moves LINE times from current line."
   "Return non-nil if point is in a docstring.
 When optional argument SYNTAX-PPSS is given, use that instead of
 point's current `syntax-ppss'."
-  ;;; https://www.nim.org/dev/peps/pep-0257/#what-is-a-docstring
-  (save-excursion
-    (when (and syntax-ppss (nim-syntax-context 'string syntax-ppss))
-      (goto-char (nth 8 syntax-ppss)))
-    (nim-nav-beginning-of-statement)
-    (let ((counter 1)
-          (indentation (current-indentation))
-          (backward-sexp-point)
-          (re (concat "[uU]?[rR]?"
-                      (nim-rx string-delimiter))))
-      (when (and
-             (not (nim-info-assignment-statement-p))
-             (looking-at-p re)
-             ;; Allow up to two consecutive docstrings only.
-             (>=
-              2
-              (progn
-                (while (save-excursion
-                         (nim-nav-backward-sexp)
-                         (setq backward-sexp-point (point))
-                         (and (= indentation (current-indentation))
-                              (not (bobp)) ; Prevent infloop.
-                              (looking-at-p
-                               (concat "[uU]?[rR]?"
-                                       (nim-rx string-delimiter)))))
-                  ;; Previous sexp was a string, restore point.
-                  (goto-char backward-sexp-point)
-                  (cl-incf counter))
-                counter)))
-        (nim-util-forward-comment -1)
-        (nim-nav-beginning-of-statement)
-        (cond ((bobp))
-              ((nim-info-assignment-statement-p) t)
-              ((nim-info-looking-at-beginning-of-defun))
-              (t nil))))))
+  (let ((ppss (or syntax-ppss (syntax-ppss))))
+    (and (eq ?# (char-before (1+  (nth 8 ppss))))
+         (eq ?# (char-before (+ 2 (nth 8 ppss)))))))
 
 (defun nim-info-encoding-from-cookie ()
   "Detect current buffer's encoding from its coding cookie.

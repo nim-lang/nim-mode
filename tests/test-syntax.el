@@ -152,4 +152,11 @@
     (137 . nil)   ; float32
     (162 . nil))) ; float64
 
+ ;; docstring
+ (test-faces-by-range
+  "should highlight docstring"
+  (test-concat-dir "tests/syntax/docstring.nim")
+  '(((56 . 100)  . font-lock-doc-face)
+    ((128 . 176) . font-lock-doc-face)))
+
  ) ; end of describe function
