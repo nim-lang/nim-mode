@@ -73,6 +73,10 @@
   "tests/indents/uncompleted-condition-stmt+1"
   :uncompleted-indent 'stmt+1)
 
+ (indent-and-compare
+  "should indent after colon correctly"
+  "tests/indents/indent-after-colon")
+
  )                                      ; keep this here for less changes
 
 ;; Local Variables:
