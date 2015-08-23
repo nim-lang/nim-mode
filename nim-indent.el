@@ -211,7 +211,7 @@ keyword
                                         (and (looking-at (nim-rx cond-block))
                                              (not (nim-helper-line-contain-p ?:)))))
                                     result
-                                  (nim-nav-beginning-of-block))))
+                                  (nim-nav-beginning-of-statement))))
                              ((looking-back (nim-rx line-end-indenters) nil)
                               (back-to-indentation)
                               (point))))))
@@ -234,15 +234,6 @@ keyword
                                (+ (point) nim-uncompleted-condition-indent))))))))
           (when start
             (cons :after-uncompleted-condition start))))
-       ;; After general block (after ":")
-       ((let ((start (save-excursion
-                       (back-to-indentation)
-                       (nim-util-forward-comment -1)
-                       (when (eq ?: (char-before (point)))
-                         (forward-line -1)
-                         (+ 1 (point-at-bol) (current-indentation))))))
-          (when start
-            (cons :after-general-block-start start))))
        ;; After normal line, comment or ender (default case).
        ((save-excursion
           (back-to-indentation)
@@ -287,7 +278,6 @@ possibilities can be narrowed to specific indentation points."
                                (current-indentation))))
            (max line-indentation base-indent)))
         (`(,(or :after-block-start
-                :after-general-block-start
                 :after-backslash-first-line
                 :inside-paren-newline-start) . ,start)
          ;; Add one indentation level.
