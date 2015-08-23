@@ -208,7 +208,8 @@ keyword
                                       (back-to-indentation)
                                       (when (not (looking-at (nim-rx cond-block)))
                                         (setq result (nim-nav-backward-block))
-                                        (looking-at (nim-rx cond-block))))
+                                        (and (looking-at (nim-rx cond-block))
+                                             (not (nim-helper-line-contain-p ?:)))))
                                     result
                                   (nim-nav-beginning-of-block))))
                              ((looking-back (nim-rx line-end-indenters) nil)

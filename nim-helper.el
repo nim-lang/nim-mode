@@ -964,12 +964,15 @@ default to utf-8."
   "Return non-nil if the current line has CHAR.
 But, string-face's CHAR is ignored.  If you set POS, the check starts from POS."
   (save-excursion
-    (goto-char pos)
-    (while (not (eolp))
-      (when (and (not (nth 3 (syntax-ppss)))
-                 (eq char (char-before (1+ (point)))))
-        (cl-return t))
-      (forward-char))))
+    (catch 'exit
+      (when pos (goto-char pos))
+      (while (not (eolp))
+        (let ((ppss (syntax-ppss)))
+          (when (and (not (nth 3 ppss))
+                     (not (nth 4 ppss))
+                     (eq char (char-after (point))))
+            (throw 'exit (point)))
+          (forward-char))))))
 
 (provide 'nim-helper)
 ;;; nim-helper.el ends here
