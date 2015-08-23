@@ -30,3 +30,8 @@ echo "should indent after colon"
 discard "End of colon should be ignored :
 This line should not indented.
 "
+
+# macro
+dumpTree:
+foo:
+x = "bar"
