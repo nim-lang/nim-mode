@@ -26,5 +26,5 @@ clean-elc:
 
 define skip
 	@echo ".cask already exists, dependecies' installation skipped."
-	@echo "If you want to update those dependencies, execute `make install-dependencies`."
+	@echo "If you want to update those dependencies, execute 'make install-dependencies'."
 endef

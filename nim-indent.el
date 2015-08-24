@@ -211,7 +211,7 @@ keyword
                                         (and (looking-at (nim-rx cond-block))
                                              (not (nim-helper-line-contain-p ?:)))))
                                     result
-                                  (nim-nav-beginning-of-block))))
+                                  (nim-nav-beginning-of-statement))))
                              ((looking-back (nim-rx line-end-indenters) nil)
                               (back-to-indentation)
                               (point))))))
