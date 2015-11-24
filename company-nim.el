@@ -137,6 +137,7 @@
   (cl-subsetp (string-to-list prefix)
               (string-to-list candidate)))
 
+;;;###autoload
 (defun company-nim (command &optional arg &rest ignored)
   "`company-mode` backend for nimsuggest."
   (interactive (list 'interactive))
