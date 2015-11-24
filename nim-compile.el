@@ -1,11 +1,10 @@
-;;; nim-compile.el ---
+;;; nim-compile.el --- -*- lexical-binding: t -*-
 
 ;;; Commentary:
 
 ;;
 
 ;;; Code:
-(eval-when-compile (require 'cl))
 (require 'nim-suggest)
 
 (defcustom nim-command "nim"
@@ -26,7 +25,7 @@ You don't need to set this if the nim executable is inside your PATH."
 
 (defun nim-compile (args &optional on-success)
   "Invoke the compiler and call ON-SUCCESS in case of successful compilation."
-  (lexical-let ((on-success (or on-success (lambda () (message "Compilation successful.")))))
+  (let ((on-success (or on-success (lambda () (message "Compilation successful.")))))
     (if (bufferp "*nim-compile*")
         (with-current-buffer "*nim-compile*"
           (erase-buffer)))))
@@ -51,13 +50,12 @@ success with the filename of the compiled file."
   (interactive)
   (save-buffer)
   (let ((default-directory (or (nim-get-project-root) default-directory)))
-    (lexical-let ((callback callback))
-      (nim-compile (list "js" (buffer-file-name))
-                      (lambda () (when callback
+    (nim-compile (list "js" (buffer-file-name))
+                 (lambda () (when callback
                               (funcall callback (concat default-directory
                                                         "nimcache/"
                                                         (file-name-sans-extension (file-name-nondirectory (buffer-file-name)))
-                                                        ".js"))))))))
+                                                        ".js")))))))
 
 (defun nim-compile-region-to-js (start end)
   "Compile the current region to javascript.
@@ -65,8 +63,8 @@ The result is written into the buffer
 `nim-compiled-buffer-name'."
   (interactive "r")
 
-  (lexical-let ((buffer (get-buffer-create nim-compiled-buffer-name))
-                (tmpdir (file-name-as-directory (make-temp-file "nim-compile" t))))
+  (let ((buffer (get-buffer-create nim-compiled-buffer-name))
+        (tmpdir (file-name-as-directory (make-temp-file "nim-compile" t))))
     (let ((default-directory tmpdir))
       (write-region start end "tmp.nim" nil 'foo)
       (with-current-buffer buffer

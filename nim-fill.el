@@ -1,4 +1,4 @@
-;;; nim-fill.el ---
+;;; nim-fill.el --- -*- lexical-binding: t -*-
 
 ;;; Commentary:
 

@@ -1,4 +1,4 @@
-;;; company-nim.el --- company backend for nim
+;;; company-nim.el --- company backend for nim -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2015  Simon Hafner
 
@@ -82,16 +82,14 @@
   (mapcar #'company-nim--format-candidate
           (if (string-equal arg ".")
               candidates
-            (remove-if-not
+            (cl-remove-if-not
              (lambda (c) (company-nim-fuzzy-match arg (car (last (nim-epc-qualifiedPath c)))))
              candidates))))
 
 
 (defun company-nim-candidates (arg callback)
   (when (derived-mode-p 'nim-mode)
-    (lexical-let ((cb callback)
-                  (local-arg arg))
-      (nim-call-epc 'sug (lambda (x) (funcall cb (company-nim--format-candidates local-arg x)))))))
+    (nim-call-epc 'sug (lambda (x) (funcall callback (company-nim--format-candidates arg x))))))
 
 
 (defun company-nim-prefix ()
@@ -108,7 +106,7 @@
 (defun company-nim-annotation (cand)
   (let ((ann (get-text-property 0 :nim-type cand))
         (symbol (get-text-property 0 :nim-sig cand)))
-    (format " %s [%s]" (substring ann 0 (search "{" ann)) symbol)))
+    (format " %s [%s]" (substring ann 0 (cl-search "{" ann)) symbol)))
 
 ;; :nim-type is frequently way too big to display in meta
 ;; (defun company-nim-meta (cand)
@@ -147,8 +145,7 @@
     (doc-buffer (company-nim-doc-buffer arg))
     (meta (company-nim-meta arg))
     (location (company-nim-location arg))
-    (candidates (lexical-let ((local-arg arg))
-                  (cons :async (lambda (cb) (company-nim-candidates local-arg cb)))))
+    (candidates (cons :async (lambda (cb) (company-nim-candidates arg cb))))
     (ignore-case t)
     (sorted t)
     ))

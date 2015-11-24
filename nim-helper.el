@@ -1,4 +1,4 @@
-;;; nim-helper.el ---
+;;; nim-helper.el --- -*- lexical-binding: t -*-
 ;;; Commentary:
 ;; nim-nav-* and nim-info-* functions refer to each other, so they
 ;; can not split...

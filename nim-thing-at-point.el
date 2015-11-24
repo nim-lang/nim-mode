@@ -1,4 +1,4 @@
-;;; nim-thing-at-point.el --- 'thing-at-point' for nim-mode
+;;; nim-thing-at-point.el --- 'thing-at-point' for nim-mode -*- lexical-binding: t -*-
 ;;; Code:
 
 

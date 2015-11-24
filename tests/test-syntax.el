@@ -1,4 +1,9 @@
+;;; test-syntax.el --- Tests for syntax.el -*-lexical-binding:t-*-
+
+;;; Code:
+
 (require 'nim-mode)
+(require 'cl-lib)
 
 (describe
  "Syntax"
@@ -17,25 +22,23 @@
      (concat test-syntax-dir filepath)))
 
  (defun test-faces (test-string file-name faces)
-   (lexical-let ((file-name file-name) (faces faces))
-     (it test-string
-         (insert-file-contents-literally file-name)
-         (font-lock-default-fontify-buffer)
-         (dolist (pos-face faces)
-           (expect
-            (get-text-property (car pos-face) 'face)
-            :to-equal
-            (cdr pos-face))))))
+   (it test-string
+       (insert-file-contents-literally file-name)
+       (font-lock-default-fontify-buffer)
+       (dolist (pos-face faces)
+         (expect
+          (get-text-property (car pos-face) 'face)
+          :to-equal
+          (cdr pos-face)))))
 
  (defun test-faces-by-range (test-string file-name spec &optional not)
-   (lexical-let ((file-name file-name) (spec spec) (not not))
-     (it test-string
+   (it test-string
        (insert-file-contents-literally file-name)
        (font-lock-default-fontify-buffer)
        (cl-loop for (place . expected-face) in spec
                 for start = (car place)
                 for end   = (cdr place)
-                do (test-helper-range-expect start end expected-face not)))))
+                do (test-helper-range-expect start end expected-face not))))
 
  (defun test-helper-range-expect (start end face &optional not)
    "Expect FACE between START and END positions."
@@ -47,45 +50,44 @@
                 face)))
 
  (defun test-characters (test-string file-name)
-   (lexical-let ((file-name file-name))
-     (it test-string
-         (insert-file-contents-literally file-name)
-         (font-lock-default-fontify-buffer)
-         (goto-char (point-min))
-         (search-forward "testCharacters: set[char] = {\n    ")
-         (let* ((limit (+ 128 22 128)) ; to prevent eternal loop
-                char-points
-                after-char-points
-                checked-characters)
-           (catch 'exit
-             (while (and (not (eql 0 limit)))
-               (setq limit (1- limit))
-               (re-search-forward
-                (rx (group "'" (regex "[^']\\{1,4\\}") "'")
-                    (group (or (1+ "," (or blank "\n"))
-                               (and "\n" (* blank) "}")))) nil t)
-               (let ((char       (match-string 1))
-                     (after-char (match-string 2)))
-                 (when char
-                   (let* ((start (- (point) (+ (length char) (length after-char))))
-                          (end (+ start (1- (length char)))))
-                     (push (cons start end) char-points)
-                     (push (substring-no-properties char) checked-characters)))
-                 (when after-char
-                   (let* ((start2 (- (point) (length after-char)))
-                          (end2 (1- (point))))
-                     (push (cons start2 end2) after-char-points)))
-                 (when (string-match "\\XFF" char)
-                   (throw 'exit nil)))))
-           (when char-points
-             (cl-loop for (s . e) in char-points
-                      do (test-helper-range-expect s e 'font-lock-string-face)))
-           (when after-char-points
-             (cl-loop for (s . e) in after-char-points
-                      do (test-helper-range-expect s e 'font-lock-string-face t)))
-           ;; You can check what you checked
-           ;; (print (reverse checked-characters))
-           ))))
+   (it test-string
+       (insert-file-contents-literally file-name)
+       (font-lock-default-fontify-buffer)
+       (goto-char (point-min))
+       (search-forward "testCharacters: set[char] = {\n    ")
+       (let* ((limit (+ 128 22 128))    ; to prevent eternal loop
+              char-points
+              after-char-points
+              checked-characters)
+         (catch 'exit
+           (while (and (not (eql 0 limit)))
+             (setq limit (1- limit))
+             (re-search-forward
+              (rx (group "'" (regex "[^']\\{1,4\\}") "'")
+                  (group (or (1+ "," (or blank "\n"))
+                             (and "\n" (* blank) "}")))) nil t)
+             (let ((char       (match-string 1))
+                   (after-char (match-string 2)))
+               (when char
+                 (let* ((start (- (point) (+ (length char) (length after-char))))
+                        (end (+ start (1- (length char)))))
+                   (push (cons start end) char-points)
+                   (push (substring-no-properties char) checked-characters)))
+               (when after-char
+                 (let* ((start2 (- (point) (length after-char)))
+                        (end2 (1- (point))))
+                   (push (cons start2 end2) after-char-points)))
+               (when (string-match "\\XFF" char)
+                 (throw 'exit nil)))))
+         (when char-points
+           (cl-loop for (s . e) in char-points
+                    do (test-helper-range-expect s e 'font-lock-string-face)))
+         (when after-char-points
+           (cl-loop for (s . e) in after-char-points
+                    do (test-helper-range-expect s e 'font-lock-string-face t)))
+         ;; You can check what you checked
+         ;; (print (reverse checked-characters))
+         )))
 
  (defun test-double-quote-and-next-line (test-string file-name start-strings)
    (lexical-let ((file-name file-name)

@@ -1,4 +1,4 @@
-;;; nim-indent.el ---
+;;; nim-indent.el --- -*- lexical-binding: t -*-
 
 ;;; Commentary:
 
