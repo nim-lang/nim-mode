@@ -1,4 +1,4 @@
-;;; nim-suggest.el ---
+;;; nim-suggest.el --- -*- lexical-binding: t -*-
 ;;; Commentary:
 
 ;;
@@ -9,7 +9,6 @@
 
 
 (require 'epc)
-(eval-when-compile (require 'cl))
 (require 'cl-lib)
 
 (defcustom nim-nimsuggest-path nil "Path to the nimsuggest binary."
@@ -28,7 +27,7 @@ hierarchy, starting from CURRENT-DIR"
     (locate-dominating-file
      current-dir
      (lambda (dir)
-       (let ((file (first (directory-files dir t pattern nil))))
+       (let ((file (cl-first (directory-files dir t pattern nil))))
          (when file (throw 'found file)))))))
 
 (defun nim-find-project-main-file ()
@@ -82,8 +81,7 @@ def: where the is defined
 use: where the symbol is used
 
 The callback is called with a list of nim-epc structs."
-  (lexical-let ((tempfile (nim-save-buffer-temporarly))
-                (cb callback))
+  (let ((tempfile (nim-save-buffer-temporarly)))
     (deferred:$
       (epc:call-deferred
        (nim-find-or-create-epc)
@@ -93,8 +91,8 @@ The callback is called with a list of nim-epc structs."
              (current-column)
              tempfile))
       (deferred:nextc it
-        (lambda (x) (funcall cb (nim-parse-epc x))))
-      (deferred:watch it (lambda (x) (delete-directory (file-name-directory tempfile) t))))))
+        (lambda (x) (funcall callback (nim-parse-epc x))))
+      (deferred:watch it (lambda (_x) (delete-directory (file-name-directory tempfile) t))))))
 
 (defun nim-save-buffer-temporarly ()
   "Save the current buffer and return the location, so we
@@ -112,7 +110,7 @@ can pass it to epc."
   (interactive)
   (nim-call-epc 'def
                 (lambda (defs)
-                  (let ((def (first defs)))
+                  (let ((def (cl-first defs)))
                     (when (not def) (error "Symbol not found"))
                     (find-file (nim-epc-filePath def))
                     (goto-char (point-min))

@@ -1,4 +1,9 @@
+;;; test-indent.el --- Tests for index -*-lexical-binding:t-*-
+
+;;; Code:
+
 (require 'nim-mode)
+(require 'cl-lib)
 
 (defun file-to-string (filename)
   (with-temp-buffer
@@ -8,8 +13,8 @@
 (describe
  "Indentation"
  (cl-defun indent-and-compare (test-string file-name &key (uncompleted-indent 4))
-   (lexical-let ((act (concat file-name "-actual.nim")) (exp (concat file-name "-expected.nim"))
-                 (indent uncompleted-indent))
+   (let ((act (concat file-name "-actual.nim")) (exp (concat file-name "-expected.nim"))
+         (indent uncompleted-indent))
      (it test-string
          (setq nim-uncompleted-condition-indent indent)
          (insert-file-contents-literally act)

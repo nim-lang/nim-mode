@@ -1,4 +1,4 @@
-;;; nim-util.el ---
+;;; nim-util.el --- -*- lexical-binding: t -*-
 ;;; Commentary:
 ;;
 ;;; Code:

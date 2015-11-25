@@ -1,4 +1,4 @@
-;;; nim-mode.el --- A major mode for the Nim programming language
+;;; nim-mode.el --- A major mode for the Nim programming language -*- lexical-binding: t -*-
 ;;
 ;; Filename: nim-mode.el
 ;; Description: A major mode for the Nim programming language
@@ -45,8 +45,7 @@
 ;;
 ;;; Code:
 
-(eval-when-compile
-  (require 'cl))
+(require 'cl-lib)
 
 ;; Order of loading
 (require 'nim-vars)
