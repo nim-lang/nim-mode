@@ -1,6 +1,8 @@
 nim-mode
 ===========
 
+![Travis CI](https://travis-ci.org/nim-lang/nim-mode.svg?branch=master)
+
 An emacs major mode for the Nim programming language.
 
 * [Install Nim](http://nim-lang.org/download.html)
