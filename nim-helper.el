@@ -960,19 +960,22 @@ default to utf-8."
   (or (nim-info-encoding-from-cookie)
       'utf-8))
 
-(defun nim-helper-line-contain-p (char &optional pos)
+(defun nim-helper-line-contain-p (char &optional pos backward)
   "Return non-nil if the current line has CHAR.
 But, string-face's CHAR is ignored.  If you set POS, the check starts from POS."
   (save-excursion
     (catch 'exit
       (when pos (goto-char pos))
-      (while (not (eolp))
+      (while (if backward (not (bolp)) (not (eolp)))
         (let ((ppss (syntax-ppss)))
           (when (and (not (nth 3 ppss))
                      (not (nth 4 ppss))
-                     (eq char (char-after (point))))
+                     (if (numberp char)
+                         (eq char (char-after (point)))
+                       ;; assume list of chars
+                       (member (char-after (point)) char)))
             (throw 'exit (point)))
-          (forward-char))))))
+          (if backward (backward-char) (forward-char)))))))
 
 ;; ‘if-let’ function will be introduced in Emacs 25.x later.
 ;; below functions were copied from subr-x.el

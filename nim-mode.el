@@ -89,33 +89,41 @@
   (set (make-local-variable 'comment-start) "# ")
   (set (make-local-variable 'comment-start-skip) "#+\\s-*")
 
-  ;; Heavily stolen from python.el
-  ;; modify the keymap
-  (set (make-local-variable 'indent-line-function) 'nim-indent-line-function)
-  (set (make-local-variable 'indent-region-function) #'nim-indent-region)
+  ;; Indent
+  (with-no-warnings
+    (if (and nim-use-smie-indent)
+        ;; SMIE
+        (progn
+          (require 'nim-smie nil t)
+          (smie-setup nim-mode-smie-grammar 'nim-mode-smie-rules
+                      :forward-token 'nim-mode-forward-token
+                      :backward-token 'nim-mode-backward-token)
+          (set (make-local-variable 'indent-line-function)
+               'nim-smie-indent-line-function))
+      ;; Old indentation bindings
+      (set (make-local-variable 'indent-line-function) #'nim-indent-line-function)
+      (set (make-local-variable 'indent-region-function) #'nim-indent-region)
+      (set (make-local-variable 'forward-sexp-function)
+           'nim-nav-forward-sexp)
+      (set (make-local-variable 'fill-paragraph-function) #'nim-fill-paragraph)))
+
   ;; Always indent with SPACES!
   (set (make-local-variable 'indent-tabs-mode) nil)
 
   (set (make-local-variable 'parse-sexp-lookup-properties) t)
   (set (make-local-variable 'parse-sexp-ignore-comments) t)
-  ;; modify the keymap
-  (set (make-local-variable 'indent-line-function)
-       #'nim-indent-line-function)
-  (set (make-local-variable 'indent-region-function) #'nim-indent-region)
 
   ;; Syntax highlight for strings
   (set (make-local-variable 'syntax-propertize-function)
        nim-syntax-propertize-function)
-  (set (make-local-variable 'forward-sexp-function)
-       'nim-nav-forward-sexp)
+
   ;; Because indentation is not redundant, we cannot safely reindent code.
   (set (make-local-variable 'electric-indent-inhibit) t)
   (set (make-local-variable 'electric-indent-chars)
        (cons ?: electric-indent-chars))
   ;; Paragraph
   (set (make-local-variable 'paragraph-start) "\\s-*$")
-  (set (make-local-variable 'fill-paragraph-function)
-       #'nim-fill-paragraph)
+
   ;; Navigation
   (set (make-local-variable 'beginning-of-defun-function)
        #'nim-nav-beginning-of-defun)
