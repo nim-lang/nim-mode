@@ -27,6 +27,7 @@
  (before-each
   (set-buffer (get-buffer-create "*Test*"))
   (erase-buffer)
+  (setq nim-use-smie-indent nil)
   (nim-mode))
 
  (after-each
