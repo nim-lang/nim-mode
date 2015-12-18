@@ -83,8 +83,9 @@ You can specify number or 'stmt+1.")
     (modify-syntax-entry ?$ "." table)
     (modify-syntax-entry ?% "." table)
 
-    ;; exceptions
+    ;; Comment start
     (modify-syntax-entry ?# "<" table)
+    ;; Comment end
     (modify-syntax-entry ?\n ">" table)
     (modify-syntax-entry ?` "$" table)
 

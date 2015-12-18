@@ -95,13 +95,15 @@
   (set (make-local-variable 'indent-region-function) #'nim-indent-region)
   ;; Always indent with SPACES!
   (set (make-local-variable 'indent-tabs-mode) nil)
-  ;; ???
+
   (set (make-local-variable 'parse-sexp-lookup-properties) t)
   (set (make-local-variable 'parse-sexp-ignore-comments) t)
   ;; modify the keymap
   (set (make-local-variable 'indent-line-function)
        #'nim-indent-line-function)
   (set (make-local-variable 'indent-region-function) #'nim-indent-region)
+
+  ;; Syntax highlight for strings
   (set (make-local-variable 'syntax-propertize-function)
        nim-syntax-propertize-function)
   (set (make-local-variable 'forward-sexp-function)
