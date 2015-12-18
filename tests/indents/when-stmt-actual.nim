@@ -72,7 +72,7 @@ proc whenWithCaseElifStmt() =
     echo "after `when` statement should be indented."
     elif true:
     case title
-    of:   echo "foo"
+    of "title":   echo "foo"
     else: echo "bar"
     else:
     echo "after `else` statement should be dedented."
@@ -83,7 +83,7 @@ proc whenWithCaseElifStmt() =
     echo "foo"
     elif true:
     if true: echo "bar"
-    elif: echo "This `elif` should be indented at `if` statement level."
+    elif true: echo "This `elif` should be indented at `if` statement level."
     else: echo "baz"
     else:
     echo "after `else` statement should be dedented."
@@ -94,7 +94,7 @@ proc whenWithCaseElifStmt() =
     echo "foo"
     elif true:
     case title
-    of:   echo "bar"
+    of "foo":   echo "bar"
     elif true: echo "this `elif` should be indented at case's indent level."
     else: echo "baz"
     else:
