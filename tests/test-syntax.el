@@ -90,17 +90,17 @@
          )))
 
  (defun test-double-quote-and-next-line (test-string file-name start-strings)
-   (lexical-let ((file-name file-name)
-                 (start-strings start-strings)
-                 (check-highlight
-                  (lambda (string)
-                    (goto-char (point-min))
-                    (if (search-forward string nil t)
-                        (test-helper-range-expect (point) (1- (point-at-eol)) 'font-lock-string-face)
-                      (error (format "Failed to find start string: %s" string)))
-                    (line-move 1)
-                    ;; comment line should not be highlighted by 'font-lock-string-face
-                    (test-helper-range-expect (1+ (point-at-bol)) (1- (point-at-eol)) 'font-lock-comment-face))))
+   (let ((file-name file-name)
+         (start-strings start-strings)
+         (check-highlight
+          (lambda (string)
+            (goto-char (point-min))
+            (if (search-forward string nil t)
+                (test-helper-range-expect (point) (1- (point-at-eol)) 'font-lock-string-face)
+              (error (format "Failed to find start string: %s" string)))
+            (when (line-move 1 t)
+              ;; comment line should not be highlighted by 'font-lock-string-face
+              (test-helper-range-expect (1+ (point-at-bol)) (1- (point-at-eol)) 'font-lock-comment-face)))))
      (it test-string
          (insert-file-contents-literally file-name)
          (font-lock-default-fontify-buffer)
