@@ -974,5 +974,93 @@ But, string-face's CHAR is ignored.  If you set POS, the check starts from POS."
             (throw 'exit (point)))
           (forward-char))))))
 
+;; ‘if-let’ function will be introduced in Emacs 25.x later.
+;; below functions were copied from subr-x.el
+;; (I tried dash’s -if-let, but unfortunately it didn’t pass tests
+;; , though not sure why)
+(unless (fboundp 'if-let)
+  (with-no-warnings ; <- suppress fboudp return value is empty
+    (eval-when-compile
+      (defmacro internal--thread-argument (first? &rest forms)
+        "Internal implementation for `thread-first' and `thread-last'.
+When Argument FIRST? is non-nil argument is threaded first, else
+last.  FORMS are the expressions to be threaded."
+        (pcase forms
+          (`(,x (,f . ,args) . ,rest)
+           `(internal--thread-argument
+             ,first? ,(if first? `(,f ,x ,@args) `(,f ,@args ,x)) ,@rest))
+          (`(,x ,f . ,rest) `(internal--thread-argument ,first? (,f ,x) ,@rest))
+          (_ (car forms))))
+
+      (defmacro thread-first (&rest forms)
+        "Thread FORMS elements as the first argument of their successor.
+Example:
+    (thread-first
+      5
+      (+ 20)
+      (/ 25)
+      -
+      (+ 40))
+Is equivalent to:
+    (+ (- (/ (+ 5 20) 25)) 40)
+Note how the single `-' got converted into a list before
+threading."
+        (declare (indent 1)
+                 (debug (form &rest [&or symbolp (sexp &rest form)])))
+        `(internal--thread-argument t ,@forms))
+
+
+      (defsubst internal--listify (elt)
+        "Wrap ELT in a list if it is not one."
+        (if (not (listp elt))
+            (list elt)
+          elt))
+
+      (defsubst internal--check-binding (binding)
+        "Check BINDING is properly formed."
+        (when (> (length binding) 2)
+          (signal
+           'error
+           (cons "`let' bindings can have only one value-form" binding)))
+        binding)
+
+      (defsubst internal--build-binding-value-form (binding prev-var)
+        "Build the conditional value form for BINDING using PREV-VAR."
+        `(,(car binding) (and ,prev-var ,(cadr binding))))
+
+      (defun internal--build-binding (binding prev-var)
+        "Check and build a single BINDING with PREV-VAR."
+        (thread-first
+            binding
+          internal--listify
+          internal--check-binding
+          (internal--build-binding-value-form prev-var)))
+
+      (defun internal--build-bindings (bindings)
+        "Check and build conditional value forms for BINDINGS."
+        (let ((prev-var t))
+          (mapcar (lambda (binding)
+                    (let ((binding (internal--build-binding binding prev-var)))
+                      (setq prev-var (car binding))
+                      binding))
+                  bindings)))
+
+      (defmacro if-let (bindings then &rest else)
+        "Process BINDINGS and if all values are non-nil eval THEN, else ELSE.
+Argument BINDINGS is a list of tuples whose car is a symbol to be
+bound and (optionally) used in THEN, and its cadr is a sexp to be
+evalled to set symbol's value.  In the special case you only want
+to bind a single value, BINDINGS can just be a plain tuple."
+        (declare (indent 2)
+                 (debug ([&or (&rest (symbolp form)) (symbolp form)] form body)))
+        (when (and (<= (length bindings) 2)
+                   (not (listp (car bindings))))
+          ;; Adjust the single binding case
+          (setq bindings (list bindings)))
+        `(let* ,(internal--build-bindings bindings)
+           (if ,(car (internal--listify (car (last bindings))))
+               ,then
+             ,@else))))))
+
 (provide 'nim-helper)
 ;;; nim-helper.el ends here
