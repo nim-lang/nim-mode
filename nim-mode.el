@@ -126,7 +126,7 @@
   (add-hook 'which-func-functions #'nim-info-current-defun nil t))
 
 ;;;###autoload
-(add-to-list 'auto-mode-alist '("\\.nim\\'" . nim-mode))
+(add-to-list 'auto-mode-alist '("\\.nim\\(ble\\|s\\)?\\'" . nim-mode))
 
 (provide 'nim-mode)
 
