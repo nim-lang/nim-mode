@@ -99,7 +99,14 @@
                       :forward-token 'nim-mode-forward-token
                       :backward-token 'nim-mode-backward-token)
           (set (make-local-variable 'indent-line-function)
-               'nim-smie-indent-line-function))
+               'nim-smie-indent-line-function)
+          ;; FIXME: due to uncompleted Nim’s smie grammar,
+          ;; ‘smie--matching-block-data’ function gets stop when
+          ;; the cursor is at proc/template/macro to find terminator
+          ;; (I guess). To prevent this, temporary use default
+          ;; show-paren-mode’s function instead.
+          (set (make-local-variable 'show-paren-data-function)
+               #'show-paren--default))
       ;; Old indentation bindings
       (set (make-local-variable 'indent-line-function) #'nim-indent-line-function)
       (set (make-local-variable 'indent-region-function) #'nim-indent-region)
