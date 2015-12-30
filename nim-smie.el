@@ -43,6 +43,7 @@
 (defvar nim-smie-previous-line-indent-state nil)
 (defvar nim-smie-force-indent-column nil)
 (defvar nim-smie-after-indent-hook nil)
+(defvar nim-smie--next-top-level nil)
 
 (defconst nim-mode-smie-grammar
   (smie-prec2->grammar
@@ -288,16 +289,20 @@ Or an empty line after comment line(s)"
               (throw 'found t))))))))
 
 (defun nim-mode-forward-token ()
-  (let ((_pos (point)))
+  (let ((pos (point)))
     (skip-chars-forward " \t")
     (forward-comment (point-max))
     (let* ((tok (smie-default-forward-token)))
-      (setq tok (nim-smie-convert-token tok))
-      (when (nim-smie-previous-line-predicate)
-        (cond ((member tok nim-smie-indent-stoppers)
-               (setq tok "__indent_stopper"))
-              ((member tok nim-smie-indent-dedenters)
-               (setq tok "__dedenter"))))
+      ;; Put a terminator to restrict calculation
+      (if (and nim-smie--next-top-level
+               (<  nim-smie--next-top-level pos))
+          (setq tok ";")
+        (setq tok (nim-smie-convert-token tok))
+        (when (nim-smie-previous-line-predicate)
+          (cond ((member tok nim-smie-indent-stoppers)
+                 (setq tok "__indent_stopper"))
+                ((member tok nim-smie-indent-dedenters)
+                 (setq tok "__dedenter")))))
       tok)))
 
 (defun nim-mode-backward-token ()
@@ -396,6 +401,16 @@ Or an empty line after comment line(s)"
     (when (line-move -1 t)
       (eq char (char-before (point-at-eol))))))
 
+(defun nim-find-next-top-level ()
+  (save-excursion
+    (catch 'exit
+      (while (and
+              (not (zerop (current-indentation)))
+              (not (eobp)))
+        (unless (line-move 1 t) (throw 'exit nil)))
+      (when (zerop (current-indentation))
+        (point-at-bol)))))
+
 (defun nim-get-comment-indent ()
   "Return indent number for comment.
 This works if only current line starts from comment."
@@ -424,7 +439,8 @@ This works if only current line starts from comment."
   (interactive)
   (setq nim-smie-indent-start-point (point)
         nim-smie-previous-line-indent-state nil
-        nim-smie-force-indent-column nil)
+        nim-smie-force-indent-column nil
+        nim-smie--next-top-level (nim-find-next-top-level))
   (if-let ((comment-indent (nim-get-comment-indent)))
       ;; indent for comment
       (indent-line-to comment-indent)
