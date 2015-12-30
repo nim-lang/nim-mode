@@ -20,13 +20,14 @@
          (insert-file-contents-literally act)
          (indent-region (point-min) (point-max))
 
-         (expect (buffer-string)
+         (expect (substring-no-properties (buffer-string))
                  :to-equal
-                 (file-to-string exp)))))
+                 (substring-no-properties (file-to-string exp))))))
 
  (before-each
   (set-buffer (get-buffer-create "*Test*"))
   (erase-buffer)
+  (setq nim-use-smie-indent nil)
   (nim-mode))
 
  (after-each

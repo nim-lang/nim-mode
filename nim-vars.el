@@ -57,6 +57,19 @@
 
 (defconst nim-indent-offset 2 "Number of spaces per level of indentation.")
 
+(defcustom nim-smie-function-indent 4
+  "Number of spaces between ‘proc ... =’.
+Note that this configuration affects other ‘template’, ‘macro’,
+‘iterator’, and ‘converter’ declaration as well."
+  :type 'integer
+  :group 'nim)
+
+(defcustom nim-use-smie-indent t
+  "Whether you use SMIE (Simple Minded Indentation Engine).
+If you set non-nil, it activates SMIE."
+  :type 'boolean
+  :group 'nim)
+
 (defvar nim-uncompleted-condition-indent 4
   "Indent behavior when condition doesn't end on one line.
 You can specify number or 'stmt+1.")
@@ -83,10 +96,13 @@ You can specify number or 'stmt+1.")
     (modify-syntax-entry ?$ "." table)
     (modify-syntax-entry ?% "." table)
 
-    ;; exceptions
+    ;; Comment start
     (modify-syntax-entry ?# "<" table)
+    ;; Comment end
     (modify-syntax-entry ?\n ">" table)
-    (modify-syntax-entry ?` "$" table)
+    ;; Use "." Punctuation syntax class because I got error when I
+    ;; used "$" from smie.el
+    (modify-syntax-entry ?` "." table)
 
     ;; Use _ syntax to single quote
     ;; See also `nim-syntax-propertize-function'.
