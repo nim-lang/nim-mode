@@ -26,16 +26,16 @@
 
 (defconst nim-font-lock-keywords
   `((,(nim-rx (1+ "\t")) . 'nim-tab-face)
-    (,(nim-rx defun (1+ whitespace) (group symbol-name))
+    (,(nim-rx defun (1+ " ") (group symbol-name))
      . (1 font-lock-function-name-face))
-    (,(nim-rx (or "var" "let") (1+ whitespace) (group symbol-name))
+    (,(nim-rx (or "var" "let") (1+ " ") (group symbol-name))
      . (1 font-lock-variable-name-face))
     (,(nim-rx (or exception type)) . font-lock-type-face)
     (,(nim-rx constant) . font-lock-constant-face)
     (,(nim-rx builtin) . font-lock-builtin-face)
     (,(nim-rx keyword) . font-lock-keyword-face)
     (,(nim-rx "{." (1+ any) ".}") . font-lock-preprocessor-face)
-    (,(nim-rx symbol-name (* whitespace) ":" (* whitespace) (group symbol-name))
+    (,(nim-rx symbol-name (* " ") ":" (* " ") (group symbol-name))
      . (1 font-lock-type-face)))
   "Font lock expressions for Nim mode.")
 
