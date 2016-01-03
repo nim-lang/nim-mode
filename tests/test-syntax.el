@@ -121,6 +121,14 @@
   (test-concat-dir "tests/syntax/string.nim")
   '(((33 . 86) . font-lock-string-face)))
 
+ (test-faces-by-range
+  "should highlight export variables"
+  (test-concat-dir "tests/syntax/export.nim")
+  '(((5   . 16)  . nim-font-lock-export-face)
+    ((40  . 50)  . nim-font-lock-export-face)
+    ((69  . 80)  . nim-font-lock-export-face)
+    ((103 . 106) . nim-font-lock-export-face)))
+
  (test-double-quote-and-next-line
   "should highlight double quoted string with single quotes"
   ;; This test makes sure whether highlights after "xxx = " are
