@@ -33,7 +33,7 @@
               'nim-font-lock-export-face
             font-lock-function-name-face)))
     ;; This only works if it’s one line
-    (,(nim-rx (or "var" "let" "const") (1+ " ")
+    (,(nim-rx (or "var" "let" "const" "type") (1+ " ")
               (group (or identifier quoted-chars) (? " ") (? (group "*"))))
      . (1 (if (match-string 2)
               'nim-font-lock-export-face
