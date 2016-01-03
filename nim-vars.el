@@ -55,6 +55,13 @@
   "Face used to visualize TAB."
   :group 'nim)
 
+(defface nim-font-lock-export-face
+  '((t :weight bold
+       :slant italic
+       :inherit font-lock-function-name-face))
+  "Font Lock face for export (XXX*)"
+  :group 'nim)
+
 (defconst nim-indent-offset 2 "Number of spaces per level of indentation.")
 
 (defcustom nim-smie-function-indent 4
