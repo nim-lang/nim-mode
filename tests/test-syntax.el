@@ -170,3 +170,9 @@
     ((128 . 176) . font-lock-doc-face)))
 
  ) ; end of describe function
+
+;; Local Variables:
+;; no-byte-compile: t
+;; End:
+
+;;; test-syntax.el ends here
