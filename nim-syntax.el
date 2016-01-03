@@ -53,7 +53,8 @@
     (,(nim-rx builtin) . font-lock-builtin-face)
     (,(nim-rx keyword) . font-lock-keyword-face)
     (,(nim-rx "{." (1+ any) ".}") . font-lock-preprocessor-face)
-    (,(nim-rx symbol-name (* " ") ":" (* " ") (group symbol-name))
+    (,(nim-rx (or identifier quoted-chars) (? "*")
+              (* " ") ":" (* " ") (group identifier))
      . (1 font-lock-type-face)))
   "Font lock expressions for Nim mode.")
 
