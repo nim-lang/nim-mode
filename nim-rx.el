@@ -150,6 +150,16 @@ This variant of `rx' supports common nim named REGEXPS."
                                          (0+ (or "_" nim-letter digit)))))
 
   (add-to-list 'nim-rx-constituents
+               (cons 'quoted-chars
+                     (nim-rx
+                      (and "`"
+                           (or
+                            identifier
+                            (1+ (or "^" "*" "[" "]" "!" "$" "%" "&"  "+" "-" "."
+                                    "/" "<" "=" ">" "?" "@" "|" "~")))
+                           "`"))))
+
+  (add-to-list 'nim-rx-constituents
                (cons 'block-start (nim-rx (or decl-block block-start-defun))))
   ;; Regular expression matching the end of line after with a block starts.
   ;; If the end of a line matches this regular expression, the next
