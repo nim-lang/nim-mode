@@ -26,8 +26,12 @@
 
 (defconst nim-font-lock-keywords
   `((,(nim-rx (1+ "\t")) . 'nim-tab-face)
-    (,(nim-rx defun (1+ " ") (group symbol-name))
-     . (1 font-lock-function-name-face))
+    (,(nim-rx defun (1+ " ")
+              (group (or identifier quoted-chars)
+                     (0+ " ") (? (group "*"))))
+     . (1 (if (match-string 2)
+              'nim-font-lock-export-face
+            font-lock-function-name-face)))
     (,(nim-rx (or "var" "let") (1+ " ") (group symbol-name))
      . (1 font-lock-variable-name-face))
     (,(nim-rx (or exception type)) . font-lock-type-face)
