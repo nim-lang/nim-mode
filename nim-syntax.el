@@ -25,8 +25,7 @@
 (eval-and-compile (require 'nim-rx))
 
 (defconst nim-font-lock-keywords
-  `(;; note the BACKTICK, `
-    ;; (,(nim-rx (1+ "\t")) . nim-tab-face) ;; TODO: make work!
+  `((,(nim-rx (1+ "\t")) . 'nim-tab-face)
     (,(nim-rx defun (1+ whitespace) (group symbol-name))
      . (1 font-lock-function-name-face))
     (,(nim-rx (or "var" "let") (1+ whitespace) (group symbol-name))

@@ -45,7 +45,6 @@
   :type 'assoc
   :group 'nim)
 
-;; TODO: make work!?
 (defface nim-tab-face
   '((((class color) (background dark))
      (:background "grey22" :foreground "darkgray"))
