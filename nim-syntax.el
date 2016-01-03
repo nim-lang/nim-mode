@@ -32,8 +32,12 @@
      . (1 (if (match-string 2)
               'nim-font-lock-export-face
             font-lock-function-name-face)))
-    (,(nim-rx (or "var" "let" "const") (1+ " ") (group symbol-name))
-     . (1 font-lock-variable-name-face))
+    ;; This only works if it’s one line
+    (,(nim-rx (or "var" "let" "const") (1+ " ")
+              (group (or identifier quoted-chars) (? " ") (? (group "*"))))
+     . (1 (if (match-string 2)
+              'nim-font-lock-export-face
+            font-lock-variable-name-face)))
     (,(nim-rx (or exception type)) . font-lock-type-face)
     (,(nim-rx constant) . font-lock-constant-face)
     (,(nim-rx builtin) . font-lock-builtin-face)
