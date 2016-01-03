@@ -32,7 +32,7 @@
      . (1 (if (match-string 2)
               'nim-font-lock-export-face
             font-lock-function-name-face)))
-    (,(nim-rx (or "var" "let") (1+ " ") (group symbol-name))
+    (,(nim-rx (or "var" "let" "const") (1+ " ") (group symbol-name))
      . (1 font-lock-variable-name-face))
     (,(nim-rx (or exception type)) . font-lock-type-face)
     (,(nim-rx constant) . font-lock-constant-face)
