@@ -60,6 +60,14 @@
 
 (put 'nim-mode 'font-lock-defaults '(nim-font-lock-keywords nil t))
 
+(defun nim-font-lock-syntactic-face-function (syntax-ppss)
+  "Return syntactic face given SYNTAX-PPSS."
+  (if (nth 4 syntax-ppss) ; if nth 4 is exist, it means inside comment.
+      (if (nim-info-docstring-p syntax-ppss)
+          font-lock-doc-face
+        font-lock-comment-face)
+    font-lock-string-face))
+
 ;;;###autoload
 (define-derived-mode nim-mode prog-mode "Nim"
   "A major mode for the Nim programming language."

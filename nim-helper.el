@@ -12,14 +12,6 @@
 The name of the defun should be grouped so it can be retrieved
 via `match-string'.")
 
-(defun nim-font-lock-syntactic-face-function (syntax-ppss)
-  "Return syntactic face given SYNTAX-PPSS."
-  (if (nth 4 syntax-ppss) ; if nth 4 is exist, it means inside comment.
-      (if (nim-info-docstring-p syntax-ppss)
-          font-lock-doc-face
-        font-lock-comment-face)
-    font-lock-string-face))
-
 (defun nim-nav--beginning-of-defun (&optional arg)
   "Internal implementation of `nim-nav-beginning-of-defun'.
 With positive ARG search backwards, else search forwards."
