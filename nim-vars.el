@@ -61,7 +61,10 @@
   "Font Lock face for export (XXX*)"
   :group 'nim)
 
-(defconst nim-indent-offset 2 "Number of spaces per level of indentation.")
+(defcustom nim-indent-offset 2
+  "Number of spaces per level of indentation."
+  :type 'integer
+  :group 'nim)
 
 (defcustom nim-smie-function-indent 4
   "Number of spaces between ‘proc ... =’.
