@@ -243,8 +243,8 @@ backward to previous statement."
       ;; Go to first line beginning a statement
       (while (and (not (bobp))
                   (or (and (nim-nav-beginning-of-statement) nil)
-                      (nim-info-current-line-comment-p)
-                      (nim-info-current-line-empty-p)))
+                      (nim-line-comment-p)
+                      (nim-line-empty-p)))
         (forward-line -1))
       (let ((block-matching-indent
              (- (current-indentation) nim-indent-offset)))
@@ -266,8 +266,8 @@ backward to previous statement."
                   (not (eobp))
                   (or (and (> (current-indentation) block-indentation)
                            (or (nim-nav-end-of-statement) t))
-                      (nim-info-current-line-comment-p)
-                      (nim-info-current-line-empty-p))))
+                      (nim-line-comment-p)
+                      (nim-line-empty-p))))
       (nim-util-forward-comment -1)
       (point-marker))))
 
@@ -387,7 +387,7 @@ expressions when looking at them in either direction."
                    ((nim-info-statement-ends-block-p) 'ends-block)))))
           (if forward-p
               (cond ((and (not (eobp))
-                          (nim-info-current-line-empty-p))
+                          (nim-line-empty-p))
                      (nim-util-forward-comment dir)
                      (nim-nav--forward-sexp dir safe skip-parens-p))
                     ((eq context 'block-start)
@@ -407,7 +407,7 @@ expressions when looking at them in either direction."
                      (nim-nav-end-of-statement))
                     (t (goto-char next-sexp-pos)))
             (cond ((and (not (bobp))
-                        (nim-info-current-line-empty-p))
+                        (nim-line-empty-p))
                    (nim-util-forward-comment dir)
                    (nim-nav--forward-sexp dir safe skip-parens-p))
                   ((eq context 'block-end)
@@ -733,22 +733,6 @@ likely an invalid nim file."
           ;; sort by closer
           (nreverse opening-blocks))))))
 
-(define-obsolete-function-alias
-  'nim-info-closing-block-message
-  'nim-info-dedenter-opening-block-message "24.4")
-
-(defun nim-info-dedenter-opening-block-message  ()
-  "Message the first line of the block the current statement closes."
-  (let ((point (nim-info-dedenter-opening-block-position)))
-    (when point
-      (save-restriction
-        (widen)
-        (unless noninteractive ; prevent output message during testing
-          (message "Closes %s" (save-excursion
-                                 (goto-char point)
-                                 (buffer-substring
-                                  (point) (line-end-position)))))))))
-
 (defun nim-info-dedenter-statement-p ()
   "Return point if current statement is a dedenter.
 Sets `match-data' to the keyword that starts the dedenter
@@ -857,6 +841,63 @@ continuations, just check the if current line is an assignment."
         (skip-syntax-forward " ")
         (point-marker)))))
 
+;; Other interactive commands
+(defun nim-indent-dedent-line ()
+  "De-indent current line."
+  (interactive "*")
+  (when (and (not (bolp))
+             (not (nim-syntax-comment-or-string-p))
+             (= (current-indentation) (current-column)))
+    ;; (nim-indent-line t)
+    t))
+
+(defun nim-indent-dedent-line-backspace (arg)
+  "De-indent current line.
+Argument ARG is passed to `backward-delete-char-untabify' when
+point is not in between the indentation."
+  (interactive "*p")
+  (unless (nim-indent-dedent-line)
+    (backward-delete-char-untabify arg)))
+(put 'nim-indent-dedent-line-backspace 'delete-selection 'supersede)
+
+(defun nim-indent-shift-left (start end &optional count)
+  "Shift lines contained in region START END by COUNT columns to the left.
+COUNT defaults to `nim-indent-offset'.  If region isn't
+active, the current line is shifted.  The shifted region includes
+the lines in which START and END lie.  An error is signaled if
+any lines in the region are indented less than COUNT columns."
+  (interactive
+   (if mark-active
+       (list (region-beginning) (region-end) current-prefix-arg)
+     (list (line-beginning-position) (line-end-position) current-prefix-arg)))
+  (if count
+      (setq count (prefix-numeric-value count))
+    (setq count nim-indent-offset))
+  (when (> count 0)
+    (let ((deactivate-mark nil))
+      (save-excursion
+        (goto-char start)
+        (while (< (point) end)
+          (if (and (< (current-indentation) count)
+                   (not (looking-at "[ \t]*$")))
+              (user-error "Can't shift all lines enough"))
+          (forward-line))
+        (indent-rigidly start end (- count))))))
+
+(defun nim-indent-shift-right (start end &optional count)
+  "Shift lines contained in region START END by COUNT columns to the right.
+COUNT defaults to `nim-indent-offset'.  If region isn't
+active, the current line is shifted.  The shifted region includes
+the lines in which START and END lie."
+  (interactive
+   (if mark-active
+       (list (region-beginning) (region-end) current-prefix-arg)
+     (list (line-beginning-position) (line-end-position) current-prefix-arg)))
+  (let ((deactivate-mark nil))
+    (setq count (if count (prefix-numeric-value count)
+                  nim-indent-offset))
+    (indent-rigidly start end count)))
+
 ;; TODO: rename to clarify this is only for the first continuation
 ;; line or remove it and move its body to `nim-indent-context'.
 (defun nim-info-assignment-continuation-line-p ()
@@ -876,26 +917,37 @@ operator."
          (beginning-of-line 1)
          (looking-at nim-nav-beginning-of-defun-regexp))))
 
-(defun nim-info-current-line-comment-p (&optional line)
+(defun nim-line-comment-p (&optional line start-point)
   "Return non-nil if current line's start position is comment.
 If there is the optional LINE argument, moves LINE times from current line."
-  (save-excursion
-    (when line (forward-line line))
-    (eq ?# (char-after (+ (line-beginning-position) (current-indentation))))))
+  (catch 'failed
+    (save-excursion
+      (when (and line (not (nim-line-move line)))
+        (throw 'failed nil))
+      (if (not start-point)
+          (eq ?# (char-after (+ (line-beginning-position) (current-indentation))))
+        (let ((ppss (syntax-ppss start-point)))
+          (when (eq t (nth 4 ppss))
+            (goto-char (nth 8 ppss))
+            (current-column)))))))
 
-(defun nim-info-current-line-empty-p (&optional line)
+
+(defun nim-line-empty-p (&optional line allow-comment)
   "Return non-nil if current line is empty, ignoring whitespace.
 If there is the optional LINE argument, moves LINE times from current line."
-  (save-excursion
-    (when line (forward-line line))
-    (beginning-of-line 1)
-    (looking-at
-     (nim-rx line-start (* whitespace)
-                (group (* not-newline))
-                (* whitespace) line-end))
-    (string-equal "" (match-string-no-properties 1))))
+  (catch 'failed
+    (save-excursion
+      (when line
+        (when (not (nim-line-move line))
+          (throw 'failed nil)))
+      (beginning-of-line 1)
+      (when (looking-at
+             (if allow-comment
+                 (nim-rx line-start (0+ " ") (or comment line-end))
+               (nim-rx line-start (0+ " ") line-end)))
+        t))))
 
-(defun nim-info-docstring-p (&optional syntax-ppss)
+(defun nim-docstring-p (&optional syntax-ppss)
   "Return non-nil if point is in a docstring.
 When optional argument SYNTAX-PPSS is given, use that instead of
 point's current `syntax-ppss'."
@@ -903,7 +955,7 @@ point's current `syntax-ppss'."
     (and (eq ?# (char-before (1+  (nth 8 ppss))))
          (eq ?# (char-before (+ 2 (nth 8 ppss)))))))
 
-(defun nim-helper-line-contain-p (char &optional pos backward)
+(defun nim-line-contain-p (char &optional pos backward)
   "Return non-nil if the current line has CHAR.
 But, string-face's CHAR is ignored.  If you set POS, the check starts from POS."
   (save-excursion
@@ -919,6 +971,15 @@ But, string-face's CHAR is ignored.  If you set POS, the check starts from POS."
                        (member (char-after (point)) char)))
             (throw 'exit (point)))
           (if backward (backward-char) (forward-char)))))))
+
+(defun nim-line-move (&optional arg)
+  ;; just added condition case (this is for testing)
+  ;; the line-move didn’t work as I expected during byte compiled tests, so
+  (condition-case nil
+      (let ((current-line (line-number-at-pos)))
+        (line-move arg t)
+        (not (= current-line (line-number-at-pos))))
+    (error nil)))
 
 ;; ‘if-let’ function will be introduced in Emacs 25.x later.
 ;; below functions were copied from subr-x.el

@@ -61,6 +61,12 @@
   "Font Lock face for export (XXX*)"
   :group 'nim)
 
+(defcustom nim-indent-trigger-commands
+  '(indent-for-tab-command yas-expand yas/expand)
+  "Commands that might trigger a `nim-indent-line' call."
+  :type '(repeat symbol)
+  :group 'nim)
+
 (defcustom nim-indent-offset 2
   "Number of spaces per level of indentation."
   :type 'integer
@@ -73,15 +79,32 @@ Note that this configuration affects other ‘template’, ‘macro’,
   :type 'integer
   :group 'nim)
 
-(defcustom nim-use-smie-indent t
-  "Whether you use SMIE (Simple Minded Indentation Engine).
-If you set non-nil, it activates SMIE."
-  :type 'boolean
+(defcustom nim-smie-indent-stoppers
+  '("proc" "template" "macro" "iterator" "converter" "type")
+  "Indentation behavior after empty line.
+You can specify list of string, which you want to stop indenting.
+If it’s nil, it does nothing."
+  :type '(choice
+          (repeat :tag "" string)
+          (const :tag "" nil))
   :group 'nim)
 
-(defvar nim-uncompleted-condition-indent 4
-  "Indent behavior when condition doesn't end on one line.
-You can specify number or 'stmt+1.")
+(defcustom nim-smie-indent-dedenters 'all-dedent
+  "Indentation behavior after empty line.
+If you set ‘all-dedent’, it forces dedent whatever point starts.
+Or you can specify list of string, which you want to dedent.
+If it’s nil, it does nothing."
+  :type '(choice
+          (repeat :tag "Dedenter symbols" string)
+          (const :tag "Don't dedent" nil)
+          (const :tag
+                 "Dedent all if previous line is empty line" all-dedent))
+  :group 'nim)
+
+(defcustom nim-smie-after-indent-hook nil
+  "Hook run after indenting."
+  :type 'hook
+  :group 'nim)
 
 (defvar nim-mode-map
   (let ((map (make-sparse-keymap)))

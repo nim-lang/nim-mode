@@ -5,7 +5,7 @@
 ;;
 
 ;;; Code:
-(require 'nim-indent)
+(require 'nim-smie)
 
 ;;; Fill Paragraph ;;;
 (defcustom nim-fill-comment-function 'nim-fill-comment
@@ -181,7 +181,7 @@ JUSTIFY should be used (if applicable) as in `fill-paragraph'."
       (narrow-to-region str-start-pos str-end-pos)
       (fill-paragraph justify))
     (save-excursion
-      (when (and (nim-info-docstring-p) nim-fill-docstring-style)
+      (when (and (nim-docstring-p) nim-fill-docstring-style)
         ;; Add the number of newlines indicated by the selected style
         ;; at the start of the docstring.
         (goto-char (+ str-start-pos num-quotes))
