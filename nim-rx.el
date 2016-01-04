@@ -140,9 +140,27 @@ This variant of `rx' supports common nim named REGEXPS."
             (t
              (rx-to-string (car regexps) t)))))
 
+  ;; based on nim manual
+  (add-to-list 'nim-rx-constituents
+               ;; note rx.el already has ‘letter’
+               (cons 'nim-letter (rx (in "a-zA-Z-ÿ"))))
+
+  (add-to-list 'nim-rx-constituents
+               (cons 'identifier (nim-rx nim-letter
+                                         (0+ (or "_" nim-letter digit)))))
+
+  (add-to-list 'nim-rx-constituents
+               (cons 'quoted-chars
+                     (nim-rx
+                      (and "`"
+                           (or
+                            identifier
+                            (1+ (or "^" "*" "[" "]" "!" "$" "%" "&"  "+" "-" "."
+                                    "/" "<" "=" ">" "?" "@" "|" "~")))
+                           "`"))))
+
   (add-to-list 'nim-rx-constituents
                (cons 'block-start (nim-rx (or decl-block block-start-defun))))
-
   ;; Regular expression matching the end of line after with a block starts.
   ;; If the end of a line matches this regular expression, the next
   ;; line is considered an indented block.  Whitespaces at the end of a

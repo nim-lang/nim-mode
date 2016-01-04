@@ -25,18 +25,36 @@
 (eval-and-compile (require 'nim-rx))
 
 (defconst nim-font-lock-keywords
-  `(;; note the BACKTICK, `
-    ;; (,(nim-rx (1+ "\t")) . nim-tab-face) ;; TODO: make work!
-    (,(nim-rx defun (1+ whitespace) (group symbol-name))
-     . (1 font-lock-function-name-face))
-    (,(nim-rx (or "var" "let") (1+ whitespace) (group symbol-name))
-     . (1 font-lock-variable-name-face))
+  `((,(nim-rx (1+ "\t")) . 'nim-tab-face)
+    (,(nim-rx defun (1+ " ")
+              (group (or identifier quoted-chars)
+                     (0+ " ") (? (group "*"))))
+     . (1 (if (match-string 2)
+              'nim-font-lock-export-face
+            font-lock-function-name-face)))
+    ;; This only works if it’s one line
+    (,(nim-rx (or "var" "let" "const" "type") (1+ " ")
+              (group (or identifier quoted-chars) (? " ") (? (group "*"))))
+     . (1 (if (match-string 2)
+              'nim-font-lock-export-face
+            font-lock-variable-name-face)))
+    ;; For multiple line properties
+    (,(nim-rx line-start (1+ " ")
+              (group
+               (or identifier quoted-chars) "*"
+               (? (and "[" word "]"))
+               (0+ (and "," (? (0+ " "))
+                        (or identifier quoted-chars) "*")))
+              (0+ " ") (or ":" "{." "=") (0+ nonl)
+              line-end)
+     . (1 'nim-font-lock-export-face))
     (,(nim-rx (or exception type)) . font-lock-type-face)
     (,(nim-rx constant) . font-lock-constant-face)
     (,(nim-rx builtin) . font-lock-builtin-face)
     (,(nim-rx keyword) . font-lock-keyword-face)
     (,(nim-rx "{." (1+ any) ".}") . font-lock-preprocessor-face)
-    (,(nim-rx symbol-name (* whitespace) ":" (* whitespace) (group symbol-name))
+    (,(nim-rx (or identifier quoted-chars) (? "*")
+              (* " ") ":" (* " ") (group identifier))
      . (1 font-lock-type-face)))
   "Font lock expressions for Nim mode.")
 

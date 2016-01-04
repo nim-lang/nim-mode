@@ -45,7 +45,6 @@
   :type 'assoc
   :group 'nim)
 
-;; TODO: make work!?
 (defface nim-tab-face
   '((((class color) (background dark))
      (:background "grey22" :foreground "darkgray"))
@@ -53,6 +52,13 @@
      (:background "beige"  :foreground "lightgray"))
     (t (:inverse-video t)))
   "Face used to visualize TAB."
+  :group 'nim)
+
+(defface nim-font-lock-export-face
+  '((t :weight bold
+       :slant italic
+       :inherit font-lock-function-name-face))
+  "Font Lock face for export (XXX*)"
   :group 'nim)
 
 (defconst nim-indent-offset 2 "Number of spaces per level of indentation.")
@@ -148,15 +154,17 @@ The above string is taken from URL
 updating.")
 
 (defconst nim-types
-  '("int" "int8" "int16" "int32" "int64" "float" "float32" "float64"
-    "bool" "char" "string" "cstring" "pointer" "ordinal" "nil" "expr"
-    "stmt" "typedesc" "range" "array" "openarray" "seq" "set"
-    "tgenericseq" "pgenericseq" "nimstringdesc" "nimstring" "byte"
-    "natural" "positive" "tobject" "pobject" "tresult" "tendian"
-    "taddress" "biggestint" "biggestfloat" "cchar" "cschar" "cshort"
-    "cint" "clong" "clonglong" "cfloat" "cdouble" "clongdouble"
+  '("int" "int8" "int16" "int32" "int64" "uint" "uint8" "uint16" "uint32"
+    "uint64" "float" "float32" "float64" "bool" "char" "string" "cstring"
+    "pointer" "ordinal" "nil" "expr" "stmt" "typedesc" "void" "auto" "any"
+    "untyped" "typed" "range" "array" "openarray" "Ordinal" "seq" "set"
+    "tgenericseq" "pgenericseq" "nimstringdesc" "nimstring" "byte" "natural"
+    "positive" "tobject" "pobject"
+    "tresult" "tendian" "taddress" "biggestint" "biggestfloat" "cchar" "cschar"
+    "cshort" "cint" "clong" "clonglong" "cfloat" "cdouble" "clongdouble"
     "cstringarray" "pfloat32" "pfloat64" "pint64" "pint32"
-    "tgc_strategy" "tfile" "tfilemode")
+    "SomeSignedInt" "SomeUnsignedInt" "SomeInteger" "SomeOrdinal" "SomeReal"
+    "SomeNumber" "tgc_strategy" "tfile" "tfilemode")
   "Nim types defined in <lib/system.nim>.")
 
 (defconst nim-exceptions
@@ -174,7 +182,8 @@ updating.")
   '("ismainmodule" "compiledate" "compiletime" "nimversion"
     "nimmajor" "nimminor" "nimpatch" "cpuendian" "hostos"
     "hostcpu" "apptype" "inf" "neginf" "nan" "quitsuccess"
-    "quitfailure" "stdin" "stdout" "stderr" "true" "false" )
+    "quitfailure" "stdin" "stdout" "stderr" "true" "false"
+    "on" "off")
   "Nim constants defined in <lib/system.nim>.")
 
 (defconst nim-builtins
