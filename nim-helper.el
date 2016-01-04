@@ -560,29 +560,6 @@ This command assumes point is not in a string or comment."
   (or arg (setq arg 1))
   (nim-nav-up-list (- arg)))
 
-(defun nim-nav-if-name-main ()
-  "Move point at the beginning the __main__ block.
-When \"if __name__ == '__main__':\" is found returns its
-position, else returns nil."
-  (interactive)
-  (let ((point (point))
-        (found (catch 'found
-                 (goto-char (point-min))
-                 (while (re-search-forward
-                         (nim-rx line-start
-                                    "if" (+ space)
-                                    "__name__" (+ space)
-                                    "==" (+ space)
-                                    (group-n 1 (or ?\" ?\'))
-                                    "__main__" (backref 1) (* space) ":")
-                         nil t)
-                   (when (not (nim-syntax-context-type))
-                     (beginning-of-line)
-                     (throw 'found t))))))
-    (if found
-        (point)
-      (ignore (goto-char point)))))
-
 (defun nim-info-current-defun (&optional include-type)
   "Return name of surrounding function with Nim compatible dotty syntax.
 Optional argument INCLUDE-TYPE indicates to include the type of the defun.
@@ -933,32 +910,6 @@ point's current `syntax-ppss'."
   (let ((ppss (or syntax-ppss (syntax-ppss))))
     (and (eq ?# (char-before (1+  (nth 8 ppss))))
          (eq ?# (char-before (+ 2 (nth 8 ppss)))))))
-
-(defun nim-info-encoding-from-cookie ()
-  "Detect current buffer's encoding from its coding cookie.
-Returns the encoding as a symbol."
-  (let ((first-two-lines
-         (save-excursion
-           (save-restriction
-             (widen)
-             (goto-char (point-min))
-             (forward-line 2)
-             (buffer-substring-no-properties
-              (point)
-              (point-min))))))
-    (when (string-match (nim-rx coding-cookie) first-two-lines)
-      (intern (match-string-no-properties 1 first-two-lines)))))
-
-(defun nim-info-encoding ()
-  "Return encoding for file.
-Try `nim-info-encoding-from-cookie', if none is found then
-default to utf-8."
-  ;; If no encoding is defined, then it's safe to use UTF-8: Nim 2
-  ;; uses ASCII as default while Nim 3 uses UTF-8.  This means that
-  ;; in the worst case scenario nim.el will make things work for
-  ;; Nim 2 files with unicode data and no encoding defined.
-  (or (nim-info-encoding-from-cookie)
-      'utf-8))
 
 (defun nim-helper-line-contain-p (char &optional pos backward)
   "Return non-nil if the current line has CHAR.

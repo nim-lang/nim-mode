@@ -58,18 +58,6 @@
 (require 'nim-suggest)
 (require 'nim-compile)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;                                Helpers                                     ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defun nim-glue-strings (glue strings)
-  "Concatenate some GLUE and a list of STRINGS."
-  (mapconcat 'identity strings glue))
-
-(defun nim-regexp-choice (strings)
-  "Construct a regexp multiple-choice from a list of STRINGS."
-  (concat "\\(" (nim-glue-strings "\\|" strings) "\\)"))
-
 (put 'nim-mode 'font-lock-defaults '(nim-font-lock-keywords nil t))
 
 ;;;###autoload
