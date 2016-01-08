@@ -782,5 +782,18 @@ case INDENTATION is a list, this order is enforced."
            (cons indentation levels)
          levels)))))
 
+;;; For debug
+;; or you can use ‘smie-edebug’.
+(defun nim-debug-smie-rules (kind token)
+  (let ((fmt (concat "kind(%s)-Token(%s)-Point(%d)\n"
+                     "sibling(%s)-bolp(%s)\n"
+                     "parent(%s)-hanging(%s)")))
+    (message (format fmt kind token (point)
+                     (ignore-errors (smie-rule-sibling-p))
+                     (ignore-errors (smie-rule-bolp))
+                     (ignore-errors (smie-indent--parent))
+                     (ignore-errors (smie-rule-hanging-p))))))
+;; (advice-add 'nim-mode-smie-rules :before #'nim-debug-smie-rules)
+
 (provide 'nim-smie)
 ;;; nim-smie.el ends here
