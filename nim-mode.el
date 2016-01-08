@@ -36,10 +36,8 @@
 ;; Todo:
 ;;
 ;; -- Make things non-case-sensitive and ignore underscores
-;; -- Identifier following "proc" gets font-lock-function-name-face
 ;; -- Treat parameter lists separately
 ;; -- Treat pragmas inside "{." and ".}" separately
-;; -- Highlight tabs as syntax error
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
