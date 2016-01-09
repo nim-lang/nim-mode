@@ -1,8 +1,8 @@
 # single line
-var foo: string = "string"
-var bar: string = "string"
+const foo: string = "string"
+const bar: string = "string"
 
-var
+const
   foo1: string = "string"
   foo2 = "foo"
   bar1: string = "string"
@@ -10,7 +10,7 @@ var
 
 
 # insert newline after equal
-var
+const
   foo3: string =
     "string"
   foo4 =
