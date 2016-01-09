@@ -165,6 +165,8 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
   nil)
 
 (defun nim-traverse ()
+  (when (looking-back "= +" nil)
+    (search-backward "="))
   (while (nim-line-contain-p '(?\} ?\) ?\]) nil t)
     (condition-case nil (backward-sexp))))
 
