@@ -293,6 +293,7 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
                   nim-indent-offset)))
            (save-excursion
              (goto-char (nth 1 (smie-indent--parent)))
+             (nim-traverse)
              (cons 'column (+ (current-indentation) offset)))))
         ;; ‘object of’ doesn't use ‘=’, so we can safely dendent them.
         ((and (smie-rule-parent-p "of")
