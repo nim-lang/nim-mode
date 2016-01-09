@@ -319,14 +319,33 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
   (cl-case kind
     ((:before :after)
      (if-let ((parent (smie-rule-parent nim-indent-offset)))
-         (progn
-           (save-excursion
+         (save-excursion
+           (let ((pos (point))
+                 ;; check if current indentation is closer
+                 ;; after the = {, (, or [
+                 ;; (ex: after-open-bracket.nim)
+                 (paren-offset
+                  (when (looking-at-p
+                         (rx "=" (0+ " ") (group (or "[" "{" "("))))
+                    (skip-chars-forward " =")
+                    (forward-sexp)
+                    (when (eq (line-number-at-pos)
+                              (assoc-default :line nim-smie--line-info))
+                      0))))
              (goto-char (nth 1 (smie-indent--parent)))
              (if (nim-smie--anonymous-proc-p)
                  (save-excursion
                    (nim-traverse)
                    (cons 'column (+ (current-indentation) nim-indent-offset)))
-               parent)))
+               (if (not (smie-rule-parent-p "var" "let" "const" "type"))
+                   ;; There are certain situations what we should
+                   ;; follow parent’s indention. (ex: iterator2.nim)
+                   parent
+                 (goto-char pos)
+                 (nim-traverse)
+                 (nim-set-force-indent
+                  (+ (current-indentation)
+                     (or paren-offset nim-indent-offset)))))))
        nim-indent-offset))
     (:list-intro
      (save-excursion
