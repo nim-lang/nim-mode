@@ -168,7 +168,8 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
   (when (looking-back "= +" nil)
     (search-backward "="))
   (while (nim-line-contain-p '(?\} ?\) ?\]) nil t)
-    (condition-case nil (backward-sexp))))
+    (condition-case nil (backward-sexp)))
+  (goto-char (+ (point-at-bol) (current-indentation))))
 
 (defun nim-same-closer-line-p ()
   (if-let ((closer-line (assoc-default :closer-line nim-smie--line-info)))
