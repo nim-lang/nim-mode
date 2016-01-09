@@ -51,39 +51,38 @@
               (assoc-default :line nim-eldoc--data))
       (assoc-default :str nim-eldoc--data))))
 
-(eval-and-compile
-  (defun nim-eldoc-format-string (data)
-    "Format DATA for eldoc."
-    (let* ((forth   (nim-epc-forth data))
-           (symKind (nim-epc-symkind data))
-           (qpath   (nim-epc-qualifiedPath data))
-           (doc (mapconcat 'identity
-                           (split-string (nim-epc-doc data) "\n")
-                           ""))
-           (name
-            (if (eq (length (cdr qpath)) 1)
-                (cadr qpath)
-              (mapconcat 'identity (cdr qpath) "."))))
-      (when name
-        (add-text-properties
-         0 (length name)
-         '(face font-lock-function-name-face)
-         name))
-      (pcase (cons symKind nil)
-        (`(,(or "skProc" "skField") . _)
-         (when (string< "" forth)
-           (cl-destructuring-bind (ptype . typeinfo) (nim-eldoc-parse forth)
-             (when (equal "proc" ptype)
-               (let* ((func  (format "%s %s" name typeinfo)))
-                 (nim-eldoc-trim
-                  (if (string= "" doc)
-                      (format "%s" func)
-                    (format "%s %s" func doc))))))))
-        (`("skType" . _)
-         (nim-eldoc-trim
-          (if (not (string< "" doc))
-              (format "there is no doc for %s" name)
-            (format "%s: %s" name doc))))))))
+(defun nim-eldoc-format-string (data)
+  "Format DATA for eldoc."
+  (let* ((forth   (nim-epc-forth data))
+         (symKind (nim-epc-symkind data))
+         (qpath   (nim-epc-qualifiedPath data))
+         (doc (mapconcat 'identity
+                         (split-string (nim-epc-doc data) "\n")
+                         ""))
+         (name
+          (if (eq (length (cdr qpath)) 1)
+              (cadr qpath)
+            (mapconcat 'identity (cdr qpath) "."))))
+    (when name
+      (add-text-properties
+       0 (length name)
+       '(face font-lock-function-name-face)
+       name))
+    (pcase (cons symKind nil)
+      (`(,(or "skProc" "skField") . ,_)
+       (when (string< "" forth)
+         (cl-destructuring-bind (ptype . typeinfo) (nim-eldoc-parse forth)
+           (when (equal "proc" ptype)
+             (let* ((func  (format "%s %s" name typeinfo)))
+               (nim-eldoc-trim
+                (if (string= "" doc)
+                    (format "%s" func)
+                  (format "%s %s" func doc))))))))
+      (`("skType" . ,_)
+       (nim-eldoc-trim
+        (if (not (string< "" doc))
+            (format "there is no doc for %s" name)
+          (format "%s: %s" name doc)))))))
 
 (defun nim-eldoc-parse (forth)
   (when (string-match
