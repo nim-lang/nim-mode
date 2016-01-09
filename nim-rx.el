@@ -160,6 +160,12 @@ This variant of `rx' supports common nim named REGEXPS."
                            "`"))))
 
   (add-to-list 'nim-rx-constituents
+               (cons 'comment
+                     (rx (1+ (syntax comment-start))
+                         (0+ (or (in " " word) nonl) (syntax comment-end)))))
+
+
+  (add-to-list 'nim-rx-constituents
                (cons 'block-start (nim-rx (or decl-block block-start-defun))))
   ;; Regular expression matching the end of line after with a block starts.
   ;; If the end of a line matches this regular expression, the next

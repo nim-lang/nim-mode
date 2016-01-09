@@ -36,10 +36,8 @@
 ;; Todo:
 ;;
 ;; -- Make things non-case-sensitive and ignore underscores
-;; -- Identifier following "proc" gets font-lock-function-name-face
 ;; -- Treat parameter lists separately
 ;; -- Treat pragmas inside "{." and ".}" separately
-;; -- Highlight tabs as syntax error
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -53,97 +51,147 @@
 (require 'nim-syntax)
 (require 'nim-util)
 (require 'nim-helper)
-(require 'nim-indent)
+(require 'nim-smie)
+(require 'paren) ; for ‘show-paren-data-function’
 (require 'nim-fill)
 (require 'nim-suggest)
 (require 'nim-compile)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;                                Helpers                                     ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defun nim-glue-strings (glue strings)
-  "Concatenate some GLUE and a list of STRINGS."
-  (mapconcat 'identity strings glue))
-
-(defun nim-regexp-choice (strings)
-  "Construct a regexp multiple-choice from a list of STRINGS."
-  (concat "\\(" (nim-glue-strings "\\|" strings) "\\)"))
-
 (put 'nim-mode 'font-lock-defaults '(nim-font-lock-keywords nil t))
+
+(defun nim-font-lock-syntactic-face-function (syntax-ppss)
+  "Return syntactic face given SYNTAX-PPSS."
+  (if (nth 4 syntax-ppss) ; if nth 4 is exist, it means inside comment.
+      (if (nim-docstring-p syntax-ppss)
+          font-lock-doc-face
+        font-lock-comment-face)
+    font-lock-string-face))
 
 ;;;###autoload
 (define-derived-mode nim-mode prog-mode "Nim"
   "A major mode for the Nim programming language."
   :group 'nim
   ;; Font lock
-  (set (make-local-variable 'font-lock-defaults)
-       '(nim-font-lock-keywords
-         nil nil nil nil
-         (font-lock-syntactic-face-function
-          . nim-font-lock-syntactic-face-function)))
+  (setq-local font-lock-defaults
+              '(nim-font-lock-keywords
+                nil nil nil nil
+                (font-lock-syntactic-face-function
+                 . nim-font-lock-syntactic-face-function)))
+
+  ;; Comment
+  (setq-local comment-start "# ")
+  (setq-local comment-start-skip "#+\\s-*")
+
+  ;; SMIE
+  (smie-setup nim-mode-smie-grammar 'nim-mode-smie-rules
+              :forward-token 'nim-mode-forward-token
+              :backward-token 'nim-mode-backward-token)
+  (setq-local indent-line-function #'nim-indent-line-function)
+  ;; FIXME: due to uncompleted Nim’s smie grammar,
+  ;; ‘smie--matching-block-data’ function gets stop when
+  ;; the cursor is at proc/template/macro to find terminator
+  ;; (I guess). To prevent this, temporary use default
+  ;; show-paren-mode’s function instead.
+  (setq-local show-paren-data-function #'show-paren--default)
+
+  ;; Always indent with SPACES!
+  (setq-local indent-tabs-mode nil)
+  (setq-local parse-sexp-lookup-properties t)
+  (setq-local parse-sexp-ignore-comments t)
+
+  ;; Syntax highlight for strings
+  (setq-local syntax-propertize-function nim-syntax-propertize-function)
+
+  ;; Because indentation is not redundant, we cannot safely reindent code.
+  (setq-local electric-indent-inhibit t)
+  (setq-local electric-indent-chars (cons ?: electric-indent-chars))
+  ;; Paragraph
+  (setq-local paragraph-start "\\s-*$")
+  ;; Navigation
+  (setq-local beginning-of-defun-function #'nim-nav-beginning-of-defun) ; C-M-a
+  (setq-local end-of-defun-function       #'nim-nav-end-of-defun)       ; C-M-e
+  ;; Fill
+  (setq-local fill-paragraph-function     #'nim-fill-paragraph)
+  ;; add-log
+  (setq-local add-log-current-defun-function #'nim-info-current-defun)
+
+  ;; Hooks
   ;; Add """ ... """ pairing to electric-pair-mode.
   (add-hook 'post-self-insert-hook
             #'nim-electric-pair-string-delimiter 'append t)
-  ;; Comment
-  (set (make-local-variable 'comment-start) "# ")
-  (set (make-local-variable 'comment-start-skip) "#+\\s-*")
-
-  ;; Indent
-  (with-no-warnings
-    (if (and nim-use-smie-indent)
-        ;; SMIE
-        (progn
-          (require 'nim-smie nil t)
-          (smie-setup nim-mode-smie-grammar 'nim-mode-smie-rules
-                      :forward-token 'nim-mode-forward-token
-                      :backward-token 'nim-mode-backward-token)
-          (set (make-local-variable 'indent-line-function)
-               'nim-smie-indent-line-function)
-          ;; FIXME: due to uncompleted Nim’s smie grammar,
-          ;; ‘smie--matching-block-data’ function gets stop when
-          ;; the cursor is at proc/template/macro to find terminator
-          ;; (I guess). To prevent this, temporary use default
-          ;; show-paren-mode’s function instead.
-          (set (make-local-variable 'show-paren-data-function)
-               #'show-paren--default))
-      ;; Old indentation bindings
-      (set (make-local-variable 'indent-line-function) #'nim-indent-line-function)
-      (set (make-local-variable 'indent-region-function) #'nim-indent-region)
-      (set (make-local-variable 'forward-sexp-function)
-           'nim-nav-forward-sexp)
-      (set (make-local-variable 'fill-paragraph-function) #'nim-fill-paragraph)))
-
-  ;; Always indent with SPACES!
-  (set (make-local-variable 'indent-tabs-mode) nil)
-
-  (set (make-local-variable 'parse-sexp-lookup-properties) t)
-  (set (make-local-variable 'parse-sexp-ignore-comments) t)
-
-  ;; Syntax highlight for strings
-  (set (make-local-variable 'syntax-propertize-function)
-       nim-syntax-propertize-function)
-
-  ;; Because indentation is not redundant, we cannot safely reindent code.
-  (set (make-local-variable 'electric-indent-inhibit) t)
-  (set (make-local-variable 'electric-indent-chars)
-       (cons ?: electric-indent-chars))
-  ;; Paragraph
-  (set (make-local-variable 'paragraph-start) "\\s-*$")
-
-  ;; Navigation
-  (set (make-local-variable 'beginning-of-defun-function)
-       #'nim-nav-beginning-of-defun)
-  (set (make-local-variable 'end-of-defun-function)
-       #'nim-nav-end-of-defun)
-  (set (make-local-variable 'add-log-current-defun-function)
-       #'nim-info-current-defun)
   (add-hook 'post-self-insert-hook
             #'nim-indent-post-self-insert-function 'append 'local)
   (add-hook 'which-func-functions #'nim-info-current-defun nil t))
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.nim\\(ble\\|s\\)?\\'" . nim-mode))
+
+(defun nim-indent-post-self-insert-function ()
+  "Adjust indentation after insertion of some characters.
+This function is intended to be added to `post-self-insert-hook.'
+If a line renders a paren alone, after adding a char before it,
+the line will be re-indented automatically if needed."
+  (when (and electric-indent-mode
+             (eq (char-before) last-command-event))
+    (cond
+     ;; Electric indent inside parens
+     ((and
+       (not (bolp))
+       (let ((paren-start (nim-syntax-context 'paren)))
+         ;; Check that point is inside parens.
+         (when paren-start
+           (not
+            ;; Filter the case where input is happening in the same
+            ;; line where the open paren is.
+            (= (line-number-at-pos)
+               (line-number-at-pos paren-start)))))
+       ;; When content has been added before the closing paren or a
+       ;; comma has been inserted, it's ok to do the trick.
+       (or
+        (memq (char-after) '(?\) ?\] ?\}))
+        (eq (char-before) ?,)))
+      (save-excursion
+        (goto-char (line-beginning-position))
+        (let ((indentation (nim-indent-calculate-indentation)))
+          (when (and (numberp indentation) (< (current-indentation) indentation))
+            (indent-line-to indentation)))))
+     ;; Electric colon
+     ((and (eq ?: last-command-event)
+           (memq ?: electric-indent-chars)
+           (not current-prefix-arg)
+           ;; Trigger electric colon only at end of line
+           (eolp)
+           ;; Avoid re-indenting on extra colon
+           (not (equal ?: (char-before (1- (point)))))
+           (not (nim-syntax-comment-or-string-p)))
+      ;; Just re-indent dedenters
+      (let ((dedenter-pos (nim-info-dedenter-statement-p))
+            (current-pos (point)))
+        (when dedenter-pos
+          (save-excursion
+            (goto-char dedenter-pos)
+            (nim-indent-line)
+            (unless (= (line-number-at-pos dedenter-pos)
+                       (line-number-at-pos current-pos))
+              ;; Reindent region if this is a multiline statement
+              (indent-region dedenter-pos current-pos)))))))))
+
+(defun nim-indent-electric-colon (arg)
+  "Insert a colon and maybe de-indent the current line.
+With numeric ARG, just insert that many colons.  With
+\\[universal-argument], just insert a single colon."
+  (interactive "*P")
+  (self-insert-command (if (not (integerp arg)) 1 arg))
+  (when (and (not arg)
+             (eolp)
+             (not (equal ?: (char-after (- (point-marker) 2))))
+             (not (nim-syntax-comment-or-string-p)))
+    (let ((indentation (current-indentation))
+          (calculated-indentation (nim-indent-calculate-indentation)))
+      (when (> indentation calculated-indentation)
+        (save-excursion
+          (indent-line-to calculated-indentation))))))
+(put 'nim-indent-electric-colon 'delete-selection t)
 
 (provide 'nim-mode)
 
