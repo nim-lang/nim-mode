@@ -378,11 +378,14 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
 (defun nim-smie--object (kind)
   (cl-case kind
     (:before
-     (if (and (smie-rule-prev-p "=")
-              (smie-rule-parent-p "type"))
-         (smie-rule-parent (* 2 nim-indent-offset))
-       (save-excursion (back-to-indentation)
-                       (cons 'column (+ (current-column) nim-indent-offset)))))))
+     (cond
+      ((and (smie-rule-prev-p "=")
+            (smie-rule-parent-p "type"))
+       (smie-rule-parent (* 2 nim-indent-offset)))
+      (t
+       (save-excursion
+         (nim-traverse)
+         (nim-set-force-indent (+ (current-column) nim-indent-offset))))))))
 
 (defun nim-smie--list-intro-conditions ()
   ;; If it’s completed as one line, set indent forcefully
