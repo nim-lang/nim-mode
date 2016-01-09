@@ -512,12 +512,11 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
           (setq tok ""))
          ((member tok2 '(":"))
           (if-let ((data (nim-get-indent-start-p nil t)))
-              (progn
-                (cond
-                 ((member (cdr data)
-                          '("if" "when" "elif" "while" "else" "of"))
-                  (goto-char (car data))
-                  (setq tok (cdr data)))))
+              (cond
+               ((member (cdr data)
+                        '("if" "when" "elif" "while" "else" "of"))
+                (goto-char (car data))
+                (setq tok (cdr data))))
             (cond
              ((and (not (assoc tok smie-closer-alist))
                    (not (rassoc tok smie-closer-alist))
