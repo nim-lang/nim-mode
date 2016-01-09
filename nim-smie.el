@@ -284,9 +284,7 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
              (cons 'column (+ (current-indentation) nim-indent-offset))
            (smie-rule-parent)))
         ;; object
-        ((and (smie-rule-parent-p "object")
-              (save-excursion (goto-char (nth 1 (smie-indent--parent)))
-                              (looking-at-p "object")))
+        ((smie-rule-parent-p "object")
          (let ((offset
                 (if (save-excursion
                       (goto-char (assoc-default :start-pos nim-smie--line-info))
