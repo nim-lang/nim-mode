@@ -75,7 +75,6 @@ is used to limit the scan."
       (setq i (1+ i)))
     i))
 
-;; from python?
 (defconst nim-syntax-propertize-function
   (syntax-propertize-rules
    ;; Char
@@ -88,7 +87,6 @@ is used to limit the scan."
    ((nim-rx string-delimiter)
     (0 (ignore (nim-syntax-stringify))))))
 
-;; python?
 (defun nim-syntax-stringify ()
   "Put `syntax-table' property correctly on single/triple double quotes."
   (let* ((num-quotes (length (match-string-no-properties 1)))
