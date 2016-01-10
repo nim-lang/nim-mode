@@ -127,10 +127,10 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
     (`(:list-intro . ,(or "if" "when" "while" "elif" "block" "else" "of"))
      (nim-smie--list-intro-conditions))
     ;; object of/ case’s of
-    (`(,(or :before :after) . "of")
-     (nim-smie--of kind))
-    (`(:before . "object")
+    (`(,_ . "object")
      (nim-smie--object kind))
+    (`(,_ . "of")
+     (nim-smie--of kind))
     ;; else
     (`(:before . "else") (nim-smie-rule-adjust-else-stmt))
     ;; var/let/const/type/import
