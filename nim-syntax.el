@@ -32,6 +32,14 @@
      . (1 (if (match-string 2)
               'nim-font-lock-export-face
             font-lock-function-name-face)))
+    ;; Highlight type words
+    (,(nim-rx (or identifier quoted-chars) (? "*")
+              (* " ") ":" (* " ")
+              (? (and "var" (* " ")))
+              (? (group (and (or "ref" "ptr") " " (* " "))))
+              (group identifier))
+     (1 font-lock-keyword-face keep t)
+     (2 font-lock-type-face keep))
     ;; This only works if it’s one line
     (,(nim-rx (or "var" "let" "const" "type") (1+ " ")
               (group (or identifier quoted-chars) (? " ") (? (group "*"))))
@@ -52,10 +60,7 @@
     (,(nim-rx constant) . font-lock-constant-face)
     (,(nim-rx builtin) . font-lock-builtin-face)
     (,(nim-rx keyword) . font-lock-keyword-face)
-    (,(nim-rx "{." (1+ any) ".}") . font-lock-preprocessor-face)
-    (,(nim-rx (or identifier quoted-chars) (? "*")
-              (* " ") ":" (* " ") (group identifier))
-     . (1 font-lock-type-face)))
+    (,(nim-rx "{." (1+ any) ".}") . font-lock-preprocessor-face))
   "Font lock expressions for Nim mode.")
 
 (defsubst nim-syntax-count-quotes (quote-char &optional point limit)
