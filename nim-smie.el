@@ -311,9 +311,14 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
                           nim-indent-offset))
        nim-indent-offset))
     (:list-intro
-     (when (looking-at-p (nim-rx ":" (0+ " ") (or comment line-end)))
+     (cond
+      ;; ":" placed end of the line
+      ((looking-at-p (nim-rx ":" (0+ " ") (or comment line-end)))
        (nim-traverse)
-       (nim-set-force-indent (+ (current-indentation) nim-indent-offset))))))
+       (nim-set-force-indent (+ (current-indentation) nim-indent-offset)))
+      ;; single line var/let/const
+      ((nim-get-indent-start-p '("var" "let" "const"))
+       (nim-set-force-indent (current-indentation)))))))
 
 (defun nim-smie--equal (kind)
   (cl-case kind
@@ -522,7 +527,10 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
                    (not (rassoc tok smie-closer-alist))
                    (save-excursion
                      (goto-char tok2-pos)
-                     (not (looking-at-p (nim-rx ":" (0+ " ") (or comment line-end))))))
+                     (and
+                      (not (nim-get-indent-start-p '("var" "let" "const")))
+                      (not (looking-at-p
+                            (nim-rx ":" (0+ " ") (or comment line-end)))))))
               (setq tok tok2)))))
          ((equal tok ":")
           (if-let ((data (nim-get-indent-start-p nil t)))
