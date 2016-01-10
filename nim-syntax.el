@@ -109,6 +109,21 @@ is used to limit the scan."
            ;; This set of quotes delimit the start of a string.
            (put-text-property quote-starting-pos (1+ quote-starting-pos)
                               'syntax-table (string-to-syntax "|")))
+          ((and string-start (< string-start (point))
+                ;; Skip "" in the raw string literal
+                (eq ?r (char-before string-start))
+                (or
+                 ;;  v point is here
+                 ;; ""
+                 (and
+                  (eq ?\" (char-before (1- (point))))
+                  (eq ?\" (char-before (point))))
+                 ;; v point is here
+                 ;; ""
+                 (and
+                  (eq ?\" (char-before (point)))
+                  (eq ?\" (char-after  (point))))))
+           nil)
           ((= num-quotes num-closing-quotes)
            ;; This set of quotes delimit the end of a string.
            ;; If there are some double quotes after quote-ending-pos,
