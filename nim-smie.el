@@ -511,6 +511,10 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
                        (setq tok ".")))))
          ((equal "." tok)
           (setq tok ""))
+         ((equal "," tok)
+          ;; ignore "," without suffix’s
+          (unless (looking-at-p (nim-rx "," (0+ " ") (or comment line-end)))
+            (setq tok "")))
          ((and (equal "var" tok)
                (looking-back ":\\( +\\)?" nil)
                (not (looking-at-p (nim-rx "var" (0+ " ") (or comment line-end)))))
