@@ -38,6 +38,8 @@
 
 ;; INTERNAL VARIABLES
 (defvar nim-smie--line-info nil)
+(defvar nim-smie--defuns
+  '("proc" "method" "iterator" "template" "macro" "converter"))
 
 (defconst nim-mode-smie-grammar
   (smie-prec2->grammar
@@ -65,7 +67,8 @@
        (paren-inside (":") (";") (",") (any))
        (inst2
         ("proc" exp "=") ("template" exp "=") ("macro" exp "=")
-        ("iterator" exp "=") ("converter" exp "=") (paren))
+        ("iterator" exp "=") ("converter" exp "=") ("method" exp "=")
+        (paren))
        (inst3
         ("if" exp "elif" exp "else" ":")
         ("when" exp "elif" exp "else" ":")
@@ -86,7 +89,8 @@
      '((assoc "try") (assoc "except") (assoc "finally") (assoc  ":"))
      '((assoc "=") (assoc "object"))
      ;; Functions
-     '((assoc "proc" "template" "macro" "iterator" "converter") (assoc "="))
+     '((assoc "proc" "method" "template" "macro" "iterator" "converter")
+       (assoc "="))
      ;; While
      '((nonassoc "while" "block" "for") (assoc "break"))
      '((assoc "=") (nonassoc "block" "while"))
@@ -123,10 +127,10 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
     (`(:list-intro . ,(or "if" "when" "while" "elif" "block" "else" "of"))
      (nim-smie--list-intro-conditions))
     ;; object of/ case’s of
-    (`(,(or :before :after) . "of")
-     (nim-smie--of kind))
-    (`(:before . "object")
+    (`(,_ . "object")
      (nim-smie--object kind))
+    (`(,_ . "of")
+     (nim-smie--of kind))
     ;; else
     (`(:before . "else") (nim-smie-rule-adjust-else-stmt))
     ;; var/let/const/type/import
@@ -165,8 +169,11 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
   nil)
 
 (defun nim-traverse ()
+  (when (looking-back "= +" nil)
+    (search-backward "="))
   (while (nim-line-contain-p '(?\} ?\) ?\]) nil t)
-    (condition-case nil (backward-sexp))))
+    (condition-case nil (backward-sexp)))
+  (goto-char (+ (point-at-bol) (current-indentation))))
 
 (defun nim-same-closer-line-p ()
   (if-let ((closer-line (assoc-default :closer-line nim-smie--line-info)))
@@ -183,8 +190,7 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
   (if (or (and (equal "{" token)
                (eq ?. (char-after (1+ (point)))))
           (not (equal "{" token)))
-      (let ((parent (when (smie-rule-parent-p
-                           "proc" "template" "macro" "iterator" "converter")
+      (let ((parent (when (member (nth 2 (smie-indent--parent)) nim-smie--defuns)
                       (smie-indent--parent)))
             (prev-info (nim-smie--get-prev-info)))
         (if parent
@@ -281,9 +287,7 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
              (cons 'column (+ (current-indentation) nim-indent-offset))
            (smie-rule-parent)))
         ;; object
-        ((and (smie-rule-parent-p "object")
-              (save-excursion (goto-char (nth 1 (smie-indent--parent)))
-                              (looking-at-p "object")))
+        ((smie-rule-parent-p "object")
          (let ((offset
                 (if (save-excursion
                       (goto-char (assoc-default :start-pos nim-smie--line-info))
@@ -292,6 +296,7 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
                   nim-indent-offset)))
            (save-excursion
              (goto-char (nth 1 (smie-indent--parent)))
+             (nim-traverse)
              (cons 'column (+ (current-indentation) offset)))))
         ;; ‘object of’ doesn't use ‘=’, so we can safely dendent them.
         ((and (smie-rule-parent-p "of")
@@ -309,22 +314,47 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
                           nim-indent-offset))
        nim-indent-offset))
     (:list-intro
-     (when (looking-at-p (nim-rx ":" (0+ " ") (or comment line-end)))
+     (cond
+      ;; ":" placed end of the line
+      ((looking-at-p (nim-rx ":" (0+ " ") (or comment line-end)))
        (nim-traverse)
-       (nim-set-force-indent (+ (current-indentation) nim-indent-offset))))))
+       (nim-set-force-indent (+ (current-indentation) nim-indent-offset)))
+      ;; single line var/let/const
+      ((nim-get-indent-start-p '("var" "let" "const"))
+       (nim-set-force-indent (current-indentation)))))))
 
 (defun nim-smie--equal (kind)
   (cl-case kind
     ((:before :after)
      (if-let ((parent (smie-rule-parent nim-indent-offset)))
-         (progn
-           (save-excursion
+         (save-excursion
+           (let ((pos (point))
+                 ;; check if current indentation is closer
+                 ;; after the = {, (, or [
+                 ;; (ex: after-open-bracket.nim)
+                 (paren-offset
+                  (when (looking-at-p
+                         (rx "=" (0+ " ") (group (or "[" "{" "("))))
+                    (skip-chars-forward " =")
+                    (forward-sexp)
+                    (when (eq (line-number-at-pos)
+                              (assoc-default :line nim-smie--line-info))
+                      0))))
              (goto-char (nth 1 (smie-indent--parent)))
              (if (nim-smie--anonymous-proc-p)
                  (save-excursion
                    (nim-traverse)
                    (cons 'column (+ (current-indentation) nim-indent-offset)))
-               parent)))
+               (if (not (smie-rule-parent-p "var" "let" "const" "type"))
+                   ;; There are certain situations what we should
+                   ;; follow parent’s indention. (ex: iterator2.nim)
+                   parent
+                 (goto-char pos)
+                 (nim-traverse)
+                 (nim-set-force-indent
+                  (+ (current-indentation)
+                     (or paren-offset nim-indent-offset))
+                  t)))))
        nim-indent-offset))
     (:list-intro
      (save-excursion
@@ -376,11 +406,28 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
 (defun nim-smie--object (kind)
   (cl-case kind
     (:before
-     (if (and (smie-rule-prev-p "=")
-              (smie-rule-parent-p "type"))
-         (smie-rule-parent (* 2 nim-indent-offset))
-       (save-excursion (back-to-indentation)
-                       (cons 'column (+ (current-column) nim-indent-offset)))))))
+     (cond
+      ((and (smie-rule-prev-p "=")
+            (smie-rule-parent-p "type"))
+       (smie-rule-parent (* 2 nim-indent-offset)))
+      (t
+       (save-excursion
+         (nim-traverse)
+         (nim-set-force-indent (+ (current-column) nim-indent-offset))))))
+    (:after
+     (when (and (smie-rule-prev-p "=")
+                (smie-rule-parent-p "="))
+       ;; This means the "=" and "object" are on different lines.
+       (when (smie-rule-bolp)
+         (let ((dedent
+                ;; if current line has "=", which means it’s not property of
+                ;; the object and it should be dedented.
+                (save-excursion
+                  (goto-char (assoc-default :start-pos nim-smie--line-info))
+                  (when (nim-line-contain-p ?= (point-at-bol))
+                    (- nim-indent-offset)))))
+           (cons 'column (+ (current-indentation)
+                            (if dedent dedent nim-indent-offset)))))))))
 
 (defun nim-smie--list-intro-conditions ()
   ;; If it’s completed as one line, set indent forcefully
@@ -472,39 +519,43 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
               (and (equal tok2 "break")
                    (looking-back "break +" nil)))
           (setq tok "__after_break"))
-         ((member tok '("proc" "template" "macro" "iterator" "converter"))
+         ((member tok nim-smie--defuns)
           ;; check current token is not return type of function signature.
           ;; if so, avoid the token.
           (unless (eq (point) (+ (point-at-bol) (current-indentation)))
-            (if-let ((data (nim-get-indent-start-p
-                            '("proc" "template" "macro" "iterator" "converter"))))
+            (if-let ((data (nim-get-indent-start-p nim-smie--defuns)))
                 (progn (goto-char (car data))
                        (setq tok ".")))))
          ((equal "." tok)
           (setq tok ""))
+         ((equal "," tok)
+          ;; ignore "," without suffix’s
+          (unless (looking-at-p (nim-rx "," (0+ " ") (or comment line-end)))
+            (setq tok "")))
          ((and (equal "var" tok)
                (looking-back ":\\( +\\)?" nil)
                (not (looking-at-p (nim-rx "var" (0+ " ") (or comment line-end)))))
           (setq tok ""))
          ((member tok2 '(":"))
           (if-let ((data (nim-get-indent-start-p nil t)))
-              (progn
-                (cond
-                 ((member (cdr data)
-                          '("if" "when" "elif" "while" "else" "of"))
-                  (goto-char (car data))
-                  (setq tok (cdr data)))))
+              (cond
+               ((member (cdr data)
+                        '("if" "when" "elif" "while" "else" "of"))
+                (goto-char (car data))
+                (setq tok (cdr data))))
             (cond
              ((and (not (assoc tok smie-closer-alist))
                    (not (rassoc tok smie-closer-alist))
                    (save-excursion
                      (goto-char tok2-pos)
-                     (not (looking-at-p (nim-rx ":" (0+ " ") (or comment line-end))))))
+                     (and
+                      (not (nim-get-indent-start-p '("var" "let" "const")))
+                      (not (looking-at-p
+                            (nim-rx ":" (0+ " ") (or comment line-end)))))))
               (setq tok tok2)))))
          ((equal tok ":")
           (if-let ((data (nim-get-indent-start-p nil t)))
-              (when (member (cdr data)
-                            '("proc" "template" "macro" "iterator" "converter"))
+              (when (member (cdr data) nim-smie--defuns)
                 (setq tok "."))))))
       tok)))
 

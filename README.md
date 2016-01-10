@@ -1,7 +1,7 @@
 nim-mode
 ===========
 
-![Travis CI](https://travis-ci.org/nim-lang/nim-mode.svg?branch=master)
+[![Travis CI](https://travis-ci.org/nim-lang/nim-mode.svg?branch=master)](https://travis-ci.org/nim-lang/nim-mode)
 
 An emacs major mode for the Nim programming language.
 

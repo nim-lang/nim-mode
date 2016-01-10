@@ -103,7 +103,7 @@
               (cl-loop with num = 0
                        for s in (delq "" (split-string (reverse short-str) ""))
                        if (equal s ".") do (cl-return num)
-                       else do (incf num)
+                       else do (cl-incf num)
                        finally return 0)))
         (substring short-str 0 (- (length short-str) minus-offset))))))
 

@@ -1,8 +1,8 @@
 # single line
-var foo: string = "string"
-var bar: string = "string"
+const foo: string = "string"
+const bar: string = "string"
 
-var
+const
   foo1: string = "string"
   foo2 = "foo"
   bar1: string = "string"
@@ -10,7 +10,7 @@ var
 
 
 # insert newline after equal
-var
+const
   foo3: string =
     "string"
   foo4 =
@@ -19,17 +19,17 @@ var
 
 # with pth/ref
 when (T is ref):
-  var r: ref T
+  const r: ref T
   echo "indent test"
 else:
-  var p: ptr T
+  const p: ptr T
   echo "indent test"
 
 
 # only type
 when nimvm:
-  var r: T
+  const r: T
   echo "indent test"
 else:
-  var p: T
+  const p: T
   echo "indent test"
