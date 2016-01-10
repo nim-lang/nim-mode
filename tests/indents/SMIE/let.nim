@@ -15,3 +15,21 @@ let
     "string"
   foo4 =
     "foo"
+
+
+# with pth/ref
+when (T is ref):
+  let r: ref T
+  echo "indent test"
+else:
+  let p: ptr T
+  echo "indent test"
+
+
+# only type
+when nimvm:
+  let r: T
+  echo "indent test"
+else:
+  let p: T
+  echo "indent test"

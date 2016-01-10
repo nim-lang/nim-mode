@@ -15,3 +15,21 @@ var
     "string"
   foo4 =
     "foo"
+
+
+# with pth/ref
+when (T is ref):
+  var r: ref T
+  echo "indent test"
+else:
+  var p: ptr T
+  echo "indent test"
+
+
+# only type
+when nimvm:
+  var r: T
+  echo "indent test"
+else:
+  var p: T
+  echo "indent test"
