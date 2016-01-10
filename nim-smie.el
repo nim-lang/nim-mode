@@ -38,6 +38,8 @@
 
 ;; INTERNAL VARIABLES
 (defvar nim-smie--line-info nil)
+(defvar nim-smie--defuns
+  '("proc" "iterator" "template" "macro" "converter"))
 
 (defconst nim-mode-smie-grammar
   (smie-prec2->grammar
@@ -186,8 +188,7 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
   (if (or (and (equal "{" token)
                (eq ?. (char-after (1+ (point)))))
           (not (equal "{" token)))
-      (let ((parent (when (smie-rule-parent-p
-                           "proc" "template" "macro" "iterator" "converter")
+      (let ((parent (when (member (nth 2 (smie-indent--parent)) nim-smie--defuns)
                       (smie-indent--parent)))
             (prev-info (nim-smie--get-prev-info)))
         (if parent
@@ -501,12 +502,11 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
               (and (equal tok2 "break")
                    (looking-back "break +" nil)))
           (setq tok "__after_break"))
-         ((member tok '("proc" "template" "macro" "iterator" "converter"))
+         ((member tok nim-smie--defuns)
           ;; check current token is not return type of function signature.
           ;; if so, avoid the token.
           (unless (eq (point) (+ (point-at-bol) (current-indentation)))
-            (if-let ((data (nim-get-indent-start-p
-                            '("proc" "template" "macro" "iterator" "converter"))))
+            (if-let ((data (nim-get-indent-start-p nim-smie--defuns)))
                 (progn (goto-char (car data))
                        (setq tok ".")))))
          ((equal "." tok)
@@ -538,8 +538,7 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
               (setq tok tok2)))))
          ((equal tok ":")
           (if-let ((data (nim-get-indent-start-p nil t)))
-              (when (member (cdr data)
-                            '("proc" "template" "macro" "iterator" "converter"))
+              (when (member (cdr data) nim-smie--defuns)
                 (setq tok "."))))))
       tok)))
 
