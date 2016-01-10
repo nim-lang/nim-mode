@@ -11,3 +11,15 @@ type
     size: ptrdiff_t
     make_global_ref*: proc(env: ptr emacs_env, any_reference: emacs_value): emacs_value
     free_global_ref*: proc(env: ptr emacs_env, global_reference: emacs_value): pointer
+
+
+type
+  RootObj* {.exportc: "TNimObject", inheritable.} =
+    object
+      s: string # this line should be dedented
+
+
+type
+  RootObj2* {.exportc: "TNimObject", inheritable.} =
+    object # suppose if this is just definition
+  otherType* = ref RootObj # check this line's indent
