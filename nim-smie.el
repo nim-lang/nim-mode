@@ -353,7 +353,8 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
                  (nim-traverse)
                  (nim-set-force-indent
                   (+ (current-indentation)
-                     (or paren-offset nim-indent-offset)))))))
+                     (or paren-offset nim-indent-offset))
+                  t)))))
        nim-indent-offset))
     (:list-intro
      (save-excursion
@@ -412,7 +413,21 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
       (t
        (save-excursion
          (nim-traverse)
-         (nim-set-force-indent (+ (current-column) nim-indent-offset))))))))
+         (nim-set-force-indent (+ (current-column) nim-indent-offset))))))
+    (:after
+     (when (and (smie-rule-prev-p "=")
+                (smie-rule-parent-p "="))
+       ;; This means the "=" and "object" are on different lines.
+       (when (smie-rule-bolp)
+         (let ((dedent
+                ;; if current line has "=", which means it’s not property of
+                ;; the object and it should be dedented.
+                (save-excursion
+                  (goto-char (assoc-default :start-pos nim-smie--line-info))
+                  (when (nim-line-contain-p ?= (point-at-bol))
+                    (- nim-indent-offset)))))
+           (cons 'column (+ (current-indentation)
+                            (if dedent dedent nim-indent-offset)))))))))
 
 (defun nim-smie--list-intro-conditions ()
   ;; If it’s completed as one line, set indent forcefully
