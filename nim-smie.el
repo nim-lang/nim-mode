@@ -39,7 +39,7 @@
 ;; INTERNAL VARIABLES
 (defvar nim-smie--line-info nil)
 (defvar nim-smie--defuns
-  '("proc" "iterator" "template" "macro" "converter"))
+  '("proc" "method" "iterator" "template" "macro" "converter"))
 
 (defconst nim-mode-smie-grammar
   (smie-prec2->grammar
@@ -67,7 +67,8 @@
        (paren-inside (":") (";") (",") (any))
        (inst2
         ("proc" exp "=") ("template" exp "=") ("macro" exp "=")
-        ("iterator" exp "=") ("converter" exp "=") (paren))
+        ("iterator" exp "=") ("converter" exp "=") ("method" exp "=")
+        (paren))
        (inst3
         ("if" exp "elif" exp "else" ":")
         ("when" exp "elif" exp "else" ":")
@@ -88,7 +89,8 @@
      '((assoc "try") (assoc "except") (assoc "finally") (assoc  ":"))
      '((assoc "=") (assoc "object"))
      ;; Functions
-     '((assoc "proc" "template" "macro" "iterator" "converter") (assoc "="))
+     '((assoc "proc" "method" "template" "macro" "iterator" "converter")
+       (assoc "="))
      ;; While
      '((nonassoc "while" "block" "for") (assoc "break"))
      '((assoc "=") (nonassoc "block" "while"))
