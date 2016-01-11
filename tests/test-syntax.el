@@ -174,6 +174,13 @@
     ((158  . 158)  . nim-font-lock-number-face);f64
     ((162  . 165)  . font-lock-type-face)))    ;f64 type
 
+ ;; Pragma
+ (test-faces-by-range
+  "should highlight pragmas"
+  (test-concat-dir "tests/syntax/pragma.nim")
+  '(((31 . 41)  . nim-font-lock-pragma-face)
+    ((79 . 86)  . nim-font-lock-pragma-face)))
+
  ;; docstring
  (test-faces-by-range
   "should highlight docstring"
