@@ -156,16 +156,23 @@
   (test-concat-dir "tests/syntax/char.nim"))
 
  ;; Number
- (test-faces
-  "should not highlight numbers"
+ (test-faces-by-range
+  "should highlight numbers"
   (test-concat-dir "tests/syntax/number.nim")
-  '((24  . nil)   ; unsigned int
-    (44  . nil)   ; int8
-    (66  . nil)   ; int16
-    (89  . nil)   ; int32
-    (112 . nil)   ; int64
-    (137 . nil)   ; float32
-    (162 . nil))) ; float64
+  '(((21   . 23)   . nim-font-lock-number-face);uint
+    ((24   . 25)   . font-lock-type-face)      ;uint type
+    ((43   . 43)   . nim-font-lock-number-face);i8
+    ((44   . 46)   . font-lock-type-face)      ;i8 type
+    ((64   . 65)   . nim-font-lock-number-face);i16
+    ((66   . 69)   . font-lock-type-face)      ;i16 type
+    ((87   . 88)   . nim-font-lock-number-face);i32
+    ((89   . 92)   . font-lock-type-face)      ;i32 type
+    ((110  . 111)  . nim-font-lock-number-face);i64
+    ((112  . 115)  . font-lock-type-face)      ;i64 type
+    ((133  . 133)  . nim-font-lock-number-face);f32
+    ((137  . 140)  . font-lock-type-face)      ;f32 type
+    ((158  . 158)  . nim-font-lock-number-face);f64
+    ((162  . 165)  . font-lock-type-face)))    ;f64 type
 
  ;; docstring
  (test-faces-by-range
