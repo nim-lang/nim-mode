@@ -217,7 +217,7 @@ updating.")
 (defconst nim-constants
   '("ismainmodule" "compiledate" "compiletime" "nimversion"
     "nimmajor" "nimminor" "nimpatch" "cpuendian" "hostos"
-    "hostcpu" "apptype" "inf" "neginf" "nan" "quitsuccess"
+    "hostcpu" "apptype" "inf" "neginf" "nan" "nimvm" "quitsuccess"
     "quitfailure" "stdin" "stdout" "stderr" "true" "false"
     "on" "off")
   "Nim constants defined in <lib/system.nim>.")
