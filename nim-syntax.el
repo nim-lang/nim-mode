@@ -79,7 +79,8 @@
     (,(nim-rx constant) . font-lock-constant-face)
     (,(nim-rx builtin) . font-lock-builtin-face)
     (,(nim-rx keyword) . font-lock-keyword-face)
-    (,(nim-rx "{." (1+ any) ".}") . font-lock-preprocessor-face))
+    ;; pragma
+    (,(nim-rx pragma) . (0 'nim-font-lock-pragma-face keep)))
   "Font lock expressions for Nim mode.")
 
 (defsubst nim-syntax-count-quotes (quote-char &optional point limit)

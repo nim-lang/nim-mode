@@ -85,6 +85,11 @@
                                                       (* ?\\ ?\\)
                                                       ;; Match single or triple quotes of any kind.
                                                       (group (or  "\"" "\"\"\"")))))
+                            (string . ,(rx
+                                        (minimal-match
+                                         (group (syntax string-delimiter)
+                                                (0+ (or any "\n"))
+                                                (syntax string-delimiter)))))
                             (character-delimiter
                              ;; Implemented with
                              ;; http://nim-lang.org/docs/manual.html#lexical-analysis-character-literals
@@ -164,6 +169,20 @@ This variant of `rx' supports common nim named REGEXPS."
                (cons 'float-suffix
                      (nim-rx
                       (group (or (and (in "fF") (or "32" "64" "128")) (in "dD"))))))
+
+  ;; pragma
+  (add-to-list
+   'nim-rx-constituents
+   (cons 'pragma
+         (nim-rx
+          (group "{."
+                 (minimal-match
+                  (1+ (or
+                       ;; any string
+                       ;; (emit pragma can include ".}")
+                       string
+                       any "\n")))
+                 (? ".") "}"))))
 
   (add-to-list 'nim-rx-constituents
                (cons 'block-start (nim-rx (or decl-block block-start-defun))))

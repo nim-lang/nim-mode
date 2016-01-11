@@ -61,6 +61,10 @@
   "Font Lock face for export (XXX*)"
   :group 'nim)
 
+(defface nim-font-lock-pragma-face
+  '((t (:inherit font-lock-preprocessor-face)))
+  "Font Lock face for pragmas."
+  :group 'nim)
 
 (defface nim-font-lock-number-face
   '((t :slant italic))
