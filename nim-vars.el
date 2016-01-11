@@ -61,6 +61,12 @@
   "Font Lock face for export (XXX*)"
   :group 'nim)
 
+
+(defface nim-font-lock-number-face
+  '((t :slant italic))
+  "Font Lock face for numbers."
+  :group 'nim)
+
 (defcustom nim-indent-trigger-commands
   '(indent-for-tab-command yas-expand yas/expand)
   "Commands that might trigger a `nim-indent-line' call."

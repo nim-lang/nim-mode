@@ -56,6 +56,25 @@
               (0+ " ") (or ":" "{." "=") (0+ nonl)
               line-end)
      . (1 'nim-font-lock-export-face))
+    ;; Number literal
+    (,(nim-rx ; u?int
+       (group int-lit)
+       (? (group (? "'") (or (and (in "uUiI") (or "8" "16" "32" "64"))
+                             (in "uU")))))
+     (1 'nim-font-lock-number-face)
+     (2 font-lock-type-face nil t))
+    (,(nim-rx ; float
+       (group (or float-lit dec-lit oct-lit bin-lit))
+              (? (group (? "'") float-suffix)))
+     (1 'nim-font-lock-number-face)
+     (2 font-lock-type-face t t)  ; exponential
+     (3 font-lock-type-face t t)) ; type
+    (,(nim-rx ; float hex
+       (group hex-lit)
+       (? (group "'" float-suffix))) ; "'" isn’t optional
+     (1 'nim-font-lock-number-face)
+     (3 font-lock-type-face nil t))
+    ;; other keywords
     (,(nim-rx (or exception type)) . font-lock-type-face)
     (,(nim-rx constant) . font-lock-constant-face)
     (,(nim-rx builtin) . font-lock-builtin-face)

@@ -50,30 +50,14 @@
                             (symbol-name          . ,(rx (any letter ?_ ?–) (* (any word ?_ ?–))))
                             (cond-block
                              . ,(rx symbol-start (or "if" "when" "while" "elif") symbol-end))
-                            (dec-number . ,(rx symbol-start
-                                               (1+ (in digit "_"))
-                                               (opt "." (in digit "_"))
-                                               (opt (any "eE") (1+ digit))
-                                               (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
-                                               symbol-end))
-                            (hex-number . ,(rx symbol-start
-                                               (1+ (in xdigit "_"))
-                                               (opt "." (in xdigit "_"))
-                                               (opt (any "eE") (1+ xdigit))
-                                               (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
-                                               symbol-end))
-                            (oct-number . ,(rx symbol-start
-                                               (1+ (in "0-7_"))
-                                               (opt "." (in "0-7_"))
-                                               (opt (any "eE") (1+ "0-7_"))
-                                               (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
-                                               symbol-end))
-                            (bin-number . ,(rx symbol-start
-                                               (1+ (in "0-1_"))
-                                               (opt "." (in "0-1_"))
-                                               (opt (any "eE") (1+ "0-1_"))
-                                               (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
-                                               symbol-end))
+
+                            (hex-lit . ,(rx "0" (or "x" "X") xdigit (0+ (or xdigit "_"))))
+                            (dec-lit . ,(rx digit (0+ (or digit "_"))))
+                            (oct-lit . ,(rx "0" (in "ocC") (in "0-7") (0+ (in "0-7_"))))
+                            (bin-lit . ,(rx "0" (in "bB") (in "01") (0+ (in "01_"))))
+
+                            (exponent
+                             . ,(rx (group (in "eE") (? (or "+" "-")) digit (0+ (or "_" digit)))))
                             (open-paren           . ,(rx (or "{" "[" "(")))
                             (close-paren          . ,(rx (or "}" "]" ")")))
                             (simple-operator      . ,(rx (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%)))
@@ -165,6 +149,21 @@ This variant of `rx' supports common nim named REGEXPS."
                      (rx (1+ (syntax comment-start))
                          (0+ (or (in " " word) nonl) (syntax comment-end)))))
 
+  ;; Numbers
+  (add-to-list 'nim-rx-constituents
+               (cons 'int-lit
+                     (nim-rx (or hex-lit dec-lit oct-lit bin-lit))))
+  (add-to-list 'nim-rx-constituents
+               (cons 'float-lit
+                     (nim-rx
+                      digit (0+ (or "_" digit))
+                      (? (and "." (1+ (or "_" digit))))
+                      (? exponent))))
+
+  (add-to-list 'nim-rx-constituents
+               (cons 'float-suffix
+                     (nim-rx
+                      (group (or (and (in "fF") (or "32" "64" "128")) (in "dD"))))))
 
   (add-to-list 'nim-rx-constituents
                (cons 'block-start (nim-rx (or decl-block block-start-defun))))
