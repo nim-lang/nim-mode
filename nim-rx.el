@@ -109,7 +109,8 @@
                                  (or
                                   ;; escaped characters
                                   (and ?\\ (or (in "a-c" "e" "f" "l" "r" "t" "v"
-                                                   "\\" "\"" "'" "0-9")
+                                                   "\\" "\"" "'")
+                                               (1+ digit)
                                                (and "x" (regex "[a-fA-F0-9]\\{2,2\\}"))))
                                   ;; One byte characters(except single quote and control characters)
                                   (eval (cons 'in (list (concat (char-to-string 32) "-" (char-to-string (1- ?\')))
