@@ -79,6 +79,8 @@
     (,(nim-rx constant) . font-lock-constant-face)
     (,(nim-rx builtin) . font-lock-builtin-face)
     (,(nim-rx keyword) . font-lock-keyword-face)
+    ;; Result
+    (,(rx symbol-start "result" symbol-end) . font-lock-variable-name-face)
     ;; pragma
     (,(nim-rx pragma) . (0 'nim-font-lock-pragma-face keep)))
   "Font lock expressions for Nim mode.")
