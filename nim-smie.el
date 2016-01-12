@@ -273,6 +273,8 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
       ;; Proc
       ((member (nth 2 (smie-indent--parent)) nim-smie--defuns)
        (cond
+        ;; if there is "=" until the proc, it means it’s
+        ;; other thing’s ":". (not proc’s return type)
         ((assoc-default 'end-eq nim-smie--line-info)
          (nim-traverse)
          (cons 'column (+ (current-indentation) nim-indent-offset)))
@@ -543,19 +545,23 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
             (tok2-pos (point)))
         (goto-char tok1-pos)
         (cond
+         ;; inside backquotes (`...`)
          ((and (eq ?` (char-before tok1-pos))
                (eq ?` (char-after (+ tok1-pos (length tok)))))
           (setq tok ""))
+         ;; detect ‘object’ before ‘of’
          ((equal "of" tok2)
           (save-excursion
             (goto-char tok2-pos)
             (when (looking-back "object +" nil)
               (goto-char pos)
               (setq tok "of"))))
+         ;; ‘break’
          ((or (equal "break" tok)
               (and (equal tok2 "break")
                    (looking-back "break +" nil)))
           (setq tok "__after_break"))
+         ;; Functions
          ((member tok nim-smie--defuns)
           ;; check current token is not return type of function signature.
           ;; if so, avoid the token.
@@ -563,12 +569,14 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
             (if-let ((data (nim-get-indent-start-p nim-smie--defuns)))
                 (progn (goto-char (car data))
                        (setq tok ".")))))
+         ;; ignore dot
          ((equal "." tok)
           (setq tok ""))
+         ;; ignore ‘,’ without suffix’s
          ((equal "," tok)
-          ;; ignore "," without suffix’s
           (unless (looking-at-p (nim-rx "," (0+ " ") (or comment line-end)))
             (setq tok "")))
+         ;; var inside paren of proc
          ((and (equal "var" tok)
                (looking-back ":\\( +\\)?" nil)
                (not (looking-at-p (nim-rx "var" (0+ " ") (or comment line-end)))))
@@ -595,6 +603,7 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
               (when (member (cdr data) nim-smie--defuns)
                 (setq tok "."))))
          ((equal tok "=")
+          ;; keep info whether this function passed "="
           (when (looking-at (nim-rx "=" (0+ " ") (or comment line-end)))
             (add-to-list 'nim-smie--line-info (cons 'end-eq t))))))
       (unless (assoc-default 'first-token nim-smie--line-info)
