@@ -67,8 +67,8 @@
        (exp-cl-eq    (exp-eq) (exp-colon))
        (enum-eq-comma (exp "=" exp "," enum-eq-comma) (enum-eq-comma))
        (type-constituent (exp-cl-eq)
-                         (exp "object" exp-colon)
-                         (exp "object" "of" exp-cl-eq)
+                         (exp "=" "object" exp-colon)
+                         (exp "=" "object" "of" exp-cl-eq)
                          (exp "=" "enum" enum-eq-comma)
                          (exp "=" "tuple" exp-colon)
                          (type-constituent))
@@ -442,8 +442,9 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
          (nim-traverse)
          (nim-set-force-indent (+ (current-column) nim-indent-offset))))))
     (:after
-     (when (and (smie-rule-prev-p "=")
-                (smie-rule-parent-p "="))
+     (cond
+      ((not (smie-rule-prev-p "=")) nil)
+      ((smie-rule-parent-p "=" "type")
        ;; This means the "=" and "object" are on different lines.
        (when (smie-rule-bolp)
          (let ((dedent
@@ -454,7 +455,7 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
                   (when (nim-line-contain-p ?= (point-at-bol))
                     (- nim-indent-offset)))))
            (cons 'column (+ (current-indentation)
-                            (if dedent dedent nim-indent-offset)))))))))
+                            (if dedent dedent nim-indent-offset))))))))))
 
 (defun nim-smie--list-intro-conditions ()
   ;; If it’s completed as one line, set indent forcefully
