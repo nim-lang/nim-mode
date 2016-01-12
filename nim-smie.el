@@ -54,15 +54,21 @@
        (& (exp "&" exp) (&))
        (inst1
         ("import" exp) ("enum" stmts ";") ("tuple" stmts ";"))
-       (var   ("var"   type-constituent) (type-constituent))
-       (let   ("let"   type-constituent) (type-constituent))
-       (const ("const" type-constituent) (type-constituent))
-       (type  ("type"  type-constituent) (type-constituent))
-       (type-constituent (exp "=" exp) (exp ":" exp)
-                         (exp "object" objof)
-                         (exp "object" "of" ((exp ":" exp)
-                                             (exp "=" exp)))
-                         (exp "tuple" exp (exp ":" exp))
+       (var   ("var"   vlc-body))
+       (let   ("let"   vlc-body))
+       (const ("const" vlc-body))
+       (vlc-body (vlc-body)
+        (exp ":" exp vlc-body ";")
+        (exp "=" exp vlc-body ";")
+        (exp ":" exp "=" exp vlc-body ";"))
+       (type  ("type"  type-constituent))
+       (exp-colon (exp ":" exp exp-colon ";") (exp-colon))
+       (exp-eq    (exp "=" exp exp-eq    ";") (exp-eq))
+       (exp-cl-eq (exp-eq) (exp-colon))
+       (type-constituent (exp-cl-eq)
+                         (exp "object" exp-colon)
+                         (exp "object" "of" exp-cl-eq)
+                         (exp "tuple" exp (exp-colon))
                          (type-constituent))
        (paren ("(" paren-inside ")"))
        (paren-inside (":") (";") (",") (any))
@@ -309,11 +315,30 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
              parent)))))
     (:before
      ;; Indent after ":" for Nim’s control statements and macros
-     (if (and (smie-rule-prev-p "else")
-              (smie-rule-parent-p "case"))
-         (cons 'column (+ (cdr (nim-smie-rule-adjust-else-stmt))
-                          nim-indent-offset))
-       nim-indent-offset))
+     (let-alist nim-smie--line-info
+       (cond ((and (smie-rule-prev-p "else")
+                   (smie-rule-parent-p "case"))
+              (cons 'column (+ (cdr (nim-smie-rule-adjust-else-stmt))
+                               nim-indent-offset)))
+             ((and (smie-rule-parent-p "iterator")
+                   (equal "=" .first-token.tk)
+                   .first-token.eol)
+              (smie-rule-parent))
+             ((and (smie-rule-parent-p "var" "let" "const")
+                   (not (looking-at (nim-rx ":" (0+ " ") (or comment line-end)))))
+              (smie-rule-parent
+               (save-excursion
+                 (let* ((offset 0))
+                   (goto-char (nth 1 (smie-indent--parent)))
+                   (let ((parent-line (line-number-at-pos)))
+                     (unless (= parent-line .first-token.line)
+                       (setq offset (+ offset nim-indent-offset)))
+                     (when (and (not (= .:line .first-token.line))
+                                (member .first-token.tk '(":" "="))
+                                .first-token.eol)
+                       (setq offset (+ offset nim-indent-offset)))
+                     (nim-set-force-indent (+ (current-indentation) offset)))))))
+             (t nim-indent-offset))))
     (:list-intro
      (cond
       ;; ":" placed end of the line
@@ -558,6 +583,14 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
           (if-let ((data (nim-get-indent-start-p nil t)))
               (when (member (cdr data) nim-smie--defuns)
                 (setq tok "."))))))
+      (unless (assoc-default 'first-token nim-smie--line-info)
+        (add-to-list 'nim-smie--line-info
+                     (cons 'first-token
+                           (list
+                            `(tk   . ,tok)
+                            `(pos  . ,(point))
+                            `(line . ,(line-number-at-pos))
+                            `(eol  . ,(looking-at (nim-rx any (0+ " ") (or comment line-end))))))))
       tok)))
 
 (defun nim-get-indent-start-p (member &optional use-closer-alist)
