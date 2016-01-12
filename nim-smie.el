@@ -94,8 +94,7 @@
      '((assoc "try") (assoc "except") (assoc "finally") (assoc  ":"))
      '((assoc "=") (assoc "object"))
      ;; Functions
-     '((assoc "proc" "method" "template" "macro" "iterator" "converter")
-       (assoc "="))
+     `((assoc ,@nim-smie--defuns) (assoc "="))
      ;; While
      '((nonassoc "while" "block" "for") (assoc "break"))
      '((assoc "=") (nonassoc "block" "while"))
