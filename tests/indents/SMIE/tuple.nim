@@ -7,4 +7,19 @@ type
 
 type
   Person2 = tuple[name: string, age: int]
-  afterTuple = "foo"
+  afterTuple = string
+
+
+type
+  Person3 = tuple[
+    name: string,
+    age: int
+  ]
+  afterTuple2 = string
+
+
+# tuple with `var`
+var building: tuple[street: string, number: int] = (
+  "Rue del Percebe",
+  13
+)
