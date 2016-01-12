@@ -35,6 +35,7 @@
 (require 'subr-x nil t) ; for if-let (from Emacs 25.1)
 (require 'nim-helper)
 (require 'smie)   ; Emacs’ indentation library
+(require 'let-alist)
 
 ;; INTERNAL VARIABLES
 (defvar nim-smie--line-info nil)
