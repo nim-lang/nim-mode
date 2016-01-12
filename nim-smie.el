@@ -51,7 +51,7 @@
        ;; SMIE emits an warning if I use a token multiple times in
        ;; opener/neither/closer. So, I changed ; to __;__.
        ;; Could be used it to separate wrong associative?
-       (stmts (stmt "__;__" stmt) (stmts))
+       (module (stmt "__;__" stmt) (stmt))
        (stmt (exp))
        (exp (id) (exp) (virtual-indents))
        (virtual-indents (stmt "__after_break"))
