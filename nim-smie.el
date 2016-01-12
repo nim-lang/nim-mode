@@ -49,7 +49,7 @@
      '((id)
        (any)
        (stmts (stmt ";" stmt) (stmts))
-       (stmt (exp) (exp "break"))
+       (stmt (exp))
        (exp (id) (exp) (virtual-indents))
        (virtual-indents (stmt "__after_break"))
        (& (exp "&" exp) (&))
