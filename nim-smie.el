@@ -101,7 +101,7 @@
      ;; While
      '((nonassoc "while" "block" "for") (assoc "break"))
      '((assoc "=") (nonassoc "block" "while"))
-     '((assoc "if" "when" "elif" "else") (assoc ":"))
+     '((assoc "if" "when") (assoc "elif") (assoc "else") (assoc ":"))
      ;; operators from nim manual
      '((assoc "$" "^") (assoc "*" "%" "\\" "/" "div" "mod" "shl" "shr")
        (assoc "+" "-" "~" "|"
