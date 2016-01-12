@@ -365,22 +365,32 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
                               (assoc-default :line nim-smie--line-info))
                       0))))
              (goto-char (nth 1 (smie-indent--parent)))
-             (cond
-              ((nim-smie--anonymous-proc-p)
-               (save-excursion
+             (let-alist nim-smie--line-info
+               (cond
+                ((nim-smie--anonymous-proc-p)
+                 (save-excursion
+                   (nim-traverse)
+                   (cons 'column (+ (current-indentation) nim-indent-offset))))
+                ((smie-rule-parent-p "var" "let" "const" "type")
+                 (goto-char pos)
                  (nim-traverse)
-                 (cons 'column (+ (current-indentation) nim-indent-offset))))
-              ((not (smie-rule-parent-p "var" "let" "const" "type"))
-               ;; There are certain situations what we should
-               ;; follow parent’s indention. (ex: iterator2.nim)
-               parent)
-              (t
-               (goto-char pos)
-               (nim-traverse)
-               (nim-set-force-indent
-                (+ (current-indentation)
-                   (or paren-offset nim-indent-offset))
-                t)))))
+                 (nim-set-force-indent
+                  (+ (current-indentation)
+                     (or paren-offset nim-indent-offset))))
+                ;; after ":", but it doesn't related to parent’s functions
+                ((and (equal ":" .first-token.tk)
+                      .first-token.eol .end-eq
+                      (< (line-number-at-pos) .first-token.line)
+                      (member (nth 2 (smie-indent--parent)) nim-smie--defuns))
+                 (save-excursion
+                   (goto-char .first-token.pos)
+                   (nim-traverse)
+                   (nim-set-force-indent
+                    (+ (current-indentation) nim-indent-offset))))
+                (t
+                 ;; There are certain situations what we should
+                 ;; follow parent’s indention. (ex: iterator2.nim)
+                 parent)))))
        nim-indent-offset))
     (:list-intro
      (save-excursion
