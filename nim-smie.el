@@ -71,12 +71,11 @@
                          (exp "=" "enum" enum-eq-comma)
                          (exp "=" "tuple" exp-colon)
                          (type-constituent))
-       (paren ("(" paren-inside ")"))
-       (paren-inside (":") (";") (",") (any))
-       (inst2
-        ("proc" exp "=") ("template" exp "=") ("macro" exp "=")
-        ("iterator" exp "=") ("converter" exp "=") ("method" exp "=")
-        (paren))
+       (func ("proc" func-body) ("method" func-body) ("iterator" func-body)
+             ("template" func-body) ("macro" func-body) ("converter" func-body))
+       (func-body (paren) (paren "=" func))
+       (paren (any "(" paren-inside ")" any))
+       (paren-inside (":") (";") (",") (any) (paren-inside))
        (inst3
         ("if" exp "elif" exp "else" ":")
         ("when" exp "elif" exp "else" ":")
@@ -602,7 +601,8 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
       (let ((match (match-string 1)))
         (if use-closer-alist
             (when (or (assoc match smie-closer-alist)
-                      (rassoc match smie-closer-alist))
+                      (rassoc match smie-closer-alist)
+                      (member match nim-smie--defuns))
               (cons (point) match))
           (when (member match member)
             (cons (point) match)))))))
