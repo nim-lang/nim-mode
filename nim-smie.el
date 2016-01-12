@@ -365,20 +365,22 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
                               (assoc-default :line nim-smie--line-info))
                       0))))
              (goto-char (nth 1 (smie-indent--parent)))
-             (if (nim-smie--anonymous-proc-p)
-                 (save-excursion
-                   (nim-traverse)
-                   (cons 'column (+ (current-indentation) nim-indent-offset)))
-               (if (not (smie-rule-parent-p "var" "let" "const" "type"))
-                   ;; There are certain situations what we should
-                   ;; follow parent’s indention. (ex: iterator2.nim)
-                   parent
-                 (goto-char pos)
+             (cond
+              ((nim-smie--anonymous-proc-p)
+               (save-excursion
                  (nim-traverse)
-                 (nim-set-force-indent
-                  (+ (current-indentation)
-                     (or paren-offset nim-indent-offset))
-                  t)))))
+                 (cons 'column (+ (current-indentation) nim-indent-offset))))
+              ((not (smie-rule-parent-p "var" "let" "const" "type"))
+               ;; There are certain situations what we should
+               ;; follow parent’s indention. (ex: iterator2.nim)
+               parent)
+              (t
+               (goto-char pos)
+               (nim-traverse)
+               (nim-set-force-indent
+                (+ (current-indentation)
+                   (or paren-offset nim-indent-offset))
+                t)))))
        nim-indent-offset))
     (:list-intro
      (save-excursion
