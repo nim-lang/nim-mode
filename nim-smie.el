@@ -23,11 +23,7 @@
 
 ;;; Commentary:
 ;;
-;; Configuration:
-;;   To activate smie for nim-mode set below configuration before
-;;   loading nim-mode.
-;;
-;;   (setq nim-use-smie-indent t)
+;; This is Nim’s indent calculation library using SMIE.
 ;;
 ;; TODO: remove copied if-let in nim-helper.el (after 25 is majored)
 ;;; Code:
