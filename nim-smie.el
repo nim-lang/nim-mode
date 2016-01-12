@@ -896,12 +896,14 @@ case INDENTATION is a list, this order is enforced."
 (defun nim-debug-smie-rules (kind token)
   (let ((fmt (concat "kind(%s)-Token(%s)-Point(%d)\n"
                      "sibling(%s)-bolp(%s)\n"
-                     "parent(%s)-hanging(%s)")))
+                     "parent(%s)-hanging(%s)\n"
+                     "line-info(%s)\n")))
     (message (format fmt kind token (point)
                      (ignore-errors (smie-rule-sibling-p))
                      (ignore-errors (smie-rule-bolp))
                      (ignore-errors (smie-indent--parent))
-                     (ignore-errors (smie-rule-hanging-p))))))
+                     (ignore-errors (smie-rule-hanging-p))
+                     nim-smie--line-info))))
 ;; (advice-add 'nim-mode-smie-rules :before #'nim-debug-smie-rules)
 
 (provide 'nim-smie)
