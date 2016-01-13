@@ -193,6 +193,25 @@ With numeric ARG, just insert that many colons.  With
           (indent-line-to calculated-indentation))))))
 (put 'nim-indent-electric-colon 'delete-selection t)
 
+;; hideshow.el (hs-minor-mode)
+(defun nim-hideshow-forward-sexp-function (_arg)
+  "Nim specific `forward-sexp' function for `hs-minor-mode'.
+Argument ARG is ignored."
+  (nim-nav-end-of-defun)
+  (unless (nim-line-empty-p)
+    (backward-char)))
+
+(add-to-list
+ 'hs-special-modes-alist
+ `(nim-mode
+   ,nim-nav-beginning-of-defun-regexp
+   ;; Use the empty string as end regexp so it doesn't default to
+   ;; "\\s)".  This way parens at end of defun are properly hidden.
+   ""
+   "#"
+   nim-hideshow-forward-sexp-function
+   nil))
+
 (provide 'nim-mode)
 
 ;;; nim-mode.el ends here
