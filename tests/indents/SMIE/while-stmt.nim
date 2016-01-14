@@ -21,3 +21,10 @@ proc testWhile3 =
       echo "something"
       break
     echo "after break should be dedented"
+
+
+proc breakTest() =
+  while true:
+    if true: echo "else break"
+    else: break
+  echo "`else` with `break` should be dedented"

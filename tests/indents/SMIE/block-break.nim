@@ -28,3 +28,10 @@ proc breakTest() =
     let data = await socket.recv(size - result.len)
     if data == "": break # We've been disconnected.
     result.add data
+
+
+proc breakTest() =
+  block:
+    if true: echo "else break"
+    else: break
+  echo "`else` with `break` should be dedented"
