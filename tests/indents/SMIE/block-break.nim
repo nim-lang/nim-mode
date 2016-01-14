@@ -23,7 +23,7 @@ proc testBlock3() =
   echo "exit from myblock2"
 
 proc breakTest() =
-  while true:
+  block:
     if size == result.len: break
     let data = await socket.recv(size - result.len)
     if data == "": break # We've been disconnected.
