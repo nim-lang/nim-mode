@@ -7,7 +7,8 @@
 (require 'nim-util)
 
 (defvar nim-nav-beginning-of-defun-regexp
-  (nim-rx line-start (* space) defun (+ space) (group symbol-name))
+  (nim-rx line-start (* space) defun (+ space)
+          (group (or identifier quoted-chars)))
   "Regexp matching class or function definition.
 The name of the defun should be grouped so it can be retrieved
 via `match-string'.")

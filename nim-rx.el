@@ -116,15 +116,17 @@ This variant of `rx' supports common nim named REGEXPS."
                (cons 'identifier (nim-rx nim-letter
                                          (0+ (or "_" nim-letter digit)))))
 
-  (add-to-list 'nim-rx-constituents
-               (cons 'quoted-chars
-                     (nim-rx
-                      (and "`"
-                           (or
-                            identifier
-                            (1+ (or "^" "*" "[" "]" "!" "$" "%" "&"  "+" "-" "."
-                                    "/" "<" "=" ">" "?" "@" "|" "~")))
-                           "`"))))
+  (add-to-list
+   'nim-rx-constituents
+   (cons 'quoted-chars
+         (nim-rx
+          (minimal-match
+           (and "`"
+                (1+ (or
+                     nim-letter digit "_"
+                     "^" "*" "[" "]" "!" "$" "%" "&" "+" "-"
+                     "." "/" "<" "=" ">" "?" "@" "|" "~"))
+                "`")))))
 
   (add-to-list 'nim-rx-constituents
                (cons 'comment
