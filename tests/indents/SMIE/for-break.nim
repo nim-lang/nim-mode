@@ -6,3 +6,9 @@ proc testFor =
       break
     else:
       echo "foo"
+
+
+proc testFor =
+  for x, y in foo:
+    if x == true: break
+    else: break
