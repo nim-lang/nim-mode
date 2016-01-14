@@ -6,10 +6,3 @@ proc testFor =
       break
     else:
       echo "foo"
-
-
-proc testFor =
-  for x, y in foo:
-    if x == true: break
-    else: break
-  echo "after else break should be dedented"
