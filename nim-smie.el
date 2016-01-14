@@ -654,7 +654,7 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
 (defun nim-smie--break (kind)
   (cl-case kind
     (:after ; __after_break
-     ;; dedent after break. Note that this token (break -> __dedenter)
+     ;; dedent after break. Note that this token (break -> __after_break)
      ;; conversion is needed following case:
      ;;
      ;;   while true:
