@@ -111,6 +111,14 @@ If it’s nil, it does nothing."
                  "Dedent all if previous line is empty line" all-dedent))
   :group 'nim)
 
+(defcustom nim-smie-dedent-after-break '()
+  "List of string that dedent after break statement.
+This feature is activated if only the break line has
+other tokens like ’:’ or ’=’."
+  :type '(choise
+          (repeat :tag "List of dedenter token" string)
+          (const :tag "" nil)))
+
 (defcustom nim-smie-after-indent-hook nil
   "Hook run after indenting."
   :type 'hook
