@@ -39,7 +39,10 @@
               (? (group (and (or "ref" "ptr") " " (* " "))))
               (group identifier))
      (1 font-lock-keyword-face keep t)
-     (2 font-lock-type-face keep))
+     (2 (if (< 0 (nth 0 (syntax-ppss)))
+            font-lock-type-face
+          'default)
+        keep))
     ;; This only works if it’s one line
     (,(nim-rx (or "var" "let" "const" "type") (1+ " ")
               (group (or identifier quoted-chars) (? " ") (? (group "*"))))
