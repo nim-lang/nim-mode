@@ -317,7 +317,9 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
       ;; General ":" rule
       (t
        (if-let ((parent (smie-rule-parent nim-indent-offset)))
-           parent))))
+           parent
+         (nim-traverse)
+         (nim-set-force-indent (+ (current-indentation) nim-indent-offset))))))
     (:before
      ;; Indent after ":" for Nim’s control statements and macros
      (let-alist nim-smie--line-info
