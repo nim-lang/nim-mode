@@ -668,7 +668,7 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
      ;; indent logic after break.
      (cond ((and (smie-rule-hanging-p)
                  (nim-line-contain-p '(?: ?=) (point) t))
-            (if (nim-get-indent-start-p '("else"))
+            (if (nim-get-indent-start-p '("else" "finally"))
                 ;; if the line is "else: break" statement (in one line),
                 ;; next line will be dedented.
                 (nim-set-force-indent
