@@ -668,8 +668,13 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
      ;; indent logic after break.
      (cond ((and (smie-rule-hanging-p)
                  (nim-line-contain-p '(?: ?=) (point) t))
-            (nim-traverse)
-            (cons 'column (+ (current-indentation))))
+            (if (nim-get-indent-start-p '("else"))
+                ;; if the line is "else: break" statement (in one line),
+                ;; next line will be dedented.
+                (nim-set-force-indent
+                 (- (current-indentation) nim-indent-offset))
+              (nim-traverse)
+              (cons 'column (+ (current-indentation)))))
            (t (nim-set-force-indent
                (- (current-indentation) nim-indent-offset)))))
     (:before ; break
