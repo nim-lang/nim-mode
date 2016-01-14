@@ -26,12 +26,21 @@
 
 (defconst nim-font-lock-keywords
   `((,(nim-rx (1+ "\t")) . 'nim-tab-face)
-    (,(nim-rx defun (1+ " ")
-              (group (or identifier quoted-chars)
-                     (0+ " ") (? (group "*"))))
-     . (1 (if (match-string 2)
-              'nim-font-lock-export-face
-            font-lock-function-name-face)))
+    (,(nim-rx defun
+              (? (group (1+ " ") (or identifier quoted-chars)
+                        (0+ " ") (? (group "*"))))
+              (? (minimal-match
+                  (group (0+ " ") "[" (0+ (or any "\n")) "]")))
+              (? (minimal-match
+                  (group (0+ " ") "(" (0+ (or any "\n")) ")")))
+              (? (group (0+ " ") ":" (0+ " ")
+                        (? (group (or "ref" "ptr") " " (* " ")))
+                        (group identifier))))
+     (1 (if (match-string 2)
+            'nim-font-lock-export-face
+          font-lock-function-name-face)
+        keep t)
+     (7 font-lock-type-face keep t))
     ;; Highlight type words
     (,(nim-rx (or identifier quoted-chars) (? "*")
               (* " ") ":" (* " ")
