@@ -26,7 +26,8 @@ proc testBlock4 =
   while true:
     var x = nil
     if x.isNil: break
-  echo "should be dedented after break"
+    echo "should be dedented after break"
+
 
 proc testBlock5 =
   while true:
