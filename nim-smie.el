@@ -350,6 +350,9 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
              (nim-set-force-indent (+ (current-indentation) nim-indent-offset))))))
       ;; single line var/let/const
       ((nim-get-indent-start-p '("var" "let" "const"))
+       (nim-set-force-indent (current-indentation)))
+      (t ; fallback (infix colon and there is no parent)
+       (nim-traverse)
        (nim-set-force-indent (current-indentation)))))))
 
 (defun nim-smie--equal (kind)
