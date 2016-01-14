@@ -142,10 +142,17 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
      nim-indent-offset)
     (`(:list-intro . ,(or "var" "let" "const" "type" "import"))
      (nim-smie--list-intro-vlcti token))
-    ;; enum/tuple
-    (`(:before . ,(or "enum" "tuple"))
+    ;; enum
+    (`(:before . "enum")
      (save-excursion (back-to-indentation)
                      (cons 'column (+ (current-column) nim-indent-offset))))
+    ;; tuple
+    (`(:before . "tuple")
+     ;; ignore tuple inside proc’s args
+     (if (member (nth 2 (smie-indent--parent)) nim-smie--defuns)
+         0
+       (save-excursion (back-to-indentation)
+                       (cons 'column (+ (current-column) nim-indent-offset)))))
     ;; Colon
     (`(,(or :before :after :list-intro) . ":")
      (nim-smie--colon kind token))
