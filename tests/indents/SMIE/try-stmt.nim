@@ -19,3 +19,11 @@ proc testTry2() =
             -1
           finally:
             echo "hi"
+
+
+proc testTryWithBreak() =
+  block:
+    try: parseInt("133a")
+    except: -1
+    finally: break
+  echo "after `finally: break` should be dedented"
