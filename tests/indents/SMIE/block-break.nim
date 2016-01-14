@@ -22,22 +22,6 @@ proc testBlock3() =
     break
   echo "exit from myblock2"
 
-proc testBlock4 =
-  while true:
-    var x = nil
-    if x.isNil: break
-    echo "should be dedented after break"
-
-
-proc testBlock5 =
-  while true:
-    echo "process"
-    if true:
-      echo "something"
-      break
-    echo "after break should be dedented"
-
-
 proc breakTest() =
   while true:
     if size == result.len: break
