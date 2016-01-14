@@ -33,7 +33,6 @@
                                           (constant          . ,nim-constants)
                                           (builtin           . ,nim-builtins)
                                           (defun             . ("proc" "method" "converter" "iterator" "template" "macro"))
-                                          (block-ender       . ("break" "continue" "raise" "return"))
                                           (block-start-defun . ("proc" "method" "converter" "iterator"
                                                                 "template" "macro"
                                                                 "if" "elif" "else" "when" "while" "for" "case" "of"
@@ -46,41 +45,16 @@
                                                symbol-end
                                                (* space)
                                                (or "#" eol)))
-
                             (symbol-name          . ,(rx (any letter ?_ ?–) (* (any word ?_ ?–))))
-                            (cond-block
-                             . ,(rx symbol-start (or "if" "when" "while" "elif") symbol-end))
-                            (dec-number . ,(rx symbol-start
-                                               (1+ (in digit "_"))
-                                               (opt "." (in digit "_"))
-                                               (opt (any "eE") (1+ digit))
-                                               (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
-                                               symbol-end))
-                            (hex-number . ,(rx symbol-start
-                                               (1+ (in xdigit "_"))
-                                               (opt "." (in xdigit "_"))
-                                               (opt (any "eE") (1+ xdigit))
-                                               (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
-                                               symbol-end))
-                            (oct-number . ,(rx symbol-start
-                                               (1+ (in "0-7_"))
-                                               (opt "." (in "0-7_"))
-                                               (opt (any "eE") (1+ "0-7_"))
-                                               (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
-                                               symbol-end))
-                            (bin-number . ,(rx symbol-start
-                                               (1+ (in "0-1_"))
-                                               (opt "." (in "0-1_"))
-                                               (opt (any "eE") (1+ "0-1_"))
-                                               (opt "'" (or "i8" "i16" "i32" "i64" "f32" "f64"))
-                                               symbol-end))
+                            (hex-lit . ,(rx "0" (or "x" "X") xdigit (0+ (or xdigit "_"))))
+                            (dec-lit . ,(rx digit (0+ (or digit "_"))))
+                            (oct-lit . ,(rx "0" (in "ocC") (in "0-7") (0+ (in "0-7_"))))
+                            (bin-lit . ,(rx "0" (in "bB") (in "01") (0+ (in "01_"))))
+
+                            (exponent
+                             . ,(rx (group (in "eE") (? (or "+" "-")) digit (0+ (or "_" digit)))))
                             (open-paren           . ,(rx (or "{" "[" "(")))
                             (close-paren          . ,(rx (or "}" "]" ")")))
-                            (simple-operator      . ,(rx (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%)))
-                            ;; FIXME: rx should support (not simple-operator).
-                            (not-simple-operator  . ,(rx
-                                                      (not
-                                                       (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%))))
                             ;; FIXME: Use regexp-opt.
                             (operator             . ,(rx (or (1+ (in "-=+*/<>@$~&%|!?^.:\\"))
                                                              (and
@@ -90,8 +64,6 @@
                                                                "shr" "div" "mod" "in" "notin" "is"
                                                                "isnot")
                                                               symbol-end))))
-                            ;; FIXME: Use regexp-opt.
-                            (assignment-operator  . ,(rx (* (in "-=+*/<>@$~&%|!?^.:\\")) "="))
                             (string-delimiter . ,(rx (and
                                                       ;; Match even number of backslashes.
                                                       (or (not (any ?\\ ?\")) point
@@ -101,6 +73,11 @@
                                                       (* ?\\ ?\\)
                                                       ;; Match single or triple quotes of any kind.
                                                       (group (or  "\"" "\"\"\"")))))
+                            (string . ,(rx
+                                        (minimal-match
+                                         (group (syntax string-delimiter)
+                                                (0+ (or any "\n"))
+                                                (syntax string-delimiter)))))
                             (character-delimiter
                              ;; Implemented with
                              ;; http://nim-lang.org/docs/manual.html#lexical-analysis-character-literals
@@ -109,23 +86,13 @@
                                  (or
                                   ;; escaped characters
                                   (and ?\\ (or (in "a-c" "e" "f" "l" "r" "t" "v"
-                                                   "\\" "\"" "'" "0-9")
+                                                   "\\" "\"" "'")
+                                               (1+ digit)
                                                (and "x" (regex "[a-fA-F0-9]\\{2,2\\}"))))
                                   ;; One byte characters(except single quote and control characters)
                                   (eval (cons 'in (list (concat (char-to-string 32) "-" (char-to-string (1- ?\')))
                                                         (concat (char-to-string (1+ ?\')) "-" (char-to-string 126))))))
-                                 (group "'")))
-                            (coding-cookie . ,(rx line-start ?# (* space)
-                                                  (or
-                                                   ;; # coding=<encoding name>
-                                                   (: "coding" (or ?: ?=) (* space) (group-n 1 (+ (or word ?-))))
-                                                   ;; # -*- coding: <encoding name> -*-
-                                                   (: "-*-" (* space) "coding:" (* space)
-                                                      (group-n 1 (+ (or word ?-))) (* space) "-*-")
-                                                   ;; # vim: set fileencoding=<encoding name> :
-                                                   (: "vim:" (* space) "set" (+ space)
-                                                      "fileencoding" (* space) ?= (* space)
-                                                      (group-n 1 (+ (or word ?-))) (* space) ":")))))))
+                                 (group "'"))))))
       (append constituents1 constituents2))
     "Additional Nim specific sexps for `nim-rx'.")
 
@@ -149,33 +116,55 @@ This variant of `rx' supports common nim named REGEXPS."
                (cons 'identifier (nim-rx nim-letter
                                          (0+ (or "_" nim-letter digit)))))
 
-  (add-to-list 'nim-rx-constituents
-               (cons 'quoted-chars
-                     (nim-rx
-                      (and "`"
-                           (or
-                            identifier
-                            (1+ (or "^" "*" "[" "]" "!" "$" "%" "&"  "+" "-" "."
-                                    "/" "<" "=" ">" "?" "@" "|" "~")))
-                           "`"))))
+  (add-to-list
+   'nim-rx-constituents
+   (cons 'quoted-chars
+         (nim-rx
+          (minimal-match
+           (and "`"
+                (1+ (or
+                     nim-letter digit "_"
+                     "^" "*" "[" "]" "!" "$" "%" "&" "+" "-"
+                     "." "/" "<" "=" ">" "?" "@" "|" "~"))
+                "`")))))
 
   (add-to-list 'nim-rx-constituents
                (cons 'comment
                      (rx (1+ (syntax comment-start))
                          (0+ (or (in " " word) nonl) (syntax comment-end)))))
 
+  ;; Numbers
+  (add-to-list 'nim-rx-constituents
+               (cons 'int-lit
+                     (nim-rx (or hex-lit dec-lit oct-lit bin-lit))))
+  (add-to-list 'nim-rx-constituents
+               (cons 'float-lit
+                     (nim-rx
+                      digit (0+ (or "_" digit))
+                      (? (and "." (1+ (or "_" digit))))
+                      (? exponent))))
+
+  (add-to-list 'nim-rx-constituents
+               (cons 'float-suffix
+                     (nim-rx
+                      (group (or (and (in "fF") (or "32" "64" "128")) (in "dD"))))))
+
+  ;; pragma
+  (add-to-list
+   'nim-rx-constituents
+   (cons 'pragma
+         (nim-rx
+          (group "{."
+                 (minimal-match
+                  (1+ (or
+                       ;; any string
+                       ;; (emit pragma can include ".}")
+                       string
+                       any "\n")))
+                 (? ".") "}"))))
 
   (add-to-list 'nim-rx-constituents
                (cons 'block-start (nim-rx (or decl-block block-start-defun))))
-  ;; Regular expression matching the end of line after with a block starts.
-  ;; If the end of a line matches this regular expression, the next
-  ;; line is considered an indented block.  Whitespaces at the end of a
-  ;; line are ignored.
-  (add-to-list 'nim-rx-constituents
-               (cons 'line-end-indenters
-                     (nim-rx (or "type" "const" "var" "let" "tuple" "object" "enum" ":"
-                                 (and defun (* (not (any ?=))) "=")
-                                 (and "object" (+ whitespace) "of" (+ whitespace) symbol-name)))))
 
   ) ; end of eval-and-compile
 

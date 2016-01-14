@@ -7,7 +7,8 @@
 (require 'nim-util)
 
 (defvar nim-nav-beginning-of-defun-regexp
-  (nim-rx line-start (* space) defun (+ space) (group symbol-name))
+  (nim-rx line-start (* space) defun (+ space)
+          (group (or identifier quoted-chars)))
   "Regexp matching class or function definition.
 The name of the defun should be grouped so it can be retrieved
 via `match-string'.")
@@ -818,29 +819,6 @@ where the continued line ends."
       (when (looking-at (nim-rx block-start))
         (point-marker)))))
 
-(defun nim-info-assignment-statement-p (&optional current-line-only)
-  "Check if current line is an assignment.
-With argument CURRENT-LINE-ONLY is non-nil, don't follow any
-continuations, just check the if current line is an assignment."
-  (save-excursion
-    (let ((found nil))
-      (if current-line-only
-          (back-to-indentation)
-        (nim-nav-beginning-of-statement))
-      (while (and
-              (re-search-forward (nim-rx not-simple-operator
-                                            assignment-operator
-                                            (group not-simple-operator))
-                                 (line-end-position) t)
-              (not found))
-        (save-excursion
-          ;; The assignment operator should not be inside a string.
-          (backward-char (length (match-string-no-properties 1)))
-          (setq found (not (nim-syntax-context-type)))))
-      (when found
-        (skip-syntax-forward " ")
-        (point-marker)))))
-
 ;; Other interactive commands
 (defun nim-indent-dedent-line ()
   "De-indent current line."
@@ -897,18 +875,6 @@ the lines in which START and END lie."
     (setq count (if count (prefix-numeric-value count)
                   nim-indent-offset))
     (indent-rigidly start end count)))
-
-;; TODO: rename to clarify this is only for the first continuation
-;; line or remove it and move its body to `nim-indent-context'.
-(defun nim-info-assignment-continuation-line-p ()
-  "Check if current line is the first continuation of an assignment.
-When current line is continuation of another with an assignment
-return the point of the first non-blank character after the
-operator."
-  (save-excursion
-    (when (nim-info-continuation-line-p)
-      (forward-line -1)
-      (nim-info-assignment-statement-p t))))
 
 (defun nim-info-looking-at-beginning-of-defun (&optional syntax-ppss)
   "Check if point is at `beginning-of-defun' using SYNTAX-PPSS."

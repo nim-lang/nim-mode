@@ -61,6 +61,16 @@
   "Font Lock face for export (XXX*)"
   :group 'nim)
 
+(defface nim-font-lock-pragma-face
+  '((t (:inherit font-lock-preprocessor-face)))
+  "Font Lock face for pragmas."
+  :group 'nim)
+
+(defface nim-font-lock-number-face
+  '((t :slant italic))
+  "Font Lock face for numbers."
+  :group 'nim)
+
 (defcustom nim-indent-trigger-commands
   '(indent-for-tab-command yas-expand yas/expand)
   "Commands that might trigger a `nim-indent-line' call."
@@ -207,7 +217,7 @@ updating.")
 (defconst nim-constants
   '("ismainmodule" "compiledate" "compiletime" "nimversion"
     "nimmajor" "nimminor" "nimpatch" "cpuendian" "hostos"
-    "hostcpu" "apptype" "inf" "neginf" "nan" "quitsuccess"
+    "hostcpu" "apptype" "inf" "neginf" "nan" "nimvm" "quitsuccess"
     "quitfailure" "stdin" "stdout" "stderr" "true" "false"
     "on" "off")
   "Nim constants defined in <lib/system.nim>.")

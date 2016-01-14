@@ -26,12 +26,32 @@
 
 (defconst nim-font-lock-keywords
   `((,(nim-rx (1+ "\t")) . 'nim-tab-face)
-    (,(nim-rx defun (1+ " ")
-              (group (or identifier quoted-chars)
-                     (0+ " ") (? (group "*"))))
-     . (1 (if (match-string 2)
-              'nim-font-lock-export-face
-            font-lock-function-name-face)))
+    (,(nim-rx defun
+              (? (group (1+ " ") (or identifier quoted-chars)
+                        (0+ " ") (? (group "*"))))
+              (? (minimal-match
+                  (group (0+ " ") "[" (0+ (or any "\n")) "]")))
+              (? (minimal-match
+                  (group (0+ " ") "(" (0+ (or any "\n")) ")")))
+              (? (group (0+ " ") ":" (0+ " ")
+                        (? (group (or "ref" "ptr") " " (* " ")))
+                        (group identifier))))
+     (1 (if (match-string 2)
+            'nim-font-lock-export-face
+          font-lock-function-name-face)
+        keep t)
+     (7 font-lock-type-face keep t))
+    ;; Highlight type words
+    (,(nim-rx (or identifier quoted-chars) (? "*")
+              (* " ") ":" (* " ")
+              (? (and "var" (* " ")))
+              (? (group (and (or "ref" "ptr") " " (* " "))))
+              (group identifier))
+     (1 font-lock-keyword-face keep t)
+     (2 (if (< 0 (nth 0 (syntax-ppss)))
+            font-lock-type-face
+          'default)
+        keep))
     ;; This only works if it’s one line
     (,(nim-rx (or "var" "let" "const" "type") (1+ " ")
               (group (or identifier quoted-chars) (? " ") (? (group "*"))))
@@ -48,14 +68,33 @@
               (0+ " ") (or ":" "{." "=") (0+ nonl)
               line-end)
      . (1 'nim-font-lock-export-face))
+    ;; Number literal
+    (,(nim-rx ; u?int
+       (group int-lit)
+       (? (group (? "'") (or (and (in "uUiI") (or "8" "16" "32" "64"))
+                             (in "uU")))))
+     (1 'nim-font-lock-number-face)
+     (2 font-lock-type-face nil t))
+    (,(nim-rx ; float
+       (group (or float-lit dec-lit oct-lit bin-lit))
+              (? (group (? "'") float-suffix)))
+     (1 'nim-font-lock-number-face)
+     (2 font-lock-type-face t t)  ; exponential
+     (3 font-lock-type-face t t)) ; type
+    (,(nim-rx ; float hex
+       (group hex-lit)
+       (? (group "'" float-suffix))) ; "'" isn’t optional
+     (1 'nim-font-lock-number-face)
+     (3 font-lock-type-face nil t))
+    ;; other keywords
     (,(nim-rx (or exception type)) . font-lock-type-face)
     (,(nim-rx constant) . font-lock-constant-face)
     (,(nim-rx builtin) . font-lock-builtin-face)
     (,(nim-rx keyword) . font-lock-keyword-face)
-    (,(nim-rx "{." (1+ any) ".}") . font-lock-preprocessor-face)
-    (,(nim-rx (or identifier quoted-chars) (? "*")
-              (* " ") ":" (* " ") (group identifier))
-     . (1 font-lock-type-face)))
+    ;; Result
+    (,(rx symbol-start "result" symbol-end) . font-lock-variable-name-face)
+    ;; pragma
+    (,(nim-rx pragma) . (0 'nim-font-lock-pragma-face keep)))
   "Font lock expressions for Nim mode.")
 
 (defsubst nim-syntax-count-quotes (quote-char &optional point limit)
@@ -70,7 +109,6 @@ is used to limit the scan."
       (setq i (1+ i)))
     i))
 
-;; from python?
 (defconst nim-syntax-propertize-function
   (syntax-propertize-rules
    ;; Char
@@ -83,7 +121,6 @@ is used to limit the scan."
    ((nim-rx string-delimiter)
     (0 (ignore (nim-syntax-stringify))))))
 
-;; python?
 (defun nim-syntax-stringify ()
   "Put `syntax-table' property correctly on single/triple double quotes."
   (let* ((num-quotes (length (match-string-no-properties 1)))
@@ -106,6 +143,21 @@ is used to limit the scan."
            ;; This set of quotes delimit the start of a string.
            (put-text-property quote-starting-pos (1+ quote-starting-pos)
                               'syntax-table (string-to-syntax "|")))
+          ((and string-start (< string-start (point))
+                ;; Skip "" in the raw string literal
+                (eq ?r (char-before string-start))
+                (or
+                 ;;  v point is here
+                 ;; ""
+                 (and
+                  (eq ?\" (char-before (1- (point))))
+                  (eq ?\" (char-before (point))))
+                 ;; v point is here
+                 ;; ""
+                 (and
+                  (eq ?\" (char-before (point)))
+                  (eq ?\" (char-after  (point))))))
+           nil)
           ((= num-quotes num-closing-quotes)
            ;; This set of quotes delimit the end of a string.
            ;; If there are some double quotes after quote-ending-pos,
@@ -114,7 +166,7 @@ is used to limit the scan."
              ;; Only count extra quotes when the double quotes is 3 to prevent
              ;; wrong highlight for r"foo""bar" forms.
              (when (eq num-quotes 3)
-               (while (eq 34 (char-after (+ quote-ending-pos extra-quotes)))
+               (while (eq ?\" (char-after (+ quote-ending-pos extra-quotes)))
                  (setq extra-quotes (1+ extra-quotes))))
              (put-text-property (+ (1- quote-ending-pos) extra-quotes)
                                 (+ quote-ending-pos      extra-quotes)
