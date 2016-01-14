@@ -341,8 +341,13 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
      (cond
       ;; ":" placed end of the line
       ((looking-at-p (nim-rx ":" (0+ " ") (or comment line-end)))
-       (nim-traverse)
-       (nim-set-force-indent (+ (current-indentation) nim-indent-offset)))
+       (let-alist nim-smie--line-info
+         (save-excursion
+           (if (and (not (= .:line .first-token.line))
+                    (= (current-indentation) .first-token.indent))
+               (cons 'column (current-indentation)) ; set previous line’s indent
+             (nim-traverse)
+             (nim-set-force-indent (+ (current-indentation) nim-indent-offset))))))
       ;; single line var/let/const
       ((nim-get-indent-start-p '("var" "let" "const"))
        (nim-set-force-indent (current-indentation)))))))
@@ -608,10 +613,11 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
         (add-to-list 'nim-smie--line-info
                      (cons 'first-token
                            (list
-                            `(tk   . ,tok)
-                            `(pos  . ,(point))
-                            `(line . ,(line-number-at-pos))
-                            `(eol  . ,(looking-at (nim-rx any (0+ " ") (or comment line-end))))))))
+                            `(tk     . ,tok)
+                            `(pos    . ,(point))
+                            `(indent . ,(current-indentation))
+                            `(line   . ,(line-number-at-pos))
+                            `(eol    . ,(looking-at (nim-rx any (0+ " ") (or comment line-end))))))))
       tok)))
 
 (defun nim-get-indent-start-p (member &optional use-closer-alist)
@@ -660,7 +666,12 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
      ;;
      ;; If you use "break" instead, it destructs if/elif/else’s
      ;; indent logic after break.
-     (nim-set-force-indent (- (current-indentation) nim-indent-offset)))
+     (cond ((and (smie-rule-hanging-p)
+                 (nim-line-contain-p '(?: ?=) (point) t))
+            (nim-traverse)
+            (cons 'column (+ (current-indentation))))
+           (t (nim-set-force-indent
+               (- (current-indentation) nim-indent-offset)))))
     (:before ; break
      (if-let ((parent (smie-rule-parent-p "while" "block" "for")))
          (smie-rule-parent
