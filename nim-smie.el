@@ -270,6 +270,12 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
   (cl-case kind
     (:after
      (cond
+      ;; In nested ‘if’ and ‘when’ statement, we can't trust parent’s
+      ;; indent because users only know the right place to indent.
+      ((and (smie-rule-prev-p "else")
+            (smie-rule-parent-p "if" "when"))
+       (nim-traverse)
+       (nim-set-force-indent (+ (current-indentation) nim-indent-offset)))
       ;; else after case statement
       ((and (smie-rule-prev-p "else")
             (smie-rule-parent-p "case"))
