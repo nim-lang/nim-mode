@@ -6,3 +6,8 @@ proc testMacro =
   dumpTree:
     foo:
       x = "bar"
+
+
+proc testMacro =
+  fakeFunc: echo "foo"
+  echo "check this line"
