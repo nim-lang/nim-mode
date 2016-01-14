@@ -594,11 +594,13 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
                (looking-back ":\\( +\\)?" nil)
                (not (looking-at-p (nim-rx "var" (0+ " ") (or comment line-end)))))
           (setq tok ""))
+         ;; Infix colon
          ((member tok2 '(":"))
           (if-let ((data (nim-get-indent-start-p nil t)))
               (cond
-               ((member (cdr data)
-                        '("if" "when" "elif" "while" "else" "of"))
+               ((and (member (cdr data) '("if" "when" "elif" "while" "else" "of"))
+                     ;; if the line is pair with else, don’t swap the token
+                     (looking-back (rx symbol-start "else" symbol-end (0+ " ")) nil))
                 (goto-char (car data))
                 (setq tok (cdr data))))
             (cond
