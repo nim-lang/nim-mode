@@ -353,22 +353,23 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
                      (nim-set-force-indent (+ (current-indentation) offset)))))))
              (t nim-indent-offset))))
     (:list-intro
-     (cond
-      ;; ":" placed end of the line
-      ((looking-at-p (nim-rx ":" (0+ " ") (or comment line-end)))
-       (let-alist nim-smie--line-info
+     (let-alist nim-smie--line-info
+       (cond
+        ;; ":" placed end of the line
+        ((looking-at-p (nim-rx ":" (0+ " ") (or comment line-end)))
          (save-excursion
            (if (and (not (= .:line .first-token.line))
                     (= (current-indentation) .first-token.indent))
                (cons 'column (current-indentation)) ; set previous line’s indent
              (nim-traverse)
-             (nim-set-force-indent (+ (current-indentation) nim-indent-offset))))))
-      ;; single line var/let/const
-      ((nim-get-indent-start-p '("var" "let" "const"))
-       (nim-set-force-indent (current-indentation)))
-      (t ; fallback (infix colon and there is no parent)
-       (nim-traverse)
-       (nim-set-force-indent (current-indentation)))))))
+             (nim-set-force-indent (+ (current-indentation) nim-indent-offset)))))
+        ;; single line var/let/const
+        ((nim-get-indent-start-p '("var" "let" "const"))
+         (nim-set-force-indent (current-indentation)))
+        (t ; fallback (infix colon and there is no parent)
+         (goto-char .first-token.pos)
+         (nim-traverse)
+         (nim-set-force-indent (current-indentation))))))))
 
 (defun nim-smie--equal (kind)
   (cl-case kind
