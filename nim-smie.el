@@ -451,8 +451,21 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
      (when (smie-rule-prev-p "object") ; this is called from :elem args
        (nim-smie--handle-object-of)))
     (:before
-     ;; For case statement
-     (when (smie-rule-prev-p ":") nim-indent-offset))))
+     (let-alist nim-smie--line-info
+       (cond
+        ;; For case statement
+        ((smie-rule-prev-p ":")
+         nim-indent-offset)
+        ;; detect "object of", but it's not really related to
+        ;; current line.
+        ((and (smie-rule-prev-p "object")
+              (equal "=" .first-token.tk)
+              .first-token.eol)
+         (save-excursion
+           (goto-char .first-token.pos)
+           (nim-traverse)
+           (nim-set-force-indent
+            (+ (current-indentation) nim-indent-offset) t))))))))
 
 (defun nim-smie--handle-object-of (&optional token)
   (if (save-excursion
@@ -471,12 +484,22 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
           nim-indent-offset)))))
 
 (defun nim-smie--object (kind)
-  (cl-case kind
+  (let-alist nim-smie--line-info
+    (cl-case kind
     (:before
      (cond
       ((and (smie-rule-prev-p "=")
             (smie-rule-parent-p "type"))
        (smie-rule-parent (* 2 nim-indent-offset)))
+      ;; most likely, this means detecting no related
+      ;; token.
+      ((and (smie-rule-parent-p "of")
+            .first-token.eol
+            (equal "=" .first-token.tk))
+       (save-excursion
+         (goto-char .first-token.pos)
+         (nim-traverse)
+         (nim-set-force-indent (+ (current-indentation) nim-indent-offset))))
       (t
        (save-excursion
          (nim-traverse)
@@ -495,7 +518,7 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
                   (when (nim-line-contain-p ?= (point-at-bol))
                     (- nim-indent-offset)))))
            (cons 'column (+ (current-indentation)
-                            (if dedent dedent nim-indent-offset))))))))))
+                            (if dedent dedent nim-indent-offset)))))))))))
 
 (defun nim-smie--list-intro-conditions ()
   ;; If it’s completed as one line, set indent forcefully
