@@ -400,11 +400,19 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
                  (nim-set-force-indent
                   (+ (current-indentation)
                      (or paren-offset nim-indent-offset))))
-                ;; after ":", but it doesn't related to parent’s functions
+                ;; after ":"
                 ((and (equal ":" .first-token.tk)
-                      .first-token.eol .end-eq
+                      .first-token.eol
                       (< (line-number-at-pos) .first-token.line)
-                      (member (nth 2 (smie-indent--parent)) nim-smie--defuns))
+                      (or
+                       ;; if it doesn't relate to parent’s functions,
+                       ;; follow ":"s indent.
+                       (and .end-eq
+                            (member (nth 2 (smie-indent--parent))
+                                    nim-smie--defuns))
+                       ;; on nimble file(nimscript), this pair (son:
+                       ;; "=", parent "=") makes wrong indent.
+                       (equal "=" (nth 2 (smie-indent--parent)))))
                  (save-excursion
                    (goto-char .first-token.pos)
                    (nim-traverse)
