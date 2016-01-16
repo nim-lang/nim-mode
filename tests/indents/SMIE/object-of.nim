@@ -37,3 +37,7 @@ type
   ReadIOEffect* = object of IOEffect   ## Effect describing a read IO operation.
   WriteIOEffect* = object of IOEffect  ## Effect describing a write IO operation.
   ExecIOEffect* = object of IOEffect   ## Effect describing an executing IO operation.
+  Exception* {.compilerproc.} = object of RootObj
+    trace: string
+  SystemError* = object of Exception
+  IOError* = object of SystemError
