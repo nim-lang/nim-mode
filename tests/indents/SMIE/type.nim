@@ -20,6 +20,8 @@ type
 
 
 type
-  RootObj2* {.exportc: "TNimObject", inheritable.} =
-    object # suppose if this is just definition
-  otherType* = ref RootObj # check this line's indent
+  A* {.exportc: "TNimObject", inheritable.} =
+    object
+  B* = ref RootObj # check this line's indent
+  C* =
+    object # check if there is other "object"
