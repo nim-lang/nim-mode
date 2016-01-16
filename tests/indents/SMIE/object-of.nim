@@ -5,6 +5,23 @@ type
   NewType* = object of RootEffect # check this line is dedented
 
 type
+  A =
+    object of RootRef
+  B[T] =
+    object of WrappedItem
+      value: T
+
+
+# with ref
+type
+  C =
+    ref object of RootRef
+  D[T] =
+    ref object of WrappedItem
+      value: T
+
+
+type
   Node = ref NodeObj
   NodeObj {.acyclic, final.} = object
     left, right: Node
