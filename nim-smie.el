@@ -492,9 +492,12 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
       ((and (smie-rule-prev-p "=")
             (smie-rule-parent-p "type"))
        (smie-rule-parent (* 2 nim-indent-offset)))
-      ;; most likely, this means detecting no related
-      ;; token.
-      ((and (smie-rule-parent-p "of")
+      ((and (or
+             ;; most likely, this means detecting no related
+             ;; token.
+             (smie-rule-parent-p "of")
+             ;; there is "object" on current line after "="
+             (= .:line (line-number-at-pos)))
             .first-token.eol
             (equal "=" .first-token.tk))
        (save-excursion
