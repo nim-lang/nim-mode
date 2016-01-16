@@ -469,20 +469,25 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
             (+ (current-indentation) nim-indent-offset) t))))))))
 
 (defun nim-smie--handle-object-of (&optional token)
-  (if (save-excursion
-        (goto-char (assoc-default :start-pos nim-smie--line-info))
-        (nim-line-contain-p ?= (point-at-bol)))
-      (save-excursion
-        (goto-char (nth 1 (smie-indent--parent)))
-        (nim-set-force-indent
-         (if (member (nth 2 (smie-indent--parent)) '("type"))
-             (+ (current-indentation) nim-indent-offset)
-           (current-indentation))))
-    (nim-set-force-indent
-     (+ (current-indentation)
-        (if (equal ":" token)
-            0
-          nim-indent-offset)))))
+  (let-alist nim-smie--line-info
+    (if (save-excursion
+          (goto-char .:start-pos)
+          (nim-line-contain-p ?= (point-at-bol)))
+        (save-excursion
+          (goto-char (nth 1 (smie-indent--parent)))
+          (nim-set-force-indent
+           (cond
+            ((member (nth 2 (smie-indent--parent)) '("type"))
+             (+ (current-indentation) nim-indent-offset))
+            ((member (nth 2 (smie-indent--parent)) '(":"))
+             (goto-char .first-token.pos)
+             (current-indentation))
+            (t (current-indentation)))))
+      (nim-set-force-indent
+       (+ (current-indentation)
+          (if (equal ":" token)
+              0
+            nim-indent-offset))))))
 
 (defun nim-smie--object (kind)
   (let-alist nim-smie--line-info
