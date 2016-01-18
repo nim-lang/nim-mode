@@ -188,6 +188,21 @@
   '(((56 . 100)  . font-lock-doc-face)
     ((128 . 176) . font-lock-doc-face)))
 
+ ;; multi line comment or doc comment
+  (test-faces-by-range
+   "should highlight multi line comment and doc string"
+   (test-concat-dir "tests/syntax/multiline_comment.nim")
+   '(((1 . 5) . font-lock-comment-delimiter-face)
+     ((48 . 75)  . font-lock-string-face)
+     ((77 . 78) . font-lock-comment-delimiter-face)
+     ((80 . 185)  . font-lock-comment-face)
+     ((192 . 235)  . font-lock-string-face)
+     ((237 . 453)  . font-lock-doc-face)
+     ((482 . 536)  . font-lock-doc-face)
+     ((545 . 553)  . font-lock-string-face)
+     ((564 . 566)  . font-lock-comment-face)
+     ((567 . 576)  . font-lock-comment-delimiter-face)))
+
  ) ; end of describe function
 
 ;; Local Variables:
