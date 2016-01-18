@@ -119,7 +119,12 @@ is used to limit the scan."
     (2 "\"")) ; closing quote
    ;; String
    ((nim-rx string-delimiter)
-    (0 (ignore (nim-syntax-stringify))))))
+    (0 (ignore (nim-syntax-stringify))))
+   ;; multi line comment
+   ((rx (or (group (or line-start (not (any "]" "#")))
+                   (group "#" (? "#") "["))
+            (group "]" "#" (? "#"))))
+    (0 (ignore (nim-syntax-commentify))))))
 
 (defun nim-syntax-stringify ()
   "Put `syntax-table' property correctly on single/triple double quotes."
@@ -177,6 +182,28 @@ is used to limit the scan."
            ;; all three quotes.
            (put-text-property quote-starting-pos quote-ending-pos
                               'syntax-table (string-to-syntax "|"))))))
+
+(defun nim-syntax-commentify ()
+  (let* ((hash (or (match-string-no-properties 2)
+                   (match-string-no-properties 3)))
+         (start-pos (- (point) (length hash)))
+         (ppss (syntax-ppss)))
+    (cond
+     ;; don't put syntax comment start or end
+     ;; if it’s #[ or ]# in ##[]##
+     ((and (not (eq t (nth 4 ppss))) ; t means single line comment
+           (<= 1 (or (nth 4 ppss) 0))
+           (or (eq ?#  (string-to-char hash))
+               (eq ?\] (string-to-char hash)))
+           (and (eq ?\[ (char-after  (+ (nth 8 ppss) 2)))
+                (= 2 (length hash))))
+      nil)
+     ((eq ?# (string-to-char hash))
+      (put-text-property start-pos (1+ start-pos)
+                         'syntax-table (string-to-syntax "< bn")))
+     ((eq ?\] (string-to-char hash))
+      (put-text-property (1- (point)) (point)
+                         'syntax-table (string-to-syntax "> bn"))))))
 
 (defun nim-syntax-context-type (&optional syntax-ppss)
   "Return the context type using SYNTAX-PPSS.

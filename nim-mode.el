@@ -80,7 +80,7 @@
 
   ;; Comment
   (setq-local comment-start "# ")
-  (setq-local comment-start-skip "#+\\s-*")
+  (setq-local comment-start-skip (rx (1+ "#") (? "[") (0+ " ")))
 
   ;; SMIE
   (smie-setup nim-mode-smie-grammar 'nim-mode-smie-rules

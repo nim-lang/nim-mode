@@ -165,13 +165,6 @@ other tokens like ’:’ or ’=’."
     (modify-syntax-entry ?\} "){  " table)
     (modify-syntax-entry ?\( "()  " table)
     (modify-syntax-entry ?\) ")(  " table)
-
-    ;; ;; Documentation comment highlighting
-    ;; ;; (modify-syntax-entry ?\# ". 12b" nim-mode-syntax-table)
-    ;; ;; (modify-syntax-entry ?\n "> b" nim-mode-syntax-table)
-    ;; ;; Comment highlighting
-    ;; (modify-syntax-entry ?# "< b"  nim-mode-syntax-table)
-    ;; (modify-syntax-entry ?\n "> b" nim-mode-syntax-table)
     table)
   "Syntax table for Nim files.")
 
