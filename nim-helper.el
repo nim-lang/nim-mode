@@ -919,7 +919,8 @@ When optional argument SYNTAX-PPSS is given, use that instead of
 point's current `syntax-ppss'."
   (let ((ppss (or syntax-ppss (syntax-ppss))))
     (and (eq ?# (char-before (1+  (nth 8 ppss))))
-         (eq ?# (char-before (+ 2 (nth 8 ppss)))))))
+         (eq ?# (char-before (+ 2 (nth 8 ppss))))
+         (not (eq ?# (char-before (+ 3 (nth 8 ppss))))))))
 
 (defun nim-line-contain-p (char &optional pos backward)
   "Return non-nil if the current line has CHAR.
