@@ -70,9 +70,17 @@
   ;; I intended this to test indentation inside string
   (describe
    "Indentation (raw)"
-
    (after-each (kill-this-buffer))
    (nim-indent-test (format "%s/raw/" test-dir) t))
+
+  (describe
+   "indentation (after break)"
+   (before-each
+    (setq nim-smie-dedent-after-break '("if" "when" "elif" "else" "finally")))
+   (after-each
+    (kill-this-buffer)
+    (setq nim-smie-dedent-after-break nil))
+   (nim-indent-test (format "%s/with-variable/" test-dir) t))
   ) ; keep this here for less changes
 
 ;; Local Variables:

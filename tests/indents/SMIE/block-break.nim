@@ -22,16 +22,9 @@ proc testBlock3() =
     break
   echo "exit from myblock2"
 
-proc testBlock4 =
-  while true:
-    var x = nil
-    if x.isNil: break
-  echo "should be dedented after break"
-
-proc testBlock5 =
-  while true:
-    echo "process"
-    if true:
-      echo "something"
-      break
-    echo "after break should be dedented"
+proc breakTest() =
+  block:
+    if size == result.len: break
+    let data = await socket.recv(size - result.len)
+    if data == "": break # We've been disconnected.
+    result.add data

@@ -7,7 +7,7 @@
 ;; Version: 0.2.0
 ;; Keywords: nim languages
 ;; Compatibility: GNU Emacs 24.4
-;; Package-Requires: ((emacs "24.4") (epc "0.1.1"))
+;; Package-Requires: ((emacs "24.4") (epc "0.1.1") (let-alist "1.0.1"))
 ;;
 ;; Taken over from James H. Fisher <jameshfisher@gmail.com>
 ;;
@@ -47,7 +47,7 @@
 
 ;; Order of loading
 (require 'nim-vars)
-(eval-and-compile (require 'nim-rx))
+(require 'nim-rx)
 (require 'nim-syntax)
 (require 'nim-util)
 (require 'nim-helper)
@@ -192,6 +192,25 @@ With numeric ARG, just insert that many colons.  With
         (save-excursion
           (indent-line-to calculated-indentation))))))
 (put 'nim-indent-electric-colon 'delete-selection t)
+
+;; hideshow.el (hs-minor-mode)
+(defun nim-hideshow-forward-sexp-function (_arg)
+  "Nim specific `forward-sexp' function for `hs-minor-mode'.
+Argument ARG is ignored."
+  (nim-nav-end-of-defun)
+  (unless (nim-line-empty-p)
+    (backward-char)))
+
+(add-to-list
+ 'hs-special-modes-alist
+ `(nim-mode
+   ,nim-nav-beginning-of-defun-regexp
+   ;; Use the empty string as end regexp so it doesn't default to
+   ;; "\\s)".  This way parens at end of defun are properly hidden.
+   ""
+   "#"
+   nim-hideshow-forward-sexp-function
+   nil))
 
 (provide 'nim-mode)
 
