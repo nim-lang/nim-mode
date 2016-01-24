@@ -102,9 +102,6 @@
   ;; Syntax highlight for strings
   (setq-local syntax-propertize-function nim-syntax-propertize-function)
 
-  ;; Because indentation is not redundant, we cannot safely reindent code.
-  (setq-local electric-indent-inhibit t)
-  (setq-local electric-indent-chars (cons ?: electric-indent-chars))
   ;; Paragraph
   (setq-local paragraph-start "\\s-*$")
   ;; Navigation
@@ -121,7 +118,11 @@
             #'nim-electric-pair-string-delimiter 'append t)
   (add-hook 'post-self-insert-hook
             #'nim-indent-post-self-insert-function 'append 'local)
-  (add-hook 'which-func-functions #'nim-info-current-defun nil t))
+  (add-hook 'which-func-functions #'nim-info-current-defun nil t)
+
+  ;; Because indentation is not redundant, we cannot safely reindent code.
+  (setq-local electric-indent-inhibit t)
+  (setq-local electric-indent-chars (cons ?: electric-indent-chars)))
 
 ;; add ‘nim-indent-function’ to electric-indent’s
 ;; blocklist. ‘electric-indent-inhibit’ isn’t enough for old emacs.
