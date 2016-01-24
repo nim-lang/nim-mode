@@ -236,7 +236,7 @@ JUSTIFY should be used (if applicable) as in `fill-paragraph'."
       (fill-paragraph justify))
     (while (not (eobp))
       (forward-line 1)
-      (nim-indent-line)
+      (nim--indent-line-core)
       (goto-char (line-end-position))))
   t)
 

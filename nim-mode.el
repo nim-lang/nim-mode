@@ -170,7 +170,7 @@ the line will be re-indented automatically if needed."
         (when dedenter-pos
           (save-excursion
             (goto-char dedenter-pos)
-            (nim-indent-line)
+            (nim--indent-line-core)
             (unless (= (line-number-at-pos dedenter-pos)
                        (line-number-at-pos current-pos))
               ;; Reindent region if this is a multiline statement
