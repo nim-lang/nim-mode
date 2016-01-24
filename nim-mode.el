@@ -123,6 +123,10 @@
             #'nim-indent-post-self-insert-function 'append 'local)
   (add-hook 'which-func-functions #'nim-info-current-defun nil t))
 
+;; add ‘nim-indent-function’ to electric-indent’s
+;; blocklist. ‘electric-indent-inhibit’ isn’t enough for old emacs.
+(add-to-list 'electric-indent-functions-without-reindent 'nim-indent-line)
+
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.nim\\(ble\\|s\\)?\\'" . nim-mode))
 
