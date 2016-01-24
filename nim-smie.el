@@ -821,7 +821,7 @@ This works if only current line starts from comment."
         (nth 8 ppss))))
 
 (defun nim--indent-line-core (&optional previous)
-  "Internal implementation of `nim-indent-line-function'.
+  "Internal implementation of `nim-indent-line'.
 Use the PREVIOUS level when argument is non-nil, otherwise indent
 to the maximum available level.  When indentation is the minimum
 possible and PREVIOUS is non-nil, cycle back to the maximum
@@ -840,7 +840,7 @@ level."
     (when follow-indentation-p
       (back-to-indentation))))
 
-(defun nim-indent-line-function ()
+(defun nim-indent-line ()
   "`indent-line-function' for Nim mode.
 When the variable `last-command' is equal to one of the symbols
 inside `nim-indent-trigger-commands' it cycles possible

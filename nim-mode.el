@@ -86,7 +86,7 @@
   (smie-setup nim-mode-smie-grammar 'nim-mode-smie-rules
               :forward-token 'nim-mode-forward-token
               :backward-token 'nim-mode-backward-token)
-  (setq-local indent-line-function #'nim-indent-line-function)
+  (setq-local indent-line-function #'nim-indent-line)
   ;; FIXME: due to uncompleted Nim’s smie grammar,
   ;; ‘smie--matching-block-data’ function gets stop when
   ;; the cursor is at proc/template/macro to find terminator
