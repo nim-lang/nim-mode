@@ -207,7 +207,5 @@ returned as is."
              (eq (char-after) last-command-event))
     (save-excursion (insert (make-string 2 last-command-event)))))
 
-(defvar electric-indent-inhibit)
-
 (provide 'nim-util)
 ;;; nim-util.el ends here
