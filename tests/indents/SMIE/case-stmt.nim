@@ -52,3 +52,13 @@ proc oneline_condition6() =
     of "c": echo "c"
     of "d": echo "d"
     else: echo "else"
+
+
+case x
+of true:
+  let z = if y:
+            echo "a"
+          else:
+            echo "b"
+else:
+  echo "no"
