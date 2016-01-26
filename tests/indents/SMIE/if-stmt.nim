@@ -17,3 +17,19 @@ if nimvm:
 else: # <- check this line is dedented correctly
   proc abs*(x: int64): int64 =
     echo "foo"
+
+
+let x = if true:
+          echo "foo"
+        elif true:
+          echo "bar"
+        else:
+          echo "buzz"
+
+
+var y = if true:
+          echo "foo"
+        elif true:
+          echo "bar"
+        else:
+          echo "buzz"

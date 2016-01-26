@@ -9,3 +9,19 @@ proc testWhenStmt () =
     echo "second elif"
   else:
     echo "hello"
+
+
+let x = when true:
+          echo "foo"
+        elif true:
+          echo "bar"
+        else:
+          echo "buzz"
+
+
+var y = when true:
+          echo "foo"
+        elif true:
+          echo "bar"
+        else:
+          echo "buzz"
