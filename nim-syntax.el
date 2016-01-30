@@ -123,7 +123,8 @@ is used to limit the scan."
    ;; multi line comment
    ((rx (or (group (or line-start (not (any "]" "#")))
                    (group "#" (? "#") "["))
-            (group "]" "#" (? "#"))))
+            (group "]" "#" (? "#"))
+            (group "#")))
     (0 (ignore (nim-syntax-commentify))))))
 
 (defun nim-syntax-stringify ()
@@ -185,22 +186,33 @@ is used to limit the scan."
 
 (defun nim-syntax-commentify ()
   (let* ((hash (or (match-string-no-properties 2)
-                   (match-string-no-properties 3)))
+                   (match-string-no-properties 3)
+                   (match-string-no-properties 4)))
          (start-pos (- (point) (length hash)))
-         (ppss (syntax-ppss)))
+         (ppss (save-excursion (syntax-ppss)))
+         (start-len (save-excursion
+                      (when (nth 8 ppss)
+                        (goto-char (nth 8 ppss))
+                        (looking-at "##?\\[")
+                        (length (match-string 0))))))
     (cond
-     ;; don't put syntax comment start or end
-     ;; if it’s #[ or ]# in ##[]##
-     ((and (not (eq t (nth 4 ppss))) ; t means single line comment
-           (<= 1 (or (nth 4 ppss) 0))
-           (or (eq ?#  (string-to-char hash))
-               (eq ?\] (string-to-char hash)))
-           (and (eq ?\[ (char-after  (+ (nth 8 ppss) 2)))
-                (= 2 (length hash))))
+     ((and (eq nil (nth 4 ppss)) (eq 1 (length hash)))
+      (put-text-property start-pos (1+ start-pos)
+                         'syntax-table (string-to-syntax "<"))
+      (put-text-property (point-at-eol) (1+ (point-at-eol))
+                         'syntax-table (string-to-syntax ">")))
+     ;; ignore
+     ((or (eq t (nth 4 ppss)) ; t means single line comment
+          (<= (length hash) 1)
+          ;; don't put syntax comment start or end
+          ;; if it’s "#[" or "]#" inside ##[]##
+          (and start-len (= 3 start-len) (= 2 (length hash))))
       nil)
+     ;; multi comment line start
      ((eq ?# (string-to-char hash))
       (put-text-property start-pos (1+ start-pos)
                          'syntax-table (string-to-syntax "< bn")))
+     ;; multi comment line end
      ((eq ?\] (string-to-char hash))
       (put-text-property (1- (point)) (point)
                          'syntax-table (string-to-syntax "> bn"))))))

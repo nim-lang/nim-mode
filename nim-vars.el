@@ -146,9 +146,8 @@ other tokens like ’:’ or ’=’."
     (modify-syntax-entry ?$ "." table)
     (modify-syntax-entry ?% "." table)
 
-    ;; Comment start
-    (modify-syntax-entry ?# "<" table)
-    ;; Comment end
+    ;; Comment
+    (modify-syntax-entry ?# "." table)
     (modify-syntax-entry ?\n ">" table)
     ;; Use "." Punctuation syntax class because I got error when I
     ;; used "$" from smie.el
