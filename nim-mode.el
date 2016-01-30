@@ -81,6 +81,7 @@
   ;; Comment
   (setq-local comment-start "# ")
   (setq-local comment-start-skip (rx (1+ "#") (? "[") (0+ " ")))
+  (setq-local comment-use-syntax t)
 
   ;; SMIE
   (smie-setup nim-mode-smie-grammar 'nim-mode-smie-rules
