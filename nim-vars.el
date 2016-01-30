@@ -175,6 +175,28 @@ other tokens like ’:’ or ’=’."
   "Dotty syntax table for Nim files.
 It makes underscores and dots word constituent chars.")
 
+(defconst nim-comment
+  `((single
+     . ((comment-start      . "#")
+        (comment-end        . "")
+        (comment-start-skip . ,(rx "#" (? "#") (? " ")))
+        (comment-use-syntax . t)))
+    (multi
+     . ((comment-start      . "#[")
+        (comment-end        . "]#")
+        (comment-start-skip
+         . ,(rx (group
+                 (syntax comment-start) (? "#") "[")))
+        (comment-end-skip
+         . ,(rx (group
+                 "]#" (? "#"))))
+        ;; comment-continue has to include non space character
+        ;; otherwise it makes trouble when you do ‘uncomment-region’.
+        (comment-continue   . " |")
+        (comment-padding    . "  ")
+        (comment-multi-line . t)
+        (comment-use-syntax . nil)))))
+
 (defconst nim-keywords
   '("addr" "and" "as" "asm" "atomic" "bind" "block" "break" "case"
     "cast" "const" "continue" "converter" "discard" "distinct" "div" "do"
