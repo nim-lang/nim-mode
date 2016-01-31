@@ -17,3 +17,9 @@ If you use `auto-indent-mode` you need to add nim-mode to the list of `auto-inde
 ```el
 (add-to-list 'auto-indent-multiple-indent-modes 'nim-mode)
 ```
+
+## Commenting
+nim-mode refers to `comment-style` variable which comment style user
+preferred (whether single line or multi line comment) when user invokes
+`comment-region` or `comment-dwim`. See also `comment-styles` variable
+for available options.

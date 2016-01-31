@@ -780,7 +780,8 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
       (goto-char (point-at-bol))
       (forward-comment (- (point)))
       (when (< (line-number-at-pos) start-line)
-        (member (char-to-string (char-before (point))) strings)))))
+        (let ((c (char-before (point))))
+          (when c (member (char-to-string c) strings)))))))
 
 (defun nim-get-comment-indent ()
   "Return indent number for comment.

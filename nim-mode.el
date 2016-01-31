@@ -7,7 +7,7 @@
 ;; Version: 0.2.0
 ;; Keywords: nim languages
 ;; Compatibility: GNU Emacs 24.4
-;; Package-Requires: ((emacs "24.4") (epc "0.1.1") (let-alist "1.0.1"))
+;; Package-Requires: ((emacs "24.4") (epc "0.1.1") (let-alist "1.0.1") (commenter "0.5.1"))
 ;;
 ;; Taken over from James H. Fisher <jameshfisher@gmail.com>
 ;;
@@ -56,6 +56,7 @@
 (require 'nim-fill)
 (require 'nim-suggest)
 (require 'nim-compile)
+(require 'commenter)
 
 (put 'nim-mode 'font-lock-defaults '(nim-font-lock-keywords nil t))
 
@@ -79,8 +80,13 @@
                  . nim-font-lock-syntactic-face-function)))
 
   ;; Comment
-  (setq-local comment-start "# ")
-  (setq-local comment-start-skip (rx (1+ "#") (? "[") (0+ " ")))
+  (setq-local comment-use-syntax t)
+  ;; Those start and end comment variables are for initial value.
+  (setq-local comment-start "#")
+  (setq-local comment-end "")
+  ;; actual comment values are defined here
+  (setq-local commenter-config nim-comment)
+  (commenter-setup)
 
   ;; SMIE
   (smie-setup nim-mode-smie-grammar 'nim-mode-smie-rules
