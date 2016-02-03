@@ -203,6 +203,12 @@
     ((564 . 566)  . font-lock-comment-face)
     ((567 . 576)  . font-lock-comment-delimiter-face)))
 
+ ;; varargs inside proc
+ (test-faces-by-range
+  "should highlight varargs inside proc’s args correctly"
+  (test-concat-dir "tests/syntax/varargs.nim")
+  '(((55 . 61) . font-lock-type-face)))
+
 
  ) ; end of describe function
 
