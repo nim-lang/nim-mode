@@ -44,7 +44,7 @@
     ;; Highlight type words
     (,(nim-rx (or identifier quoted-chars) (? "*")
               (* " ") ":" (* " ")
-              (? (and "var" (* " ")))
+              (? (and "var " (0+ " ")))
               (? (group (and (or "ref" "ptr") " " (* " "))))
               (group identifier))
      (1 font-lock-keyword-face keep t)
