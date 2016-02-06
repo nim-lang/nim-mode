@@ -39,7 +39,8 @@
                    (eq ?\( (char-after (nth 1 (syntax-ppss)))))
           (goto-char (1- (nth 1 (syntax-ppss)))))
         (nim-call-epc
-         'def
+         ;; version 2 protocol can use: ideDef, ideUse, ideDus
+         'dus
          (lambda (defs)
            (let ((def (cl-first defs)))
              (when def
