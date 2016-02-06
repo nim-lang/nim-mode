@@ -98,6 +98,7 @@ DEFS is group of definitions from nimsuggest."
                    ;; just in case
                    (t "no doc"))))))
       (`("skType")
+       (nim-eldoc-put-face name font-lock-type-face)
        (nim-eldoc-trim
         (if (not (string< "" doc))
             (format "%s: no doc" name)
