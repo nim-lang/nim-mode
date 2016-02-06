@@ -70,7 +70,7 @@
        '(face font-lock-function-name-face)
        name))
     (pcase (cons symKind nil)
-      (`(,(or "skProc" "skField") . ,_)
+      (`(,(or "skProc" "skField" "skTemplate") . ,_)
        (when (string< "" forth)
          (cl-destructuring-bind (ptype . typeinfo) (nim-eldoc-parse forth)
            (when (equal "proc" ptype)
