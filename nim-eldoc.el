@@ -70,8 +70,8 @@ DEFS is group of definitions from nimsuggest."
        0 (length name)
        '(face font-lock-function-name-face)
        name))
-    (pcase (cons symKind nil)
-      (`(,(or "skProc" "skField" "skTemplate") . ,_)
+    (pcase (list symKind)
+      (`(,(or "skProc" "skField" "skTemplate"))
        (when (string< "" forth)
          (cl-destructuring-bind (ptype . typeinfo) (nim-eldoc-parse forth)
            (when (equal "proc" ptype)
@@ -80,7 +80,7 @@ DEFS is group of definitions from nimsuggest."
                 (if (string= "" doc)
                     (format "%s" func)
                   (format "%s %s" func doc))))))))
-      (`(,(or "skVar" "skLet" "skConst" "skResult" "skParam") . ,_)
+      (`(,(or "skVar" "skLet" "skConst" "skResult" "skParam"))
        (let ((sym (substring symKind 2 (length symKind))))
          (add-text-properties
           0 (length sym)
@@ -105,7 +105,7 @@ DEFS is group of definitions from nimsuggest."
                              finally return ""))
                    ;; just in case
                    (t ""))))))
-      (`("skType" . ,_)
+      (`("skType")
        (nim-eldoc-trim
         (if (not (string< "" doc))
             (format "there is no doc for %s" name)
