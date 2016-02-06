@@ -54,11 +54,16 @@
 (defun nim-eldoc--move ()
   (let ((pos  (point))
         (ppss (syntax-ppss)))
-    (when (and (< 0 (nth 0 ppss))
-               (eq ?\( (char-after (nth 1 ppss))))
+    (when (nim-eldoc-inside-paren-p)
       (goto-char (nth 1 ppss))
       (when (looking-back nim-eldoc--skip-regex nil)
         (goto-char pos)))))
+
+(defun nim-eldoc-inside-paren-p ()
+  (save-excursion
+    (let ((ppss (syntax-ppss)))
+      (and (< 0 (nth 0 ppss))
+           (eq ?\( (char-after (nth 1 ppss)))))))
 
 (defun nim-eldoc--update (defs)
   (when defs
