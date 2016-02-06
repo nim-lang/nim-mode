@@ -37,7 +37,7 @@
       (save-excursion
         (when (and (< 0 (nth 0 (syntax-ppss)))
                    (eq ?\( (char-after (nth 1 (syntax-ppss)))))
-          (goto-char (1- (nth 1 (syntax-ppss)))))
+          (goto-char (nth 1 (syntax-ppss))))
         (nim-call-epc
          ;; version 2 protocol can use: ideDef, ideUse, ideDus
          'dus
