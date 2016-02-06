@@ -64,7 +64,9 @@ hierarchy, starting from CURRENT-DIR"
               epc-process
             (progn (setq nim-epc-processes-alist (assq-delete-all main-file nim-epc-processes-alist))
                    nil)))
-        (let ((epc-process (epc:start-epc nim-nimsuggest-path (list "--verbosity:0" "--epc" main-file))))
+        (let ((epc-process (epc:start-epc
+                            nim-nimsuggest-path
+                            (list "--v2" "--verbosity:0" "--epc" main-file))))
           (push (cons main-file epc-process) nim-epc-processes-alist)
           epc-process))))
 
