@@ -65,35 +65,27 @@ DEFS is group of definitions from nimsuggest."
           (if (eq (length (cdr qpath)) 1)
               (cadr qpath)
             (mapconcat 'identity (cdr qpath) "."))))
-    (when name
-      (add-text-properties
-       0 (length name)
-       '(face font-lock-function-name-face)
-       name))
+    (nim-eldoc-put-face doc font-lock-doc-face)
     (pcase (list symKind)
       (`(,(or "skProc" "skField" "skTemplate"))
        (when (string< "" forth)
          (cl-destructuring-bind (ptype . typeinfo) (nim-eldoc-parse forth)
            (when (equal "proc" ptype)
+             (nim-eldoc-put-face name font-lock-function-name-face)
              (let* ((func  (format "%s %s" name typeinfo)))
                (nim-eldoc-trim
                 (if (string= "" doc)
                     (format "%s" func)
                   (format "%s %s" func doc))))))))
       (`(,(or "skVar" "skLet" "skConst" "skResult" "skParam"))
-       (let ((sym (substring symKind 2 (length symKind))))
-         (add-text-properties
-          0 (length sym)
-          '(face font-lock-keyword-face)
-          sym)
-         (add-text-properties
-          0 (length name)
-          (cond ((member symKind '("skVar" "skResult"))
-                 '(face font-lock-variable-name-face))
-                ((member symKind '("skLet" "skConst"))
-                 '(face font-lock-constant-face))
-                (t '(face font-lock-keyword-face)))
-          name)
+       (let ((sym (downcase (substring symKind 2 (length symKind)))))
+         (nim-eldoc-put-face sym font-lock-keyword-face)
+         (nim-eldoc-put-face name
+                             (cond ((member symKind '("skVar" "skResult"))
+                                    '(face font-lock-variable-name-face))
+                                   ((member symKind '("skLet" "skConst"))
+                                    '(face font-lock-constant-face))
+                                   (t '(face font-lock-keyword-face))))
          (nim-eldoc-trim
           (format "%s %s : %s" sym name
                   (cond
@@ -119,6 +111,13 @@ DEFS is group of definitions from nimsuggest."
     (let ((first (match-string 1 forth))
           (other (match-string 2 forth)))
       (cons first other))))
+
+(defun nim-eldoc-put-face (text face)
+  (when (and text (string< "" text))
+    (add-text-properties
+     0 (length text)
+     `(face ,face)
+     text)))
 
 (defun nim-eldoc-trim (str)
   "Adjust STR for mini buffer."
