@@ -43,13 +43,7 @@
   (when nim-nimsuggest-path
     (unless (eq (point) (car nim-eldoc--data))
       (save-excursion
-        (let ((pos  (point))
-              (ppss (syntax-ppss)))
-          (when (and (< 0 (nth 0 ppss))
-                     (eq ?\( (char-after (nth 1 ppss))))
-            (goto-char (nth 1 ppss))
-            (when (looking-back nim-eldoc--skip-regex nil)
-              (goto-char pos))))
+        (nim-eldoc--move)
         (nim-call-epc
          ;; version 2 protocol can use: ideDef, ideUse, ideDus
          'dus
@@ -62,6 +56,15 @@
     (when (eq (line-number-at-pos)
               (assoc-default :line nim-eldoc--data))
       (assoc-default :str nim-eldoc--data))))
+
+(defun nim-eldoc--move ()
+  (let ((pos  (point))
+        (ppss (syntax-ppss)))
+    (when (and (< 0 (nth 0 ppss))
+               (eq ?\( (char-after (nth 1 ppss))))
+      (goto-char (nth 1 ppss))
+      (when (looking-back nim-eldoc--skip-regex nil)
+        (goto-char pos)))))
 
 (defun nim-eldoc-format-string (defs)
   "Format data inside DEFS for eldoc.
