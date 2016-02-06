@@ -94,13 +94,13 @@ DEFS is group of definitions from nimsuggest."
                     (cl-loop for def in defs
                              if (string< "" (nim-epc-forth def))
                              do (cl-return (nim-epc-forth def))
-                             finally return ""))
+                             finally return "no doc"))
                    ;; just in case
-                   (t ""))))))
+                   (t "no doc"))))))
       (`("skType")
        (nim-eldoc-trim
         (if (not (string< "" doc))
-            (format "there is no doc for %s" name)
+            (format "%s: no doc" name)
           (format "%s: %s" name doc)))))))
 
 (defun nim-eldoc-parse (forth)
