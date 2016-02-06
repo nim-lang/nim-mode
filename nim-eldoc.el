@@ -26,7 +26,7 @@
 ;;; Code:
 
 (require 'nim-suggest)
-(require 'cl-macs)
+(require 'cl-lib)
 
 (defvar nim-eldoc--data nil)
 (defun nim-eldoc-function ()
@@ -95,7 +95,16 @@ DEFS is group of definitions from nimsuggest."
                 (t '(face font-lock-keyword-face)))
           name)
          (nim-eldoc-trim
-          (format "%s %s : %s" sym name forth))))
+          (format "%s %s : %s" sym name
+                  (cond
+                   ((string< "" forth) forth)
+                   ((string= "" forth)
+                    (cl-loop for def in defs
+                             if (string< "" (nim-epc-forth def))
+                             do (cl-return (nim-epc-forth def))
+                             finally return ""))
+                   ;; just in case
+                   (t ""))))))
       (`("skType" . ,_)
        (nim-eldoc-trim
         (if (not (string< "" doc))
