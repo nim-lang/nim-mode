@@ -27,6 +27,7 @@
 
 (require 'nim-suggest)
 (require 'cl-lib)
+(require 'thingatpt)
 
 (defvar nim-eldoc--data nil)
 (defvar nim-eldoc--skip-regex
@@ -41,7 +42,7 @@
   "Return a doc string appropriate for the current context, or nil."
   (interactive)
   (when nim-nimsuggest-path
-    (unless (eq (point) (car nim-eldoc--data))
+    (unless (nim-eldoc-same-try-p)
       (save-excursion
         (nim-eldoc--move)
         (nim-call-epc
@@ -65,6 +66,20 @@
       (and (< 0 (nth 0 ppss))
            (eq ?\( (char-after (nth 1 ppss)))))))
 
+(defun nim-eldoc-same-try-p ()
+  (or (and (equal (thing-at-point 'symbol)
+                  (assoc-default :name nim-eldoc--data))
+           (eq (assoc-default :line nim-eldoc--data)
+               (line-number-at-pos)))
+      (and (nim-eldoc-inside-paren-p)
+           (save-excursion
+             (nim-eldoc--move)
+             (or
+              ;; for template
+              (eq (point) (assoc-default :pos nim-eldoc--data))
+              ;; for proc
+              (eq (1- (point)) (assoc-default :pos nim-eldoc--data)))))))
+
 (defun nim-eldoc--update (defs)
   (if defs
       (nim-eldoc--update-1 defs)
@@ -79,7 +94,9 @@
     (setq nim-eldoc--data
           (list
            (cons :str  (nim-eldoc-format-string defs))
-           (cons :line (line-number-at-pos))))))
+           (cons :line (line-number-at-pos))
+           (cons :name (thing-at-point 'symbol))
+           (cons :pos  (point))))))
 
 (defun nim-eldoc-format-string (defs)
   "Format data inside DEFS for eldoc.
