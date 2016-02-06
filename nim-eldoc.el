@@ -96,7 +96,9 @@
            (cons :str  (nim-eldoc-format-string defs))
            (cons :line (line-number-at-pos))
            (cons :name (thing-at-point 'symbol))
-           (cons :pos  (point))))))
+           (cons :pos  (point))))
+    (setq eldoc-last-message (assoc-default :str nim-eldoc--data))
+    (message eldoc-last-message)))
 
 (defun nim-eldoc-format-string (defs)
   "Format data inside DEFS for eldoc.
