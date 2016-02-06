@@ -67,7 +67,7 @@ DEFS is group of definitions from nimsuggest."
             (mapconcat 'identity (cdr qpath) "."))))
     (nim-eldoc-put-face doc font-lock-doc-face)
     (pcase (list symKind)
-      (`(,(or "skProc" "skField" "skTemplate"))
+      (`(,(or "skProc" "skField" "skTemplate" "skMacro"))
        (when (string< "" forth)
          (cl-destructuring-bind (ptype . typeinfo) (nim-eldoc-parse forth)
            (when (equal "proc" ptype)
