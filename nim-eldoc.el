@@ -46,13 +46,7 @@
         (nim-eldoc--move)
         (nim-call-epc
          ;; version 2 protocol can use: ideDef, ideUse, ideDus
-         'dus
-         (lambda (defs)
-           (when defs
-             (setq nim-eldoc--data
-                   (list
-                    (cons :str  (nim-eldoc-format-string defs))
-                    (cons :line (line-number-at-pos)))))))))
+         'dus 'nim-eldoc--update)))
     (when (eq (line-number-at-pos)
               (assoc-default :line nim-eldoc--data))
       (assoc-default :str nim-eldoc--data))))
@@ -65,6 +59,13 @@
       (goto-char (nth 1 ppss))
       (when (looking-back nim-eldoc--skip-regex nil)
         (goto-char pos)))))
+
+(defun nim-eldoc--update (defs)
+  (when defs
+    (setq nim-eldoc--data
+           (list
+            (cons :str  (nim-eldoc-format-string defs))
+            (cons :line (line-number-at-pos))))))
 
 (defun nim-eldoc-format-string (defs)
   "Format data inside DEFS for eldoc.
