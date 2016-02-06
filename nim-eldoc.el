@@ -29,15 +29,26 @@
 (require 'cl-lib)
 
 (defvar nim-eldoc--data nil)
+(defvar nim-eldoc--skip-regex
+  (rx symbol-start
+      (or "if" "when" "elif" "while"
+          ;; for tuple assignment
+          "var" "let" "const")
+      symbol-end (0+ " ")))
+
 (defun nim-eldoc-function ()
   "Return a doc string appropriate for the current context, or nil."
   (interactive)
   (when nim-nimsuggest-path
     (unless (eq (point) (car nim-eldoc--data))
       (save-excursion
-        (when (and (< 0 (nth 0 (syntax-ppss)))
-                   (eq ?\( (char-after (nth 1 (syntax-ppss)))))
-          (goto-char (nth 1 (syntax-ppss))))
+        (let ((pos  (point))
+              (ppss (syntax-ppss)))
+          (when (and (< 0 (nth 0 ppss))
+                     (eq ?\( (char-after (nth 1 ppss))))
+            (goto-char (nth 1 ppss))
+            (when (looking-back nim-eldoc--skip-regex nil)
+              (goto-char pos))))
         (nim-call-epc
          ;; version 2 protocol can use: ideDef, ideUse, ideDus
          'dus
