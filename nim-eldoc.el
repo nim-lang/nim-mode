@@ -79,6 +79,22 @@
                 (if (string= "" doc)
                     (format "%s" func)
                   (format "%s %s" func doc))))))))
+      (`(,(or "skVar" "skLet" "skConst" "skResult" "skParam") . ,_)
+       (let ((sym (substring symKind 2 (length symKind))))
+         (add-text-properties
+          0 (length sym)
+          '(face font-lock-keyword-face)
+          sym)
+         (add-text-properties
+          0 (length name)
+          (cond ((member symKind '("skVar" "skResult"))
+                 '(face font-lock-variable-name-face))
+                ((member symKind '("skLet" "skConst"))
+                 '(face font-lock-constant-face))
+                (t '(face font-lock-keyword-face)))
+          name)
+         (nim-eldoc-trim
+          (format "%s %s : %s" sym name forth))))
       (`("skType" . ,_)
        (nim-eldoc-trim
         (if (not (string< "" doc))
