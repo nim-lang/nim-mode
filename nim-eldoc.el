@@ -42,19 +42,20 @@
          ;; version 2 protocol can use: ideDef, ideUse, ideDus
          'dus
          (lambda (defs)
-           (let ((def (cl-first defs)))
-             (when def
-               (setq nim-eldoc--data
-                     (list
-                      (cons :str  (nim-eldoc-format-string def))
-                      (cons :line (line-number-at-pos))))))))))
+           (when defs
+             (setq nim-eldoc--data
+                   (list
+                    (cons :str  (nim-eldoc-format-string defs))
+                    (cons :line (line-number-at-pos)))))))))
     (when (eq (line-number-at-pos)
               (assoc-default :line nim-eldoc--data))
       (assoc-default :str nim-eldoc--data))))
 
-(defun nim-eldoc-format-string (data)
-  "Format DATA for eldoc."
-  (let* ((forth   (nim-epc-forth data))
+(defun nim-eldoc-format-string (defs)
+  "Format data inside DEFS for eldoc.
+DEFS is group of definitions from nimsuggest."
+  (let* ((data    (cl-first defs))
+         (forth   (nim-epc-forth data))
          (symKind (nim-epc-symkind data))
          (qpath   (nim-epc-qualifiedPath data))
          (doc (mapconcat 'identity
