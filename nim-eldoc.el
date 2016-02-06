@@ -66,11 +66,20 @@
            (eq ?\( (char-after (nth 1 ppss)))))))
 
 (defun nim-eldoc--update (defs)
+  (if defs
+      (nim-eldoc--update-1 defs)
+    (save-excursion
+      (when (nim-eldoc-inside-paren-p)
+        (nim-eldoc--move)
+        (backward-char)
+        (nim-call-epc 'dus 'nim-eldoc--update-1)))))
+
+(defun nim-eldoc--update-1 (defs)
   (when defs
     (setq nim-eldoc--data
-           (list
-            (cons :str  (nim-eldoc-format-string defs))
-            (cons :line (line-number-at-pos))))))
+          (list
+           (cons :str  (nim-eldoc-format-string defs))
+           (cons :line (line-number-at-pos))))))
 
 (defun nim-eldoc-format-string (defs)
   "Format data inside DEFS for eldoc.
