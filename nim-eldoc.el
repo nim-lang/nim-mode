@@ -30,11 +30,12 @@
 
 (defvar nim-eldoc--data nil)
 (defvar nim-eldoc--skip-regex
-  (rx symbol-start
-      (or "if" "when" "elif" "while"
-          ;; for tuple assignment
-          "var" "let" "const")
-      symbol-end (0+ " ")))
+  (rx (or (group symbol-start
+                 (or "if" "when" "elif" "while"
+                     ;; for tuple assignment
+                     "var" "let" "const")
+                 symbol-end (0+ " "))
+          (group line-start (0+ " ")))))
 
 (defun nim-eldoc-function ()
   "Return a doc string appropriate for the current context, or nil."
