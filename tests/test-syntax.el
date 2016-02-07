@@ -201,7 +201,17 @@
     ((482 . 536)  . font-lock-doc-face)
     ((545 . 553)  . font-lock-string-face)
     ((564 . 566)  . font-lock-comment-face)
-    ((567 . 576)  . font-lock-comment-delimiter-face)))
+    ((567 . 576)  . font-lock-comment-delimiter-face)
+    ((611 . 614)  . font-lock-string-face)
+    ((615 . 620)  . font-lock-comment-face)
+    ((626 . 629)  . font-lock-string-face)
+    ((630 . 635)  . font-lock-comment-face)
+    ((641 . 645)  . font-lock-string-face)
+    ((646 . 651)  . font-lock-comment-face)
+    ((657 . 661)  . font-lock-string-face)
+    ((662 . 667)  . font-lock-comment-face)
+    ((673 . 682)  . font-lock-string-face)
+    ((683 . 701)  . font-lock-comment-face)))
 
  ;; varargs inside proc
  (test-faces-by-range
