@@ -26,8 +26,8 @@
 ;;; Code:
 
 (require 'nim-suggest)
+(require 'nim-helper)
 (require 'cl-lib)
-(require 'thingatpt)
 
 (defvar nim-eldoc--data nil)
 (defvar nim-eldoc--skip-regex
@@ -67,7 +67,7 @@
            (eq ?\( (char-after (nth 1 ppss)))))))
 
 (defun nim-eldoc-same-try-p ()
-  (or (and (equal (thing-at-point 'symbol)
+  (or (and (equal (nim-current-symbol)
                   (assoc-default :name nim-eldoc--data))
            (eq (assoc-default :line nim-eldoc--data)
                (line-number-at-pos)))
@@ -95,7 +95,7 @@
           (list
            (cons :str  (nim-eldoc-format-string defs))
            (cons :line (line-number-at-pos))
-           (cons :name (thing-at-point 'symbol))
+           (cons :name (nim-current-symbol))
            (cons :pos  (point))))
     (setq eldoc-last-message (assoc-default :str nim-eldoc--data))
     (message eldoc-last-message)))
