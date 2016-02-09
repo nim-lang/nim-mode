@@ -220,6 +220,21 @@
   '(((55 . 61) . font-lock-type-face)))
 
 
+ ;; backticks in comment
+ (test-faces-by-range
+  "should highlight words inside backticks correctly"
+  (test-concat-dir "tests/syntax/backtick.nim")
+  '(((99 . 116) . font-lock-constant-face)
+    ((122 . 141) . font-lock-constant-face)
+    ((147 . 164) . font-lock-constant-face)
+    ((170 . 189) . font-lock-constant-face)
+    ((195 . 212) . font-lock-constant-face)
+    ((218 . 237) . font-lock-constant-face)
+    ((247 . 264) . font-lock-constant-face)
+    ((270 . 289) . font-lock-constant-face)
+    ((321 . 338) . font-lock-constant-face)
+    ((340 . 359) . font-lock-constant-face)))
+
  ) ; end of describe function
 
 ;; Local Variables:
