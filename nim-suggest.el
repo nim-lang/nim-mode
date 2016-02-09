@@ -11,7 +11,8 @@
 (require 'epc)
 (require 'cl-lib)
 
-(defcustom nim-nimsuggest-path nil "Path to the nimsuggest binary."
+(defcustom nim-nimsuggest-path (executable-find "nimsuggest")
+  "Path to the nimsuggest binary."
   :type 'string
   :group 'nim)
 
