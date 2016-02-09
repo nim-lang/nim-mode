@@ -50,6 +50,8 @@
     ;; Highlight ``identifier``
     (nim-backtick-matcher
      (1 font-lock-constant-face prepend))
+    ;; Highlight $# and $[0-9]+ inside string
+    (nim-format-$-matcher . (1 font-lock-preprocessor-face prepend))
     ;; other keywords
     (,(nim-rx (or exception type)) . font-lock-type-face)
     (,(nim-rx constant) . font-lock-constant-face)
@@ -255,6 +257,30 @@ character address of the specified TYPE."
      (not (re-search-forward (nim-rx backticks) nil t)))
    (lambda (ppss) (not (nth 4 ppss)))))
 
+(defun nim-format-$-matcher (&rest _args)
+  "Highlight matcher for $# and $[1-9][0-9]? in string."
+  (nim-matcher-func
+   (lambda ()
+     (forward-comment (point-max))
+     (when (not (nth 3 (save-excursion (syntax-ppss))))
+       (unless (re-search-forward "\\s|" nil t)
+         (throw 'exit nil))))
+   (lambda ()
+     (let ((start (point))
+           (limit (if (re-search-forward "\\s|" nil t)
+                      (point)
+                    nil)))
+       (goto-char start)
+       (not (re-search-forward
+             ;; I think two digit is enough...
+             (rx (group "$" (or "#" (and (in "1-9") (? num))))) limit t))))
+   (lambda (ppss)
+     (not (and (nth 3 ppss)
+               (or (not (eq ?$ (char-after (- (point) 3))))
+                   (and
+                    (member (char-after (- (point) 2))
+                            '(?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
+                    (not (eq ?$ (char-after (- (point) 4)))))))))))
 
 (defun nim-pragma-matcher (&optional _start-pos)
   "Highlight pragma."
