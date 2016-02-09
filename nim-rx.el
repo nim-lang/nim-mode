@@ -166,6 +166,19 @@ This variant of `rx' supports common nim named REGEXPS."
   (add-to-list 'nim-rx-constituents
                (cons 'block-start (nim-rx (or decl-block block-start-defun))))
 
+  (add-to-list 'nim-rx-constituents
+               (cons 'font-lock-defun
+                     (nim-rx defun
+                             (? (group (1+ " ") (or identifier quoted-chars)
+                                       (0+ " ") (? (group "*"))))
+                             (? (minimal-match
+                                 (group (0+ " ") "[" (0+ (or any "\n")) "]")))
+                             (? (minimal-match
+                                 (group (0+ " ") "(" (0+ (or any "\n")) ")")))
+                             (? (group (0+ " ") ":" (0+ " ")
+                                       (? (group (or "ref" "ptr") " " (* " ")))
+                                       (group identifier))))))
+
   ) ; end of eval-and-compile
 
 (provide 'nim-rx)

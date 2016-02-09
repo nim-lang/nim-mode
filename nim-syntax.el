@@ -26,16 +26,7 @@
 
 (defconst nim-font-lock-keywords
   `((,(nim-rx (1+ "\t")) . 'nim-tab-face)
-    (,(nim-rx defun
-              (? (group (1+ " ") (or identifier quoted-chars)
-                        (0+ " ") (? (group "*"))))
-              (? (minimal-match
-                  (group (0+ " ") "[" (0+ (or any "\n")) "]")))
-              (? (minimal-match
-                  (group (0+ " ") "(" (0+ (or any "\n")) ")")))
-              (? (group (0+ " ") ":" (0+ " ")
-                        (? (group (or "ref" "ptr") " " (* " ")))
-                        (group identifier))))
+    (nim-proc-matcher
      (1 (if (match-string 2)
             'nim-font-lock-export-face
           font-lock-function-name-face)
@@ -257,6 +248,35 @@ character address of the specified TYPE."
   "Return non-nil if char after point is a closing paren."
   (= (syntax-class (syntax-after (point)))
      (syntax-class (string-to-syntax ")"))))
+
+;;;;;;;;;;;;;;;;;;;;;;;
+;; Highlight matcher
+
+(defun nim-matcher-func (skip-func pred pred2)
+  (let* (data)
+    (catch 'exit
+      (while (not data)
+        (funcall skip-func)
+        (if (funcall pred)
+            (throw 'exit nil)
+          (setq data (match-data))
+          (let ((ppss (save-excursion (syntax-ppss))))
+            (if (funcall pred2 ppss)
+                (setq data nil)
+              ;; ensure match-data
+              (set-match-data data)
+              (throw 'exit data))))))))
+
+(defun nim-skip-comment-and-string ()
+  (forward-comment (point-max))
+  (when (nth 3 (save-excursion (syntax-ppss)))
+    (re-search-forward "\\s|" nil t)))
+
+(defun nim-proc-matcher (&optional _start-pos)
+  (nim-matcher-func
+   'nim-skip-comment-and-string
+   (lambda () (not (re-search-forward (nim-rx font-lock-defun) nil t)))
+   (lambda (ppss) (or (nth 3 ppss) (nth 4 ppss)))))
 
 (provide 'nim-syntax)
 ;;; nim-syntax.el ends here
