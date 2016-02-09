@@ -235,6 +235,14 @@
     ((321 . 338) . font-lock-constant-face)
     ((340 . 359) . font-lock-constant-face)))
 
+ ;; $# and $[1-9]
+ (test-faces-by-range
+  "should highlight $# and $[1-9] inside string correctly"
+  (test-concat-dir "tests/syntax/format.nim")
+  '(((84 . 85) . font-lock-preprocessor-face)
+    ((89 . 90) . font-lock-preprocessor-face)
+    ((94 . 95) . font-lock-preprocessor-face)))
+
  ) ; end of describe function
 
 ;; Local Variables:
