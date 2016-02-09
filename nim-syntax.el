@@ -55,8 +55,6 @@
      (1 font-lock-constant-face prepend))
     ;; Highlight $# and $[0-9]+ inside string
     (nim-format-$-matcher . (1 font-lock-preprocessor-face prepend))
-    ;; pragma
-    (nim-pragma-matcher . (0 'nim-font-lock-pragma-face keep))
     ;; highlight word after ‘is’
     (,(nim-rx " " symbol-start "is" symbol-end (1+ " ") (group identifier))
      (1 font-lock-type-face)))
@@ -69,7 +67,8 @@ set nil to this value by ‘nim-mode-init-hook’.")
     (,(nim-rx constant) . font-lock-constant-face)
     (,(nim-rx builtin) . font-lock-builtin-face)
     (,(nim-rx keyword) . font-lock-keyword-face)
-    (,(rx symbol-start "result" symbol-end) . font-lock-variable-name-face)))
+    (,(rx symbol-start "result" symbol-end) . font-lock-variable-name-face)
+    (nim-pragma-matcher . (4 'nim-font-lock-pragma-face))))
 
 (defsubst nim-syntax-count-quotes (quote-char &optional point limit)
   "Count number of quotes around point (max is 3).
@@ -290,12 +289,57 @@ character address of the specified TYPE."
                             '(?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
                     (not (eq ?$ (char-after (- (point) 4)))))))))))
 
+(defun nim-inside-pragma-p (&optional pos)
+  (let ((ppss (save-excursion (syntax-ppss pos))))
+    (when (not (or (nth 3 ppss) (nth 4 ppss)))
+      (let ((ppss9-first (car (nth 9 ppss)))
+            (ppss9-last  (car (last (nth 9 ppss)))))
+
+        (or (when ppss9-first
+              (and (eq ?\{ (char-after ppss9-first))
+                   (eq ?.  (char-after (1+  ppss9-first)))
+                   (1+  ppss9-first)))
+            (when ppss9-last
+              (and (eq ?\{ (char-after ppss9-last))
+                   (eq ?.  (char-after (1+  ppss9-last)))
+                   (1+  ppss9-last))))))))
+
 (defun nim-pragma-matcher (&optional _start-pos)
   "Highlight pragma."
   (nim-matcher-func
-   'nim-skip-comment-and-string
-   (lambda () (not (re-search-forward (nim-rx pragma) nil t)))
-   (lambda (ppss) (nth 8 ppss))))
+   (lambda ()
+     (nim-skip-comment-and-string)
+     (unless (nim-inside-pragma-p)
+       (while (and (not (nim-inside-pragma-p))
+                   (re-search-forward (rx "{.") nil t))
+         (when (nim-syntax-comment-or-string-p)
+           (nim-skip-comment-and-string))))
+     (unless (nim-inside-pragma-p)
+       (throw 'exit nil)))
+   (lambda ()
+     (not (re-search-forward
+           (nim-rx (or (group (or (group (? ".") "}")
+                                  (group "." identifier)))
+                       (group identifier))) nil t)))
+   (lambda (ppss)
+     (cond
+      ((nth 4 ppss)
+       (forward-comment (point-max)) t)
+      ((nth 3 ppss)
+       (re-search-forward "\\s|" nil t) t)
+      ;; if deprecated pragma’s inside skip til close "]"
+      ((eq ?\[ (char-after (car (last (nth 9 ppss)))))
+       (unless (eq ?\] (char-after (point)))
+         (search-forward "]" nil t))
+       t)
+      ((eq ?\( (char-after (car (last (nth 9 ppss)))))
+       (unless (eq ?\) (char-after (point)))
+         (search-forward ")" nil t))
+       t)
+      ((and (not (match-string 1)) (match-string 4)
+            (nim-inside-pragma-p))
+       nil)
+      (t t)))))
 
 (defun nim-type-matcher (&optional _start-pos)
   (nim-matcher-func
