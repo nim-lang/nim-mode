@@ -72,6 +72,10 @@
 (define-derived-mode nim-mode prog-mode "Nim"
   "A major mode for the Nim programming language."
   :group 'nim
+
+  ;; init hook
+  (run-hooks nim-mode-init-hook)
+
   ;; Font lock
   (setq-local font-lock-defaults
               `(,(append nim-font-lock-keywords

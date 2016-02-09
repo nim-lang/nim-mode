@@ -124,6 +124,11 @@ other tokens like ’:’ or ’=’."
   :type 'hook
   :group 'nim)
 
+(defcustom nim-mode-init-hook nil
+  "This hook is called when ‘nim-mode’ is initialized."
+  :type 'hook
+  :group 'nim)
+
 (defvar nim-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "M-.") 'nim-goto-sym)
