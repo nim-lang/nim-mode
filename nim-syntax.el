@@ -56,7 +56,10 @@
     ;; Highlight $# and $[0-9]+ inside string
     (nim-format-$-matcher . (1 font-lock-preprocessor-face prepend))
     ;; pragma
-    (nim-pragma-matcher . (0 'nim-font-lock-pragma-face keep))))
+    (nim-pragma-matcher . (0 'nim-font-lock-pragma-face keep)))
+  "Extra font-lock keywords.
+If you feel uncomfortable because of this font-lock keywords,
+set nil to this value by ‘nim-mode-init-hook’.")
 
 (defconst nim-font-lock-keywords-2
   `((,(nim-rx (or exception type)) . font-lock-type-face)
