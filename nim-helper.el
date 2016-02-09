@@ -615,29 +615,15 @@ since it returns nil if point is not inside a defun."
              (concat (and type (format "%s " type))
                      (mapconcat 'identity names ".")))))))
 
-(defun nim-info-current-symbol (&optional replace-self)
-  "Return current symbol using dotty syntax.
-With optional argument REPLACE-SELF convert \"self\" to current
-parent defun name."
+(defun nim-info-current-symbol ()
+  "Return current symbol using dotty syntax."
   (let ((name
          (and (not (nim-syntax-comment-or-string-p))
               (with-syntax-table nim-dotty-syntax-table
                 (let ((sym (symbol-at-point)))
                   (and sym
                        (substring-no-properties (symbol-name sym))))))))
-    (when name
-      (if (not replace-self)
-          name
-        (let ((current-defun (nim-info-current-defun)))
-          (if (not current-defun)
-              name
-            (replace-regexp-in-string
-             (nim-rx line-start word-start "self" word-end ?.)
-             (concat
-              (mapconcat 'identity
-                         (butlast (split-string current-defun "\\."))
-                         ".") ".")
-             name)))))))
+    name))
 
 (defun nim-info-statement-starts-block-p ()
   "Return non-nil if current statement opens a block."
