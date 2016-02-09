@@ -42,16 +42,8 @@
      . (1 (if (match-string 2)
               'nim-font-lock-export-face
             font-lock-variable-name-face)))
-    ;; For multiple line properties
-    (,(nim-rx line-start (1+ " ")
-              (group
-               (or identifier quoted-chars) "*"
-               (? (and "[" word "]"))
-               (0+ (and "," (? (0+ " "))
-                        (or identifier quoted-chars) "*")))
-              (0+ " ") (or ":" "{." "=") (0+ nonl)
-              line-end)
-     . (1 'nim-font-lock-export-face))
+    ;; export properties
+    (,(nim-rx font-lock-export) . (1 'nim-font-lock-export-face))
     ;; Number literal
     (nim-number-matcher
      (0 'nim-font-lock-number-face))
