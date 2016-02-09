@@ -33,16 +33,9 @@
         keep t)
      (7 font-lock-type-face keep t))
     ;; Highlight type words
-    (,(nim-rx (or identifier quoted-chars) (? "*")
-              (* " ") ":" (* " ")
-              (? (and "var " (0+ " ")))
-              (? (group (and (or "ref" "ptr") " " (* " "))))
-              (group identifier))
+    (nim-type-matcher
      (1 font-lock-keyword-face keep t)
-     (2 (if (< 0 (nth 0 (syntax-ppss)))
-            font-lock-type-face
-          'default)
-        keep))
+     (2 font-lock-type-face keep))
     ;; This only works if it’s one line
     (,(nim-rx (or "var" "let" "const" "type") (1+ " ")
               (group (or identifier quoted-chars) (? " ") (? (group "*"))))
@@ -272,6 +265,14 @@ character address of the specified TYPE."
   (when (nth 3 (save-excursion (syntax-ppss)))
     (re-search-forward "\\s|" nil t)))
 
+
+(defun nim-type-matcher (&optional _start-pos)
+  (nim-matcher-func
+   'nim-skip-comment-and-string
+   (lambda () (not (re-search-forward (nim-rx colon-type) nil t)))
+   (lambda (ppss)
+     (or (eq (nth 0 ppss) 0)
+         (not (eq ?\( (char-after (nth 1 ppss))))))))
 (defun nim-proc-matcher (&optional _start-pos)
   (nim-matcher-func
    'nim-skip-comment-and-string

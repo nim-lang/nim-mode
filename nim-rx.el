@@ -179,6 +179,14 @@ This variant of `rx' supports common nim named REGEXPS."
                                        (? (group (or "ref" "ptr") " " (* " ")))
                                        (group identifier))))))
 
+  (add-to-list 'nim-rx-constituents
+               (cons 'colon-type
+                     (nim-rx (or identifier quoted-chars) (? "*")
+                             (* " ") ":" (* " ")
+                             (? (and "var " (0+ " ")))
+                             (? (group (and (or "ref" "ptr") " " (* " "))))
+                             (group identifier))))
+
   ) ; end of eval-and-compile
 
 (provide 'nim-rx)
