@@ -47,6 +47,9 @@
     ;; Number literal
     (nim-number-matcher
      (0 'nim-font-lock-number-face))
+    ;; Highlight ``identifier``
+    (nim-backtick-matcher
+     (1 font-lock-constant-face prepend))
     ;; other keywords
     (,(nim-rx (or exception type)) . font-lock-type-face)
     (,(nim-rx constant) . font-lock-constant-face)
@@ -241,6 +244,16 @@ character address of the specified TYPE."
   (forward-comment (point-max))
   (when (nth 3 (save-excursion (syntax-ppss)))
     (re-search-forward "\\s|" nil t)))
+
+(defun nim-backtick-matcher (&optional _start-pos)
+  "Highlight matcher for ``symbol`` in comment."
+  (nim-matcher-func
+   (lambda ()
+     (unless (nth 4 (save-excursion (syntax-ppss)))
+       (re-search-forward "\\s<" nil t)))
+   (lambda ()
+     (not (re-search-forward (nim-rx backticks) nil t)))
+   (lambda (ppss) (not (nth 4 ppss)))))
 
 
 (defun nim-pragma-matcher (&optional _start-pos)

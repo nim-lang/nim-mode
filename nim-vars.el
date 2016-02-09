@@ -151,7 +151,7 @@ other tokens like ’:’ or ’=’."
     (modify-syntax-entry ?\n ">" table)
     ;; Use "." Punctuation syntax class because I got error when I
     ;; used "$" from smie.el
-    (modify-syntax-entry ?` "." table)
+    (modify-syntax-entry ?` "'" table)
 
     ;; Use _ syntax to single quote
     ;; See also `nim-syntax-propertize-function'.

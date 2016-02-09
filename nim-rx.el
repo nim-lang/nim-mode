@@ -208,6 +208,29 @@ This variant of `rx' supports common nim named REGEXPS."
                              (group identifier))))
 
   (add-to-list 'nim-rx-constituents
+               (cons 'backquoted-chars
+                     (rx
+                      (syntax expression-prefix)
+                      (minimal-match (1+ (not (syntax comment-end))))
+                      (syntax expression-prefix))))
+
+  (add-to-list 'nim-rx-constituents
+               (cons 'backticks
+                     (nim-rx
+                      (or line-start " " (syntax open-parenthesis))
+                      (group (or (group (syntax expression-prefix)
+                                        backquoted-chars
+                                        (syntax expression-prefix))
+                                 (group backquoted-chars)))
+                      (or " "
+                          line-end
+                          (syntax punctuation)
+                          (syntax comment-end)
+                          (syntax symbol)
+                          (syntax open-parenthesis)
+                          (syntax close-parenthesis)))))
+
+  (add-to-list 'nim-rx-constituents
                (cons 'font-lock-export
                      (nim-rx line-start (1+ " ")
                              (group
