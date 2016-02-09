@@ -41,8 +41,11 @@
               (group (or identifier quoted-chars) (? " ") (? (group "*"))))
      . (1 (if (match-string 2)
               'nim-font-lock-export-face
-            font-lock-variable-name-face)))
-    ;; export properties
+            font-lock-variable-name-face))))
+  "Font lock expressions for Nim mode.")
+
+(defvar nim-font-lock-keywords-extra
+  `(;; export properties
     (,(nim-rx font-lock-export) . (1 'nim-font-lock-export-face))
     ;; Number literal
     (nim-number-matcher
@@ -53,8 +56,7 @@
     ;; Highlight $# and $[0-9]+ inside string
     (nim-format-$-matcher . (1 font-lock-preprocessor-face prepend))
     ;; pragma
-    (nim-pragma-matcher . (0 'nim-font-lock-pragma-face keep)))
-  "Font lock expressions for Nim mode.")
+    (nim-pragma-matcher . (0 'nim-font-lock-pragma-face keep))))
 
 (defconst nim-font-lock-keywords-2
   `((,(nim-rx (or exception type)) . font-lock-type-face)
