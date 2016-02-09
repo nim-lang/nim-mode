@@ -53,23 +53,8 @@
               line-end)
      . (1 'nim-font-lock-export-face))
     ;; Number literal
-    (,(nim-rx ; u?int
-       (group int-lit)
-       (? (group (? "'") (or (and (in "uUiI") (or "8" "16" "32" "64"))
-                             (in "uU")))))
-     (1 'nim-font-lock-number-face)
-     (2 font-lock-type-face nil t))
-    (,(nim-rx ; float
-       (group (or float-lit dec-lit oct-lit bin-lit))
-              (? (group (? "'") float-suffix)))
-     (1 'nim-font-lock-number-face)
-     (2 font-lock-type-face t t)  ; exponential
-     (3 font-lock-type-face t t)) ; type
-    (,(nim-rx ; float hex
-       (group hex-lit)
-       (? (group "'" float-suffix))) ; "'" isn’t optional
-     (1 'nim-font-lock-number-face)
-     (3 font-lock-type-face nil t))
+    (nim-number-matcher
+     (0 'nim-font-lock-number-face))
     ;; other keywords
     (,(nim-rx (or exception type)) . font-lock-type-face)
     (,(nim-rx constant) . font-lock-constant-face)
@@ -273,6 +258,13 @@ character address of the specified TYPE."
    (lambda (ppss)
      (or (eq (nth 0 ppss) 0)
          (not (eq ?\( (char-after (nth 1 ppss))))))))
+
+(defun nim-number-matcher (&optional _start-pos)
+  (nim-matcher-func
+   'nim-skip-comment-and-string
+   (lambda () (not (re-search-forward (nim-rx nim-numbers) nil t)))
+   (lambda (ppss) (or (nth 3 ppss) (nth 4 ppss)))))
+
 (defun nim-proc-matcher (&optional _start-pos)
   (nim-matcher-func
    'nim-skip-comment-and-string

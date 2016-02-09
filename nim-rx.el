@@ -149,6 +149,26 @@ This variant of `rx' supports common nim named REGEXPS."
                      (nim-rx
                       (group (or (and (in "fF") (or "32" "64" "128")) (in "dD"))))))
 
+  (add-to-list 'nim-rx-constituents
+               (cons 'nim-numbers
+                     (nim-rx
+                      symbol-start
+                      (or
+                       ;; float hex
+                       (group (group hex-lit)
+                              ;; "'" isn’t optional
+                              (group "'" float-suffix))
+                       ;; float
+                       (group (group (or float-lit dec-lit oct-lit bin-lit))
+                              (group (? "'") float-suffix))
+                       ;; u?int
+                       (group
+                        (group int-lit)
+                        (? (group (? "'")
+                                  (or (and (in "uUiI") (or "8" "16" "32" "64"))
+                                      (in "uU"))))))
+                      symbol-end)))
+
   ;; pragma
   (add-to-list
    'nim-rx-constituents
