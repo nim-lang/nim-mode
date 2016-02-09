@@ -615,7 +615,7 @@ since it returns nil if point is not inside a defun."
              (concat (and type (format "%s " type))
                      (mapconcat 'identity names ".")))))))
 
-(defun nim-info-current-symbol ()
+(defun nim-current-symbol ()
   "Return current symbol using dotty syntax."
   (let ((name
          (and (not (nim-syntax-comment-or-string-p))
