@@ -195,7 +195,9 @@ This variant of `rx' supports common nim named REGEXPS."
                                  (group (0+ " ") "[" (0+ (or any "\n")) "]")))
                              (? (minimal-match
                                  (group (0+ " ") "(" (0+ (or any "\n")) ")")))
+                             ;; return type
                              (? (group (0+ " ") ":" (0+ " ")
+                                       (? (group "var " (0+ " ")))
                                        (? (group (or "ref" "ptr") " " (* " ")))
                                        (group identifier))))))
 

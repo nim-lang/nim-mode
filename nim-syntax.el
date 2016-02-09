@@ -31,7 +31,7 @@
             'nim-font-lock-export-face
           font-lock-function-name-face)
         keep t)
-     (7 font-lock-type-face keep t))
+     (8 font-lock-type-face keep t))
     ;; Highlight type words
     (nim-type-matcher
      (1 font-lock-keyword-face keep t)
