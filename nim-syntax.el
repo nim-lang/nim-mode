@@ -63,7 +63,7 @@
     ;; Result
     (,(rx symbol-start "result" symbol-end) . font-lock-variable-name-face)
     ;; pragma
-    (,(nim-rx pragma) . (0 'nim-font-lock-pragma-face keep)))
+    (nim-pragma-matcher . (0 'nim-font-lock-pragma-face keep)))
   "Font lock expressions for Nim mode.")
 
 (defsubst nim-syntax-count-quotes (quote-char &optional point limit)
@@ -250,6 +250,13 @@ character address of the specified TYPE."
   (when (nth 3 (save-excursion (syntax-ppss)))
     (re-search-forward "\\s|" nil t)))
 
+
+(defun nim-pragma-matcher (&optional _start-pos)
+  "Highlight pragma."
+  (nim-matcher-func
+   'nim-skip-comment-and-string
+   (lambda () (not (re-search-forward (nim-rx pragma) nil t)))
+   (lambda (ppss) (nth 8 ppss))))
 
 (defun nim-type-matcher (&optional _start-pos)
   (nim-matcher-func
