@@ -74,7 +74,8 @@
   :group 'nim
   ;; Font lock
   (setq-local font-lock-defaults
-              '(nim-font-lock-keywords
+              `(,(append nim-font-lock-keywords
+                         nim-font-lock-keywords-2)
                 nil nil nil nil
                 (font-lock-syntactic-face-function
                  . nim-font-lock-syntactic-face-function)))

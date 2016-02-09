@@ -52,16 +52,16 @@
      (1 font-lock-constant-face prepend))
     ;; Highlight $# and $[0-9]+ inside string
     (nim-format-$-matcher . (1 font-lock-preprocessor-face prepend))
-    ;; other keywords
-    (,(nim-rx (or exception type)) . font-lock-type-face)
-    (,(nim-rx constant) . font-lock-constant-face)
-    (,(nim-rx builtin) . font-lock-builtin-face)
-    (,(nim-rx keyword) . font-lock-keyword-face)
-    ;; Result
-    (,(rx symbol-start "result" symbol-end) . font-lock-variable-name-face)
     ;; pragma
     (nim-pragma-matcher . (0 'nim-font-lock-pragma-face keep)))
   "Font lock expressions for Nim mode.")
+
+(defconst nim-font-lock-keywords-2
+  `((,(nim-rx (or exception type)) . font-lock-type-face)
+    (,(nim-rx constant) . font-lock-constant-face)
+    (,(nim-rx builtin) . font-lock-builtin-face)
+    (,(nim-rx keyword) . font-lock-keyword-face)
+    (,(rx symbol-start "result" symbol-end) . font-lock-variable-name-face)))
 
 (defsubst nim-syntax-count-quotes (quote-char &optional point limit)
   "Count number of quotes around point (max is 3).
