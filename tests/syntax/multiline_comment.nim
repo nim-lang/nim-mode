@@ -23,3 +23,10 @@ proc testMultiComment =
   echo "foo bar"
 
 var foo #[ comment ]#: string = "foo"
+
+# boundary
+echo "#["# foo
+echo "]#"# bar
+echo "##["# foo
+echo "]##"# bar
+echo "check ->"#" <- double quote

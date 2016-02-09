@@ -111,6 +111,12 @@ is used to limit the scan."
 
 (defconst nim-syntax-propertize-function
   (syntax-propertize-rules
+   ;; single/multi line comment
+   ((rx (or (group (or line-start (not (any "]" "#" "\"")))
+                   (group "#" (? "#") "["))
+            (group "]" "#" (? "#"))
+            (group "#")))
+    (0 (ignore (nim-syntax-commentify))))
    ;; Char
    ;; Put syntax entry("\"") for character type to highlight
    ;; when only the character-delimiter regex matched.
@@ -119,13 +125,7 @@ is used to limit the scan."
     (2 "\"")) ; closing quote
    ;; String
    ((nim-rx string-delimiter)
-    (0 (ignore (nim-syntax-stringify))))
-   ;; multi line comment
-   ((rx (or (group (or line-start (not (any "]" "#")))
-                   (group "#" (? "#") "["))
-            (group "]" "#" (? "#"))
-            (group "#")))
-    (0 (ignore (nim-syntax-commentify))))))
+    (0 (ignore (nim-syntax-stringify))))))
 
 (defun nim-syntax-stringify ()
   "Put `syntax-table' property correctly on single/triple double quotes."
