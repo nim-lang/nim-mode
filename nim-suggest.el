@@ -7,7 +7,7 @@
 
 ;;; Completion
 
-
+(require 'nim-vars)
 (require 'epc)
 (require 'cl-lib)
 
@@ -66,7 +66,7 @@ hierarchy, starting from CURRENT-DIR"
                    nil)))
         (let ((epc-process (epc:start-epc
                             nim-nimsuggest-path
-                            (list "--v2" "--verbosity:0" "--epc" main-file))))
+                            (append nim-suggest-options (list main-file)))))
           (push (cons main-file epc-process) nim-epc-processes-alist)
           epc-process))))
 

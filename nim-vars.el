@@ -124,6 +124,12 @@ other tokens like ’:’ or ’=’."
   :type 'hook
   :group 'nim)
 
+(defcustom nim-suggest-options '("--v2" "--verbosity:0" "--epc")
+  "Options for Nimsuggest."
+  :type '(choice (repeat :tag "List of options" string)
+                 (const :tag "" nil))
+  :group 'nim)
+
 (defvar nim-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "M-.") 'nim-goto-sym)
