@@ -178,8 +178,8 @@
  (test-faces-by-range
   "should highlight pragmas"
   (test-concat-dir "tests/syntax/pragma.nim")
-  '(((31 . 41)  . nim-font-lock-pragma-face)
-    ((79 . 86)  . nim-font-lock-pragma-face)))
+  '(((31 . 40)  . nim-font-lock-pragma-face)
+    ((79 . 85)  . nim-font-lock-pragma-face)))
 
  ;; docstring
  (test-faces-by-range
