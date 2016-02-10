@@ -243,6 +243,14 @@
     ((89 . 90) . font-lock-preprocessor-face)
     ((94 . 95) . font-lock-preprocessor-face)))
 
+ ;; after ‘is’ operator and ‘distinct’
+ (test-faces-by-range
+  "should highlight after is operator correctly"
+  (test-concat-dir "tests/syntax/test_is_and_distinct.nim")
+  '(((132 . 142) . font-lock-type-face)
+    ((202 . 212) . font-lock-type-face)
+    ((282 . 293) . font-lock-type-face)))
+
  ) ; end of describe function
 
 ;; Local Variables:
