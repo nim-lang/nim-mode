@@ -26,34 +26,85 @@
 ;;; Code:
 
 (require 'nim-suggest)
-(require 'cl-macs)
+(require 'nim-helper)
+(require 'cl-lib)
 
 (defvar nim-eldoc--data nil)
+(defvar nim-eldoc--skip-regex
+  (rx (or (group symbol-start
+                 (or "if" "when" "elif" "while"
+                     ;; for tuple assignment
+                     "var" "let" "const")
+                 symbol-end (0+ " "))
+          (group line-start (0+ " ")))))
+
 (defun nim-eldoc-function ()
   "Return a doc string appropriate for the current context, or nil."
   (interactive)
   (when nim-nimsuggest-path
-    (unless (eq (point) (car nim-eldoc--data))
+    (unless (nim-eldoc-same-try-p)
       (save-excursion
-        (when (and (< 0 (nth 0 (syntax-ppss)))
-                   (eq ?\( (char-after (nth 1 (syntax-ppss)))))
-          (goto-char (1- (nth 1 (syntax-ppss)))))
+        (nim-eldoc--move)
         (nim-call-epc
-         'def
-         (lambda (defs)
-           (let ((def (cl-first defs)))
-             (when def
-               (setq nim-eldoc--data
-                     (list
-                      (cons :str  (nim-eldoc-format-string def))
-                      (cons :line (line-number-at-pos))))))))))
+         ;; version 2 protocol can use: ideDef, ideUse, ideDus
+         'dus 'nim-eldoc--update)))
     (when (eq (line-number-at-pos)
               (assoc-default :line nim-eldoc--data))
       (assoc-default :str nim-eldoc--data))))
 
-(defun nim-eldoc-format-string (data)
-  "Format DATA for eldoc."
-  (let* ((forth   (nim-epc-forth data))
+(defun nim-eldoc--move ()
+  (let ((pos  (point))
+        (ppss (syntax-ppss)))
+    (when (nim-eldoc-inside-paren-p)
+      (goto-char (nth 1 ppss))
+      (when (looking-back nim-eldoc--skip-regex nil)
+        (goto-char pos)))))
+
+(defun nim-eldoc-inside-paren-p ()
+  (save-excursion
+    (let ((ppss (syntax-ppss)))
+      (and (< 0 (nth 0 ppss))
+           (eq ?\( (char-after (nth 1 ppss)))))))
+
+(defun nim-eldoc-same-try-p ()
+  (or (and (equal (nim-current-symbol)
+                  (assoc-default :name nim-eldoc--data))
+           (eq (assoc-default :line nim-eldoc--data)
+               (line-number-at-pos)))
+      (and (nim-eldoc-inside-paren-p)
+           (save-excursion
+             (nim-eldoc--move)
+             (or
+              ;; for template
+              (eq (point) (assoc-default :pos nim-eldoc--data))
+              ;; for proc
+              (eq (1- (point)) (assoc-default :pos nim-eldoc--data)))))))
+
+(defun nim-eldoc--update (defs)
+  (if defs
+      (nim-eldoc--update-1 defs)
+    (save-excursion
+      (when (nim-eldoc-inside-paren-p)
+        (nim-eldoc--move)
+        (backward-char)
+        (nim-call-epc 'dus 'nim-eldoc--update-1)))))
+
+(defun nim-eldoc--update-1 (defs)
+  (when defs
+    (setq nim-eldoc--data
+          (list
+           (cons :str  (nim-eldoc-format-string defs))
+           (cons :line (line-number-at-pos))
+           (cons :name (nim-current-symbol))
+           (cons :pos  (point))))
+    (setq eldoc-last-message (assoc-default :str nim-eldoc--data))
+    (message eldoc-last-message)))
+
+(defun nim-eldoc-format-string (defs)
+  "Format data inside DEFS for eldoc.
+DEFS is group of definitions from nimsuggest."
+  (let* ((data    (cl-first defs))
+         (forth   (nim-epc-forth data))
          (symKind (nim-epc-symkind data))
          (qpath   (nim-epc-qualifiedPath data))
          (doc (mapconcat 'identity
@@ -63,25 +114,43 @@
           (if (eq (length (cdr qpath)) 1)
               (cadr qpath)
             (mapconcat 'identity (cdr qpath) "."))))
-    (when name
-      (add-text-properties
-       0 (length name)
-       '(face font-lock-function-name-face)
-       name))
-    (pcase (cons symKind nil)
-      (`(,(or "skProc" "skField") . ,_)
+    (nim-eldoc-put-face doc font-lock-doc-face)
+    (pcase (list symKind)
+      (`(,(or "skProc" "skField" "skTemplate" "skMacro"))
        (when (string< "" forth)
          (cl-destructuring-bind (ptype . typeinfo) (nim-eldoc-parse forth)
            (when (equal "proc" ptype)
+             (nim-eldoc-put-face name font-lock-function-name-face)
              (let* ((func  (format "%s %s" name typeinfo)))
                (nim-eldoc-trim
                 (if (string= "" doc)
                     (format "%s" func)
                   (format "%s %s" func doc))))))))
-      (`("skType" . ,_)
+      (`(,(or "skVar" "skLet" "skConst" "skResult" "skParam"))
+       (let ((sym (downcase (substring symKind 2 (length symKind)))))
+         (nim-eldoc-put-face sym font-lock-keyword-face)
+         (nim-eldoc-put-face name
+                             (cond ((member symKind '("skVar" "skResult"))
+                                    '(face font-lock-variable-name-face))
+                                   ((member symKind '("skLet" "skConst"))
+                                    '(face font-lock-constant-face))
+                                   (t '(face font-lock-keyword-face))))
+         (nim-eldoc-trim
+          (format "%s %s : %s" sym name
+                  (cond
+                   ((string< "" forth) forth)
+                   ((string= "" forth)
+                    (cl-loop for def in defs
+                             if (string< "" (nim-epc-forth def))
+                             do (cl-return (nim-epc-forth def))
+                             finally return "no doc"))
+                   ;; just in case
+                   (t "no doc"))))))
+      (`("skType")
+       (nim-eldoc-put-face name font-lock-type-face)
        (nim-eldoc-trim
         (if (not (string< "" doc))
-            (format "there is no doc for %s" name)
+            (format "%s: no doc" name)
           (format "%s: %s" name doc)))))))
 
 (defun nim-eldoc-parse (forth)
@@ -92,6 +161,13 @@
     (let ((first (match-string 1 forth))
           (other (match-string 2 forth)))
       (cons first other))))
+
+(defun nim-eldoc-put-face (text face)
+  (when (and text (string< "" text))
+    (add-text-properties
+     0 (length text)
+     `(face ,face)
+     text)))
 
 (defun nim-eldoc-trim (str)
   "Adjust STR for mini buffer."
