@@ -55,8 +55,9 @@
      (1 font-lock-constant-face prepend))
     ;; Highlight $# and $[0-9]+ inside string
     (nim-format-$-matcher . (1 font-lock-preprocessor-face prepend))
-    ;; highlight word after ‘is’
-    (,(nim-rx " " symbol-start "is" symbol-end (1+ " ") (group identifier))
+    ;; Highlight word after ‘is’ and ‘distinct’
+    (,(nim-rx " " symbol-start (or "is" "distinct") symbol-end (1+ " ")
+              (group identifier))
      (1 font-lock-type-face)))
   "Extra font-lock keywords.
 If you feel uncomfortable because of this font-lock keywords,
