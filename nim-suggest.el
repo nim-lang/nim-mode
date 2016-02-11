@@ -67,7 +67,8 @@ hierarchy, starting from CURRENT-DIR"
                    nil)))
         (let ((epc-process (epc:start-epc
                             nim-nimsuggest-path
-                            (append nim-suggest-options (list main-file)))))
+                            (append nim-suggest-options
+                                    (list "--epc" "--verbosity:0" main-file)))))
           (push (cons main-file epc-process) nim-epc-processes-alist)
           epc-process))))
 
