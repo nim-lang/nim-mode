@@ -7,11 +7,12 @@
 
 ;;; Completion
 
-
+(require 'nim-vars)
 (require 'epc)
 (require 'cl-lib)
 
-(defcustom nim-nimsuggest-path nil "Path to the nimsuggest binary."
+(defcustom nim-nimsuggest-path (executable-find "nimsuggest")
+  "Path to the nimsuggest binary."
   :type 'string
   :group 'nim)
 
@@ -64,7 +65,10 @@ hierarchy, starting from CURRENT-DIR"
               epc-process
             (progn (setq nim-epc-processes-alist (assq-delete-all main-file nim-epc-processes-alist))
                    nil)))
-        (let ((epc-process (epc:start-epc nim-nimsuggest-path (list "--verbosity:0" "--epc" main-file))))
+        (let ((epc-process (epc:start-epc
+                            nim-nimsuggest-path
+                            (append nim-suggest-options
+                                    (list "--epc" "--verbosity:0" main-file)))))
           (push (cons main-file epc-process) nim-epc-processes-alist)
           epc-process))))
 
