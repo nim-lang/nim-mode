@@ -178,8 +178,8 @@
  (test-faces-by-range
   "should highlight pragmas"
   (test-concat-dir "tests/syntax/pragma.nim")
-  '(((31 . 41)  . nim-font-lock-pragma-face)
-    ((79 . 86)  . nim-font-lock-pragma-face)))
+  '(((31 . 40)  . nim-font-lock-pragma-face)
+    ((79 . 85)  . nim-font-lock-pragma-face)))
 
  ;; docstring
  (test-faces-by-range
@@ -219,6 +219,37 @@
   (test-concat-dir "tests/syntax/varargs.nim")
   '(((55 . 61) . font-lock-type-face)))
 
+
+ ;; backticks in comment
+ (test-faces-by-range
+  "should highlight words inside backticks correctly"
+  (test-concat-dir "tests/syntax/backtick.nim")
+  '(((99 . 116) . font-lock-constant-face)
+    ((122 . 141) . font-lock-constant-face)
+    ((147 . 164) . font-lock-constant-face)
+    ((170 . 189) . font-lock-constant-face)
+    ((195 . 212) . font-lock-constant-face)
+    ((218 . 237) . font-lock-constant-face)
+    ((247 . 264) . font-lock-constant-face)
+    ((270 . 289) . font-lock-constant-face)
+    ((321 . 338) . font-lock-constant-face)
+    ((340 . 359) . font-lock-constant-face)))
+
+ ;; $# and $[1-9]
+ (test-faces-by-range
+  "should highlight $# and $[1-9] inside string correctly"
+  (test-concat-dir "tests/syntax/format.nim")
+  '(((84 . 85) . font-lock-preprocessor-face)
+    ((89 . 90) . font-lock-preprocessor-face)
+    ((94 . 95) . font-lock-preprocessor-face)))
+
+ ;; after ‘is’ operator and ‘distinct’
+ (test-faces-by-range
+  "should highlight after is operator correctly"
+  (test-concat-dir "tests/syntax/test_is_and_distinct.nim")
+  '(((132 . 142) . font-lock-type-face)
+    ((202 . 212) . font-lock-type-face)
+    ((282 . 293) . font-lock-type-face)))
 
  ) ; end of describe function
 

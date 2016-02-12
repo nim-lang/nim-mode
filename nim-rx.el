@@ -149,6 +149,26 @@ This variant of `rx' supports common nim named REGEXPS."
                      (nim-rx
                       (group (or (and (in "fF") (or "32" "64" "128")) (in "dD"))))))
 
+  (add-to-list 'nim-rx-constituents
+               (cons 'nim-numbers
+                     (nim-rx
+                      symbol-start
+                      (or
+                       ;; float hex
+                       (group (group hex-lit)
+                              ;; "'" isn’t optional
+                              (group "'" float-suffix))
+                       ;; float
+                       (group (group (or float-lit dec-lit oct-lit bin-lit))
+                              (group (? "'") float-suffix))
+                       ;; u?int
+                       (group
+                        (group int-lit)
+                        (? (group (? "'")
+                                  (or (and (in "uUiI") (or "8" "16" "32" "64"))
+                                      (in "uU"))))))
+                      symbol-end)))
+
   ;; pragma
   (add-to-list
    'nim-rx-constituents
@@ -165,6 +185,63 @@ This variant of `rx' supports common nim named REGEXPS."
 
   (add-to-list 'nim-rx-constituents
                (cons 'block-start (nim-rx (or decl-block block-start-defun))))
+
+  (add-to-list 'nim-rx-constituents
+               (cons 'font-lock-defun
+                     (nim-rx defun
+                             (? (group (1+ " ") (or identifier quoted-chars)
+                                       (0+ " ") (? (group "*"))))
+                             (? (minimal-match
+                                 (group (0+ " ") "[" (0+ (or any "\n")) "]")))
+                             (? (minimal-match
+                                 (group (0+ " ") "(" (0+ (or any "\n")) ")")))
+                             ;; return type
+                             (? (group (0+ " ") ":" (0+ " ")
+                                       (? (group "var " (0+ " ")))
+                                       (? (group (or "ref" "ptr") " " (* " ")))
+                                       (group identifier))))))
+
+  (add-to-list 'nim-rx-constituents
+               (cons 'colon-type
+                     (nim-rx (or identifier quoted-chars) (? "*")
+                             (* " ") ":" (* " ")
+                             (? (and "var " (0+ " ")))
+                             (? (group (and (or "ref" "ptr") " " (* " "))))
+                             (group identifier))))
+
+  (add-to-list 'nim-rx-constituents
+               (cons 'backquoted-chars
+                     (rx
+                      (syntax expression-prefix)
+                      (minimal-match (1+ (not (syntax comment-end))))
+                      (syntax expression-prefix))))
+
+  (add-to-list 'nim-rx-constituents
+               (cons 'backticks
+                     (nim-rx
+                      (or line-start " " (syntax open-parenthesis))
+                      (group (or (group (syntax expression-prefix)
+                                        backquoted-chars
+                                        (syntax expression-prefix))
+                                 (group backquoted-chars)))
+                      (or " "
+                          line-end
+                          (syntax punctuation)
+                          (syntax comment-end)
+                          (syntax symbol)
+                          (syntax open-parenthesis)
+                          (syntax close-parenthesis)))))
+
+  (add-to-list 'nim-rx-constituents
+               (cons 'font-lock-export
+                     (nim-rx line-start (1+ " ")
+                             (group
+                              (or identifier quoted-chars) "*"
+                              (? (and "[" word "]"))
+                              (0+ (and "," (? (0+ " "))
+                                       (or identifier quoted-chars) "*")))
+                             (0+ " ") (or ":" "{." "=") (0+ nonl)
+                             line-end)))
 
   ) ; end of eval-and-compile
 

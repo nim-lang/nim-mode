@@ -26,76 +26,50 @@
 
 (defconst nim-font-lock-keywords
   `((,(nim-rx (1+ "\t")) . 'nim-tab-face)
-    (,(nim-rx defun
-              (? (group (1+ " ") (or identifier quoted-chars)
-                        (0+ " ") (? (group "*"))))
-              (? (minimal-match
-                  (group (0+ " ") "[" (0+ (or any "\n")) "]")))
-              (? (minimal-match
-                  (group (0+ " ") "(" (0+ (or any "\n")) ")")))
-              (? (group (0+ " ") ":" (0+ " ")
-                        (? (group (or "ref" "ptr") " " (* " ")))
-                        (group identifier))))
+    (nim-proc-matcher
      (1 (if (match-string 2)
             'nim-font-lock-export-face
           font-lock-function-name-face)
         keep t)
-     (7 font-lock-type-face keep t))
+     (8 font-lock-type-face keep t))
     ;; Highlight type words
-    (,(nim-rx (or identifier quoted-chars) (? "*")
-              (* " ") ":" (* " ")
-              (? (and "var " (0+ " ")))
-              (? (group (and (or "ref" "ptr") " " (* " "))))
-              (group identifier))
+    (nim-type-matcher
      (1 font-lock-keyword-face keep t)
-     (2 (if (< 0 (nth 0 (syntax-ppss)))
-            font-lock-type-face
-          'default)
-        keep))
+     (2 font-lock-type-face keep))
     ;; This only works if it’s one line
     (,(nim-rx (or "var" "let" "const" "type") (1+ " ")
               (group (or identifier quoted-chars) (? " ") (? (group "*"))))
      . (1 (if (match-string 2)
               'nim-font-lock-export-face
-            font-lock-variable-name-face)))
-    ;; For multiple line properties
-    (,(nim-rx line-start (1+ " ")
-              (group
-               (or identifier quoted-chars) "*"
-               (? (and "[" word "]"))
-               (0+ (and "," (? (0+ " "))
-                        (or identifier quoted-chars) "*")))
-              (0+ " ") (or ":" "{." "=") (0+ nonl)
-              line-end)
-     . (1 'nim-font-lock-export-face))
+            font-lock-variable-name-face))))
+  "Font lock expressions for Nim mode.")
+
+(defvar nim-font-lock-keywords-extra
+  `(;; export properties
+    (,(nim-rx font-lock-export) . (1 'nim-font-lock-export-face))
     ;; Number literal
-    (,(nim-rx ; u?int
-       (group int-lit)
-       (? (group (? "'") (or (and (in "uUiI") (or "8" "16" "32" "64"))
-                             (in "uU")))))
-     (1 'nim-font-lock-number-face)
-     (2 font-lock-type-face nil t))
-    (,(nim-rx ; float
-       (group (or float-lit dec-lit oct-lit bin-lit))
-              (? (group (? "'") float-suffix)))
-     (1 'nim-font-lock-number-face)
-     (2 font-lock-type-face t t)  ; exponential
-     (3 font-lock-type-face t t)) ; type
-    (,(nim-rx ; float hex
-       (group hex-lit)
-       (? (group "'" float-suffix))) ; "'" isn’t optional
-     (1 'nim-font-lock-number-face)
-     (3 font-lock-type-face nil t))
-    ;; other keywords
-    (,(nim-rx (or exception type)) . font-lock-type-face)
+    (nim-number-matcher
+     (0 'nim-font-lock-number-face))
+    ;; Highlight ``identifier``
+    (nim-backtick-matcher
+     (1 font-lock-constant-face prepend))
+    ;; Highlight $# and $[0-9]+ inside string
+    (nim-format-$-matcher . (1 font-lock-preprocessor-face prepend))
+    ;; Highlight word after ‘is’ and ‘distinct’
+    (,(nim-rx " " symbol-start (or "is" "distinct") symbol-end (1+ " ")
+              (group identifier))
+     (1 font-lock-type-face)))
+  "Extra font-lock keywords.
+If you feel uncomfortable because of this font-lock keywords,
+set nil to this value by ‘nim-mode-init-hook’.")
+
+(defconst nim-font-lock-keywords-2
+  `((,(nim-rx (or exception type)) . font-lock-type-face)
     (,(nim-rx constant) . font-lock-constant-face)
     (,(nim-rx builtin) . font-lock-builtin-face)
     (,(nim-rx keyword) . font-lock-keyword-face)
-    ;; Result
     (,(rx symbol-start "result" symbol-end) . font-lock-variable-name-face)
-    ;; pragma
-    (,(nim-rx pragma) . (0 'nim-font-lock-pragma-face keep)))
-  "Font lock expressions for Nim mode.")
+    (nim-pragma-matcher . (4 'nim-font-lock-pragma-face))))
 
 (defsubst nim-syntax-count-quotes (quote-char &optional point limit)
   "Count number of quotes around point (max is 3).
@@ -257,6 +231,136 @@ character address of the specified TYPE."
   "Return non-nil if char after point is a closing paren."
   (= (syntax-class (syntax-after (point)))
      (syntax-class (string-to-syntax ")"))))
+
+;;;;;;;;;;;;;;;;;;;;;;;
+;; Highlight matcher
+
+(defun nim-matcher-func (skip-func pred pred2)
+  (let* (data)
+    (catch 'exit
+      (while (not data)
+        (funcall skip-func)
+        (if (funcall pred)
+            (throw 'exit nil)
+          (setq data (match-data))
+          (let ((ppss (save-excursion (syntax-ppss))))
+            (if (funcall pred2 ppss)
+                (setq data nil)
+              ;; ensure match-data
+              (set-match-data data)
+              (throw 'exit data))))))))
+
+(defun nim-skip-comment-and-string ()
+  (forward-comment (point-max))
+  (when (nth 3 (save-excursion (syntax-ppss)))
+    (re-search-forward "\\s|" nil t)))
+
+(defun nim-backtick-matcher (&optional _start-pos)
+  "Highlight matcher for ``symbol`` in comment."
+  (nim-matcher-func
+   (lambda ()
+     (unless (nth 4 (save-excursion (syntax-ppss)))
+       (re-search-forward "\\s<" nil t)))
+   (lambda ()
+     (not (re-search-forward (nim-rx backticks) nil t)))
+   (lambda (ppss) (not (nth 4 ppss)))))
+
+(defun nim-format-$-matcher (&rest _args)
+  "Highlight matcher for $# and $[1-9][0-9]? in string."
+  (nim-matcher-func
+   (lambda ()
+     (forward-comment (point-max))
+     (when (not (nth 3 (save-excursion (syntax-ppss))))
+       (unless (re-search-forward "\\s|" nil t)
+         (throw 'exit nil))))
+   (lambda ()
+     (let ((start (point))
+           (limit (if (re-search-forward "\\s|" nil t)
+                      (point)
+                    nil)))
+       (goto-char start)
+       (not (re-search-forward
+             ;; I think two digit is enough...
+             (rx (group "$" (or "#" (and (in "1-9") (? num))))) limit t))))
+   (lambda (ppss)
+     (not (and (nth 3 ppss)
+               (or (not (eq ?$ (char-after (- (point) 3))))
+                   (and
+                    (member (char-after (- (point) 2))
+                            '(?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
+                    (not (eq ?$ (char-after (- (point) 4)))))))))))
+
+(defun nim-inside-pragma-p (&optional pos)
+  (let ((ppss (save-excursion (syntax-ppss pos))))
+    (when (not (or (nth 3 ppss) (nth 4 ppss)))
+      (let ((ppss9-first (car (nth 9 ppss)))
+            (ppss9-last  (car (last (nth 9 ppss)))))
+
+        (or (when ppss9-first
+              (and (eq ?\{ (char-after ppss9-first))
+                   (eq ?.  (char-after (1+  ppss9-first)))
+                   (1+  ppss9-first)))
+            (when ppss9-last
+              (and (eq ?\{ (char-after ppss9-last))
+                   (eq ?.  (char-after (1+  ppss9-last)))
+                   (1+  ppss9-last))))))))
+
+(defun nim-pragma-matcher (&optional _start-pos)
+  "Highlight pragma."
+  (nim-matcher-func
+   (lambda ()
+     (nim-skip-comment-and-string)
+     (unless (nim-inside-pragma-p)
+       (while (and (not (nim-inside-pragma-p))
+                   (re-search-forward (rx "{.") nil t))
+         (when (nim-syntax-comment-or-string-p)
+           (nim-skip-comment-and-string))))
+     (unless (nim-inside-pragma-p)
+       (throw 'exit nil)))
+   (lambda ()
+     (not (re-search-forward
+           (nim-rx (or (group (or (group (? ".") "}")
+                                  (group "." identifier)))
+                       (group identifier))) nil t)))
+   (lambda (ppss)
+     (cond
+      ((nth 4 ppss)
+       (forward-comment (point-max)) t)
+      ((nth 3 ppss)
+       (re-search-forward "\\s|" nil t) t)
+      ;; if deprecated pragma’s inside skip til close "]"
+      ((eq ?\[ (char-after (car (last (nth 9 ppss)))))
+       (unless (eq ?\] (char-after (point)))
+         (search-forward "]" nil t))
+       t)
+      ((eq ?\( (char-after (car (last (nth 9 ppss)))))
+       (unless (eq ?\) (char-after (point)))
+         (search-forward ")" nil t))
+       t)
+      ((and (not (match-string 1)) (match-string 4)
+            (nim-inside-pragma-p))
+       nil)
+      (t t)))))
+
+(defun nim-type-matcher (&optional _start-pos)
+  (nim-matcher-func
+   'nim-skip-comment-and-string
+   (lambda () (not (re-search-forward (nim-rx colon-type) nil t)))
+   (lambda (ppss)
+     (or (eq (nth 0 ppss) 0)
+         (not (eq ?\( (char-after (nth 1 ppss))))))))
+
+(defun nim-number-matcher (&optional _start-pos)
+  (nim-matcher-func
+   'nim-skip-comment-and-string
+   (lambda () (not (re-search-forward (nim-rx nim-numbers) nil t)))
+   (lambda (ppss) (or (nth 3 ppss) (nth 4 ppss)))))
+
+(defun nim-proc-matcher (&optional _start-pos)
+  (nim-matcher-func
+   'nim-skip-comment-and-string
+   (lambda () (not (re-search-forward (nim-rx font-lock-defun) nil t)))
+   (lambda (ppss) (or (nth 3 ppss) (nth 4 ppss)))))
 
 (provide 'nim-syntax)
 ;;; nim-syntax.el ends here
