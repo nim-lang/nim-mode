@@ -28,6 +28,7 @@
 (require 'nim-suggest)
 (require 'nim-helper)
 (require 'cl-lib)
+(require 'eldoc)
 
 (defvar nim-eldoc--data nil)
 (defvar nim-eldoc--skip-regex

@@ -5,8 +5,101 @@
 (require 'nim-mode)
 (require 'cl-lib)
 
+;; Test functions
+(defun test-concat-dir (filepath)
+   (if noninteractive
+       filepath
+     (defvar-local test-syntax-dir (concat (locate-dominating-file buffer-file-name ".git")))
+     (concat test-syntax-dir filepath)))
+
+(defun test-faces (test-string file-name faces)
+  (it test-string
+      (insert-file-contents-literally file-name)
+      (font-lock-default-fontify-buffer)
+      (dolist (pos-face faces)
+        (expect
+         (get-text-property (car pos-face) 'face)
+         :to-equal
+         (cdr pos-face)))))
+
+(defun test-faces-by-range (test-string file-name spec &optional not)
+  (it test-string
+      (insert-file-contents-literally file-name)
+      (font-lock-default-fontify-buffer)
+      (cl-loop for (place . expected-face) in spec
+               for start = (car place)
+               for end   = (cdr place)
+               do (test-helper-range-expect start end expected-face not))))
+
+(defun test-helper-range-expect (start end face &optional not)
+  "Expect FACE between START and END positions."
+  (cl-loop for pos from start to end
+           do (expect
+               (get-text-property pos 'face)
+               (when not :not)
+               :to-equal
+               face)))
+
+(defun test-characters (test-string file-name)
+  (it test-string
+      (insert-file-contents-literally file-name)
+      (font-lock-default-fontify-buffer)
+      (goto-char (point-min))
+      (search-forward "testCharacters: set[char] = {\n    ")
+      (let* ((limit (+ 128 22 128))    ; to prevent eternal loop
+             char-points
+             after-char-points
+             checked-characters)
+        (catch 'exit
+          (while (and (not (eql 0 limit)))
+            (setq limit (1- limit))
+            (re-search-forward
+             (rx (group "'" (regex "[^']\\{1,4\\}") "'")
+                 (group (or (1+ "," (or blank "\n"))
+                            (and "\n" (* blank) "}")))) nil t)
+            (let ((char       (match-string 1))
+                  (after-char (match-string 2)))
+              (when char
+                (let* ((start (- (point) (+ (length char) (length after-char))))
+                       (end (+ start (1- (length char)))))
+                  (push (cons start end) char-points)
+                  (push (substring-no-properties char) checked-characters)))
+              (when after-char
+                (let* ((start2 (- (point) (length after-char)))
+                       (end2 (1- (point))))
+                  (push (cons start2 end2) after-char-points)))
+              (when (string-match "\\XFF" char)
+                (throw 'exit nil)))))
+        (when char-points
+          (cl-loop for (s . e) in char-points
+                   do (test-helper-range-expect s e 'font-lock-string-face)))
+        (when after-char-points
+          (cl-loop for (s . e) in after-char-points
+                   do (test-helper-range-expect s e 'font-lock-string-face t)))
+        ;; You can check what you checked
+        ;; (print (reverse checked-characters))
+        )))
+
+(defun test-double-quote-and-next-line (test-string file-name start-strings)
+  (let ((file-name file-name)
+        (start-strings start-strings)
+        (check-highlight
+         (lambda (string)
+           (goto-char (point-min))
+           (if (search-forward string nil t)
+               (test-helper-range-expect (point) (1- (point-at-eol)) 'font-lock-string-face)
+             (error (format "Failed to find start string: %s" string)))
+           (when (line-move 1 t)
+             ;; comment line should not be highlighted by 'font-lock-string-face
+             (test-helper-range-expect (1+ (point-at-bol)) (1- (point-at-eol)) 'font-lock-comment-face)))))
+    (it test-string
+        (insert-file-contents-literally file-name)
+        (font-lock-default-fontify-buffer)
+        (cl-loop for string in start-strings
+                 do (funcall check-highlight string)))))
+
 (describe
- "Syntax"
+ "Syntax nim-mode"
  (before-each
   (set-buffer (get-buffer-create "*Test*"))
   (erase-buffer)
@@ -14,98 +107,6 @@
 
  (after-each
   (kill-buffer (get-buffer-create "*Test*")))
-
- (defun test-concat-dir (filepath)
-   (if noninteractive
-       filepath
-     (defvar-local test-syntax-dir (concat (locate-dominating-file buffer-file-name ".git")))
-     (concat test-syntax-dir filepath)))
-
- (defun test-faces (test-string file-name faces)
-   (it test-string
-       (insert-file-contents-literally file-name)
-       (font-lock-default-fontify-buffer)
-       (dolist (pos-face faces)
-         (expect
-          (get-text-property (car pos-face) 'face)
-          :to-equal
-          (cdr pos-face)))))
-
- (defun test-faces-by-range (test-string file-name spec &optional not)
-   (it test-string
-       (insert-file-contents-literally file-name)
-       (font-lock-default-fontify-buffer)
-       (cl-loop for (place . expected-face) in spec
-                for start = (car place)
-                for end   = (cdr place)
-                do (test-helper-range-expect start end expected-face not))))
-
- (defun test-helper-range-expect (start end face &optional not)
-   "Expect FACE between START and END positions."
-   (cl-loop for pos from start to end
-            do (expect
-                (get-text-property pos 'face)
-                (when not :not)
-                :to-equal
-                face)))
-
- (defun test-characters (test-string file-name)
-   (it test-string
-       (insert-file-contents-literally file-name)
-       (font-lock-default-fontify-buffer)
-       (goto-char (point-min))
-       (search-forward "testCharacters: set[char] = {\n    ")
-       (let* ((limit (+ 128 22 128))    ; to prevent eternal loop
-              char-points
-              after-char-points
-              checked-characters)
-         (catch 'exit
-           (while (and (not (eql 0 limit)))
-             (setq limit (1- limit))
-             (re-search-forward
-              (rx (group "'" (regex "[^']\\{1,4\\}") "'")
-                  (group (or (1+ "," (or blank "\n"))
-                             (and "\n" (* blank) "}")))) nil t)
-             (let ((char       (match-string 1))
-                   (after-char (match-string 2)))
-               (when char
-                 (let* ((start (- (point) (+ (length char) (length after-char))))
-                        (end (+ start (1- (length char)))))
-                   (push (cons start end) char-points)
-                   (push (substring-no-properties char) checked-characters)))
-               (when after-char
-                 (let* ((start2 (- (point) (length after-char)))
-                        (end2 (1- (point))))
-                   (push (cons start2 end2) after-char-points)))
-               (when (string-match "\\XFF" char)
-                 (throw 'exit nil)))))
-         (when char-points
-           (cl-loop for (s . e) in char-points
-                    do (test-helper-range-expect s e 'font-lock-string-face)))
-         (when after-char-points
-           (cl-loop for (s . e) in after-char-points
-                    do (test-helper-range-expect s e 'font-lock-string-face t)))
-         ;; You can check what you checked
-         ;; (print (reverse checked-characters))
-         )))
-
- (defun test-double-quote-and-next-line (test-string file-name start-strings)
-   (let ((file-name file-name)
-         (start-strings start-strings)
-         (check-highlight
-          (lambda (string)
-            (goto-char (point-min))
-            (if (search-forward string nil t)
-                (test-helper-range-expect (point) (1- (point-at-eol)) 'font-lock-string-face)
-              (error (format "Failed to find start string: %s" string)))
-            (when (line-move 1 t)
-              ;; comment line should not be highlighted by 'font-lock-string-face
-              (test-helper-range-expect (1+ (point-at-bol)) (1- (point-at-eol)) 'font-lock-comment-face)))))
-     (it test-string
-         (insert-file-contents-literally file-name)
-         (font-lock-default-fontify-buffer)
-         (cl-loop for string in start-strings
-                  do (funcall check-highlight string)))))
 
  ;; String
  (test-faces
@@ -252,6 +253,28 @@
     ((282 . 293) . font-lock-type-face)))
 
  ) ; end of describe function
+
+(describe
+ "Syntax nimscript-mode"
+ (before-each
+  (set-buffer (get-buffer-create "*Test*"))
+  (erase-buffer)
+  (nimscript-mode))
+
+ (after-each
+  (kill-buffer (get-buffer-create "*Test*")))
+
+ (test-faces-by-range
+  "should highlight NimScript keywords correctly"
+  (test-concat-dir "tests/syntax/test_nimscript.nims")
+  '(((38  . 41)  . font-lock-variable-name-face) ; mode
+    ((45  . 54)  . font-lock-type-face)          ; ScriptMode
+    ((78  . 81)  . font-lock-keyword-face)       ; task
+    ((83  . 87)  . font-lock-builtin-face)       ; build
+    ((145 . 149) . font-lock-builtin-face)       ; tests
+    ((207 . 211) . font-lock-builtin-face)       ; bench
+    ((259 . 262) . font-lock-keyword-face)))     ; exec
+ )
 
 ;; Local Variables:
 ;; no-byte-compile: t
