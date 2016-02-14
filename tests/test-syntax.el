@@ -5,17 +5,8 @@
 (require 'nim-mode)
 (require 'cl-lib)
 
-(describe
- "Syntax"
- (before-each
-  (set-buffer (get-buffer-create "*Test*"))
-  (erase-buffer)
-  (nim-mode))
-
- (after-each
-  (kill-buffer (get-buffer-create "*Test*")))
-
- (defun test-concat-dir (filepath)
+;; Test functions
+(defun test-concat-dir (filepath)
    (if noninteractive
        filepath
      (defvar-local test-syntax-dir (concat (locate-dominating-file buffer-file-name ".git")))
@@ -106,6 +97,16 @@
          (font-lock-default-fontify-buffer)
          (cl-loop for string in start-strings
                   do (funcall check-highlight string)))))
+
+(describe
+ "Syntax nim-mode"
+ (before-each
+  (set-buffer (get-buffer-create "*Test*"))
+  (erase-buffer)
+  (nim-mode))
+
+ (after-each
+  (kill-buffer (get-buffer-create "*Test*")))
 
  ;; String
  (test-faces
@@ -252,6 +253,28 @@
     ((282 . 293) . font-lock-type-face)))
 
  ) ; end of describe function
+
+(describe
+ "Syntax nimscript-mode"
+ (before-each
+  (set-buffer (get-buffer-create "*Test*"))
+  (erase-buffer)
+  (nimscript-mode))
+
+ (after-each
+  (kill-buffer (get-buffer-create "*Test*")))
+
+ (test-faces-by-range
+  "should highlight NimScript keywords correctly"
+  (test-concat-dir "tests/syntax/test_nimscript.nims")
+  '(((38  . 41)  . font-lock-variable-name-face) ; mode
+    ((45  . 54)  . font-lock-type-face)          ; ScriptMode
+    ((78  . 81)  . font-lock-keyword-face)       ; task
+    ((83  . 87)  . font-lock-builtin-face)       ; build
+    ((145 . 149) . font-lock-builtin-face)       ; tests
+    ((207 . 211) . font-lock-builtin-face)       ; bench
+    ((259 . 262) . font-lock-keyword-face)))     ; exec
+ )
 
 ;; Local Variables:
 ;; no-byte-compile: t
