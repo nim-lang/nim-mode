@@ -33,3 +33,11 @@ var y = if true:
           echo "bar"
         else:
           echo "buzz"
+
+
+# check indent including `in`
+if s.kind in {skResult, skTemp}:
+  echo "foo"
+
+if true == 1 in (1..10):
+  echo "bar"
