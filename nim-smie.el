@@ -226,6 +226,7 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
                 (if (member "}" (assoc-default :closers nim-smie--line-info))
                     (current-indentation)
                   nim-smie-function-indent))))
+          (nim-traverse)
           (cons 'column (current-indentation))))))
 
 (defun nim-smie--close-all (token)
