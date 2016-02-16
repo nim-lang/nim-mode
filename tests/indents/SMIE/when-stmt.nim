@@ -25,3 +25,14 @@ var y = when true:
           echo "bar"
         else:
           echo "buzz"
+
+
+# check `var` and `else`
+var a = when true: "a"
+        else: "b"
+echo "check this line's indent"
+
+# check `let` and `else`
+let b = when true: "a"
+        else: "b"
+echo "check this line's indent"
