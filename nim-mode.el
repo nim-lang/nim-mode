@@ -141,7 +141,48 @@
 (add-to-list 'electric-indent-functions-without-reindent 'nim-indent-line)
 
 ;;;###autoload
-(add-to-list 'auto-mode-alist '("\\.nim\\(ble\\|s\\)?\\'" . nim-mode))
+(define-derived-mode nimscript-mode nim-mode "NimScript"
+  "A major-mode for NimScript files.
+This major-mode is activated when you enter *.nims and *.nimble
+suffixed files, but if it’s .nimble file, also another logic is
+applied. See also ‘nimscript-mode-maybe’."
+  :group 'nim
+  (setq-local font-lock-defaults
+              `(,(append
+                  nim-font-lock-keywords
+                  nim-font-lock-keywords-extra
+                  nim-font-lock-keywords-2
+                  ;; Add extra keywords for NimScript
+                  nimscript-keywords)
+                nil nil nil nil
+                (font-lock-syntactic-face-function
+                 . nim-font-lock-syntactic-face-function))))
+
+;;;###autoload
+(defun nimscript-mode-maybe ()
+  "Most likely turn on ‘nimscript-mode’.
+In *.nimble files, if the first line sentence matches
+‘nim-nimble-ini-format-regex’, this function activates ‘conf-mode’
+instead.  The default regex’s matching word is [Package]."
+  (interactive)
+  (if (not (buffer-file-name))
+      (nimscript-mode)
+    (let ((extension (file-name-extension (buffer-file-name))))
+      (cond ((equal "nims" extension)
+             (nimscript-mode))
+            ((equal "nimble" extension)
+             (save-excursion
+               (goto-char (point-min))
+               (if (looking-at-p nim-nimble-ini-format-regex)
+                   (conf-mode)
+                 (nimscript-mode))))))))
+
+;;;###autoload
+(add-to-list 'auto-mode-alist
+             '("\\.nim\\'"              . nim-mode))
+;;;###autoload
+(add-to-list 'auto-mode-alist
+             '("\\.nim\\(ble\\|s\\)\\'" . nimscript-mode-maybe))
 
 (defun nim-indent-post-self-insert-function ()
   "Adjust indentation after insertion of some characters.
