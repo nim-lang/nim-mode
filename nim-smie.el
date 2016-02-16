@@ -83,14 +83,14 @@
         ("case" exp "elif" exp "else" ":" stmt)
         ("try" exp "except" exp "except" exp "finally" ":" stmt)
         ("while" any ":" stmt)
-        ("for" exp "in" any ":" stmt)
+        ("for" any ":" stmt)
         ("block" any ":" stmt)))
      ;; You can choose: `assoc', `left', `right' or `nonassoc'.
      '((nonassoc "if" "when" "case" "for" "try")
        (assoc "of") (assoc "elif") (assoc "else"))
      '((assoc "case") (assoc "else") (assoc ":"))
      '((nonassoc "case" "object") (assoc "of"))
-     '((assoc "for") (assoc "in") (assoc ":"))
+     '((assoc "for") (assoc ":"))
      '((assoc "try") (assoc "except") (assoc "finally") (assoc  ":"))
      '((assoc "=") (assoc "object"))
      ;; Functions
