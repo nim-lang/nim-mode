@@ -114,6 +114,8 @@
 (defun nim-mode-smie-rules (kind token)
   "Nim-mode’s indent rules.
 See also ‘smie-rules-function’ about KIND and TOKEN."
+  (if-let ((ind (nim-smie--condition-after-equal-p)))
+      (cons 'column ind)
   (pcase (cons kind token)
     ;; Proc
     (`(:list-intro . "proc") (nim-smie--list-intro-proc))
@@ -172,7 +174,7 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
     ;; other keywords
     (`(:before . ,_))
     ;; Don’t make ambiguous indentation
-    (_ 0)))
+    (_ 0))))
 
 (defun nim-set-force-indent (indent &optional override)
   (when (or override (not (cdr (assoc :force-indent nim-smie--line-info))))
@@ -189,6 +191,18 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
 (defun nim-same-closer-line-p ()
   (if-let ((closer-line (assoc-default :closer-line nim-smie--line-info)))
       (= (line-number-at-pos) closer-line)))
+
+(defun nim-smie--condition-after-equal-p ()
+  "Check something like ’let x = if/when/case’ or not."
+  (let-alist nim-smie--line-info
+    (when (and .first-token.tk (equal "else" .first-token.tk))
+      (let ((parent (and (smie-rule-parent-p "if" "when" "case")
+                         (smie-indent--parent))))
+        (when parent
+          (save-excursion
+            (goto-char (nth 1 parent))
+            (when (looking-back (rx (1+ " " "=" (1+ " "))) nil)
+              (current-indentation))))))))
 
 (defun nim-smie--paren (kind token)
   (cl-case kind
@@ -669,7 +683,18 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
          ((equal tok "=")
           ;; keep info whether this function passed "="
           (when (looking-at (nim-rx "=" (0+ " ") (or comment line-end)))
-            (add-to-list 'nim-smie--line-info (cons 'end-eq t))))))
+            (add-to-list 'nim-smie--line-info (cons 'end-eq t))))
+         ;; if the line is something like ‘else: ...’,
+         ;; set "else" to tok.
+         ((and
+           (not (assoc-default 'first-token nim-smie--line-info))
+           ;; check the else sentence is one line sentence
+           (< (current-indentation) (- (current-column) 5))
+           (not (equal "__after_break" tok)))
+          (let ((data (nim-get-indent-start-p '("else"))))
+            (when data
+              (goto-char (car data))
+              (setq tok "else"))))))
       (unless (assoc-default 'first-token nim-smie--line-info)
         (add-to-list 'nim-smie--line-info
                      (cons 'first-token
