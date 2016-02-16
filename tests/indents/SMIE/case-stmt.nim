@@ -62,3 +62,22 @@ of true:
             echo "b"
 else:
   echo "no"
+
+
+# check `var` and `else`
+var x = "foo"
+var a = case x:
+          of "f": echo "f"
+          of "fo": echo "fo"
+          of "foo": echo "foo"
+          else: "else"
+echo "check this line's indent"
+
+# check `let` and `else`
+let x = "bar"
+let a = case x
+        of "f": echo "f"
+        of "fo": echo "fo"
+        of "foo": echo "foo"
+        else: "else"
+echo "check this line's indent"

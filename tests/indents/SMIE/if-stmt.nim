@@ -41,3 +41,14 @@ if s.kind in {skResult, skTemp}:
 
 if true == 1 in (1..10):
   echo "bar"
+
+
+# check `var` and `else`
+var a = if true: "a"
+        else: "b"
+echo "check this line's indent"
+
+# check `let` and `else`
+let b = if true: "a"
+        else: "b"
+echo "check this line's indent"
