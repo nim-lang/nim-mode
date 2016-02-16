@@ -25,3 +25,14 @@ type
   B* = ref RootObj # check this line's indent
   C* =
     object # check if there is other "object"
+
+
+# check indent after pragma
+type
+  typeA* = proc(): cint {.cdecl.}
+  typeB* = proc(): cint {.cdecl.}
+  typeC* {.importc: "struct emacs_runtime",
+           header: "<emacs-module.h>".} = object
+    size: ptrdiff_t
+    soemthing: proc(): ptr foo {.cdecl.}
+    # check this line's indent
