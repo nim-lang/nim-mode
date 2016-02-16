@@ -116,65 +116,65 @@
 See also ‘smie-rules-function’ about KIND and TOKEN."
   (if-let ((ind (nim-smie--condition-after-equal-p)))
       (cons 'column ind)
-  (pcase (cons kind token)
-    ;; Proc
-    (`(:list-intro . "proc") (nim-smie--list-intro-proc))
-    ;; Parenthesis
-    (`(,(or :before :after) . ,(or "(" "{" "["))
-     (nim-smie--paren kind token))
-    (`(:close-all . ,(or "]" "}" ")"))
-     (nim-smie--close-all token))
-    ;; Comma
-    (`(:before . ",") (nim-smie--comma))
-    ;; "="
-    (`(,(or :before :after :list-intro) . "=")
-     (nim-smie--equal kind))
-    ;; Conditions
-    (`(:list-intro . ,(or "if" "when" "while" "elif" "block" "else" "of"))
-     (nim-smie--list-intro-conditions))
-    ;; object of/ case’s of
-    (`(,_ . "object")
-     (nim-smie--object kind))
-    (`(,_ . "of")
-     (nim-smie--of kind))
-    ;; else
-    (`(:before . "else") (nim-smie-rule-adjust-else-stmt))
-    ;; var/let/const/type/import
-    (`(:after . ,(or "var" "let" "const" "type" "import"))
-     nim-indent-offset)
-    (`(:list-intro . ,(or "var" "let" "const" "type" "import"))
-     (nim-smie--list-intro-vlcti token))
-    ;; enum
-    (`(:before . "enum")
-     (save-excursion (back-to-indentation)
-                     (cons 'column (+ (current-column) nim-indent-offset))))
-    ;; tuple
-    (`(:before . "tuple")
-     ;; ignore tuple inside proc’s args
-     (if (member (nth 2 (smie-indent--parent)) nim-smie--defuns)
-         0
+    (pcase (cons kind token)
+      ;; Proc
+      (`(:list-intro . "proc") (nim-smie--list-intro-proc))
+      ;; Parenthesis
+      (`(,(or :before :after) . ,(or "(" "{" "["))
+       (nim-smie--paren kind token))
+      (`(:close-all . ,(or "]" "}" ")"))
+       (nim-smie--close-all token))
+      ;; Comma
+      (`(:before . ",") (nim-smie--comma))
+      ;; "="
+      (`(,(or :before :after :list-intro) . "=")
+       (nim-smie--equal kind))
+      ;; Conditions
+      (`(:list-intro . ,(or "if" "when" "while" "elif" "block" "else" "of"))
+       (nim-smie--list-intro-conditions))
+      ;; object of/ case’s of
+      (`(,_ . "object")
+       (nim-smie--object kind))
+      (`(,_ . "of")
+       (nim-smie--of kind))
+      ;; else
+      (`(:before . "else") (nim-smie-rule-adjust-else-stmt))
+      ;; var/let/const/type/import
+      (`(:after . ,(or "var" "let" "const" "type" "import"))
+       nim-indent-offset)
+      (`(:list-intro . ,(or "var" "let" "const" "type" "import"))
+       (nim-smie--list-intro-vlcti token))
+      ;; enum
+      (`(:before . "enum")
        (save-excursion (back-to-indentation)
-                       (cons 'column (+ (current-column) nim-indent-offset)))))
-    ;; Colon
-    (`(,(or :before :after :list-intro) . ":")
-     (nim-smie--colon kind token))
-    ;; &
-    (`(,(or :after :list-intro) . "&")
-     (nim-smie--& kind))
-    ;; ‘empty-line-token’
-    (`(:elem . empty-line-token)
-     ;; This has to return token; not indent number.
-     ;; see ‘smie-indent-keyword’.
-     nil)
-    (`(:elem . basic)
-     (current-indentation))
-    ;; break
-    (`(,(or :before :after) . ,(or "break" "__after_break"))
-     (nim-smie--break kind))
-    ;; other keywords
-    (`(:before . ,_))
-    ;; Don’t make ambiguous indentation
-    (_ 0))))
+                       (cons 'column (+ (current-column) nim-indent-offset))))
+      ;; tuple
+      (`(:before . "tuple")
+       ;; ignore tuple inside proc’s args
+       (if (member (nth 2 (smie-indent--parent)) nim-smie--defuns)
+           0
+         (save-excursion (back-to-indentation)
+                         (cons 'column (+ (current-column) nim-indent-offset)))))
+      ;; Colon
+      (`(,(or :before :after :list-intro) . ":")
+       (nim-smie--colon kind token))
+      ;; &
+      (`(,(or :after :list-intro) . "&")
+       (nim-smie--& kind))
+      ;; ‘empty-line-token’
+      (`(:elem . empty-line-token)
+       ;; This has to return token; not indent number.
+       ;; see ‘smie-indent-keyword’.
+       nil)
+      (`(:elem . basic)
+       (current-indentation))
+      ;; break
+      (`(,(or :before :after) . ,(or "break" "__after_break"))
+       (nim-smie--break kind))
+      ;; other keywords
+      (`(:before . ,_))
+      ;; Don’t make ambiguous indentation
+      (_ 0))))
 
 (defun nim-set-force-indent (indent &optional override)
   (when (or override (not (cdr (assoc :force-indent nim-smie--line-info))))
