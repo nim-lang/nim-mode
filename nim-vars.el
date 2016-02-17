@@ -259,11 +259,11 @@ updating.")
   "Nim exceptions defined in <lib/system.nim>.")
 
 (defconst nim-constants
-  '("ismainmodule" "compiledate" "compiletime" "nimversion"
-    "nimmajor" "nimminor" "nimpatch" "cpuendian" "hostos"
-    "hostcpu" "apptype" "inf" "neginf" "nan" "nimvm" "quitsuccess"
-    "quitfailure" "stdin" "stdout" "stderr" "true" "false"
-    "on" "off")
+  '("isMainModule" "CompileDate" "CompileTime" "NimVersion"
+    "NimMajor" "NimMinor" "NimPatch" "NimStackTrace" "cpuEndian" "hostOS"
+    "hostCPU" "appType" "Inf" "NegInf" "NaN" "nimvm" "QuitSuccess"
+    "QuitFailure" "stdin" "stdout" "stderr" "true" "false"
+    "on" "off" "NoFakeVars")
   "Nim constants defined in <lib/system.nim>.")
 
 (defconst nim-nonoverloadable-builtins
