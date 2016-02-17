@@ -278,28 +278,49 @@ updating.")
   "Nim nonoverloadable builtins.")
 
 (defconst nim-builtins
-  '("not" "+" "-" "=" "<" ">" "@" "&" "*"
-    ">=" "<=" "$" ">=%" ">%" "<%" "<=%" "," ":" "==" "/"  "div" "mod"
-    "shr" "shl" "and" "or" "xor" "abs" "+%" "-%" "*%" "/%" "%%" "-+-"
-    "not_in" "is_not" "cmp" "succ" "pred" "inc"
-    "dec" "newseq" "len" "incl" "excl" "card" "ord" "chr" "ze" "ze64"
-    "tou8" "tou16" "tou32" "min" "max" "setlen" "newstring" "add"
-    "compileoption" "del" "delete" "insert" "repr" "tofloat"
-    "tobiggestfloat" "toint" "tobiggestint" "addquitproc" "copy"
-    "zeromem" "copymem" "movemem" "equalmem" "alloc" "alloc0"
-    "realloc" "dealloc" "assert" "swap" "getrefcount" "getoccupiedmem"
-    "getfreemem" "gettotalmem" "countdown" "countup" "items"
-    "enumerate" "isnil" "find" "contains" "pop" "each" "gc_disable"
-    "gc_enable" "gc_fullcollect" "gc_setstrategy"
-    "gc_enablemarkandsweep" "gc_disablemarkandsweep"
-    "gc_getstatistics" "gc_ref" "gc_unref" "accumulateresult" "echo"
-    "newexception" "quit" "open" "reopen" "close" "endoffile"
-    "readchar" "flushfile" "readfile" "write" "readline" "writeln"
-    "getfilesize" "readbytes" "readchars" "readbuffer" "writebytes"
-    "writechars" "writebuffer" "setfilepos" "getfilepos" "lines"
-    "filehandle" "cstringarraytoseq" "getdiscriminant" "selectbranch"
-    "getcurrentexception" "getcurrentexceptionmsg" "likely" "unlikely"
-    )
+  '(; length 1 characters are ignored to highlight
+    "+" "-" "=" "<" ">" "@" "&" "*" "/"
+    ">=" "<=" "$" ">=%" ">%" "<%" "<=%" "==" "+%" "-%" "*%" "/%" "%%"
+    "div" "mod" "shr" "shl" "and" "or" "xor"
+    "not" "notin" "isnot" "cmp" "succ" "pred" "inc"
+    "dec" "newseq" "len" "xlen" "incl" "excl" "card" "ord" "chr" "ze" "ze64"
+    "toU8" "toU16" "toU32" "min" "max" "setLen" "newString" "add"
+    "compileOption" "del" "delete" "insert" "repr" "toFloat"
+    "toBiggestFloat" "toInt" "toBiggestInt" "addQuitProc" "copy"
+    "slurp" "staticRead" "gorge" "staticExec" "instantiationInfo"
+    "currentSourcePath" "raiseAssert" "failedAssertImpl" "assert" "doAssert"
+    "onFailedAssert" "shallow" "eval" "locals"
+    "swap" "getRefcount" "countdown" "countup" "min" "max" "abs" "clamp"
+    "items" "mitems" "pairs" "mpairs" "isNil"
+    "find" "contains" "pop" "fields" "fieldPairs" "each"
+    "accumulateresult" "echo" "debugEcho" "newException"
+    "getTypeInfo" "quit" "open" "reopen" "close" "endOfFile"
+    "readChar" "flushFile" "readAll" "readFile" "write" "writeFile"
+    "readLine" "writeLn" "writeLine"
+    "getFileSize" "readBytes" "readChars" "readBuffer" "writeBytes"
+    "writeChars" "writeBuffer" "setFilePos" "getFilePos" "getFileHandle"
+    "lines" "cstringArrayToSeq" "getDiscriminant" "selectBranch"
+    ;; hasAlloc
+    "safeAdd"
+    ;; hasAlloc && not nimscript && not JS
+    "deepCopy"
+    ;; not nimscirpt
+    "zeroMem" "copyMem" "moveMem" "equalMem"
+    ;; not nimscirpt && hasAlloc
+    "alloc" "createU" "alloc0" "create" "realloc" "resize" "dealloc"
+    "allocShared" "createShareU" "allocShared0" "createShared"
+    "reallocShared" "resizeShared" "deallocShared" "freeShared"
+    "getOccupiedMem" "getFreeMem" "getTotalMem"
+    "GC_disable" "GC_enable" "GC_fullCollect" "GC_setStrategy"
+    "GC_enableMarkAndSweep" "GC_disableMarkAndSweep"
+    "GC_getStatistics" "GC_ref" "GC_unref"
+    ;; not nimscirpt && hasAlloc && hasThreadSupport
+    "getOccupiedSharedMem" "getFreeSharedMem" "getTotalSharedMem"
+    ;; not nimscirpt && Not JS
+    "likely" "unlikely" "rawProc" "rawEnv" "finished"
+    ;; not nimscirpt && not hostOS "standalone" && Not JS
+    "getCurrentException" "getCurrentExceptionMsg" "onRaise"
+    "setCurrentException")
   "Standard library functions fundamental enough to count as builtins.
 Magic functions.")
 
