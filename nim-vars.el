@@ -233,15 +233,18 @@ updating.")
 (defconst nim-types
   '("int" "int8" "int16" "int32" "int64" "uint" "uint8" "uint16" "uint32"
     "uint64" "float" "float32" "float64" "bool" "char" "string" "cstring"
-    "pointer" "ordinal" "nil" "expr" "stmt" "typedesc" "void" "auto" "any"
-    "untyped" "typed" "range" "array" "openarray" "Ordinal" "seq" "set"
-    "tgenericseq" "pgenericseq" "nimstringdesc" "nimstring" "byte" "natural"
-    "positive" "tobject" "pobject"
-    "tresult" "tendian" "taddress" "biggestint" "biggestfloat" "cchar" "cschar"
-    "cshort" "cint" "clong" "clonglong" "cfloat" "cdouble" "clongdouble"
-    "cstringarray" "pfloat32" "pfloat64" "pint64" "pint32"
+    "pointer" "expr" "stmt" "typedesc" "void" "auto" "any"
+    "untyped" "typed" "range" "array" "openArray" "Ordinal" "seq" "set"
+    "TGenericSeq" "PGenericSeq" "NimStringDesc" "NimString" "byte" "Natural"
+    "Positive" "RootObj" "RootRef" "RootEffect" "TimeEffect" "IOEffect"
+    "ReadIOEffect" "WriteIOEffect" "ExecIOEffect"
+    "TResult" "Endianness" "ByteAddress" "BiggestInt" "BiggestFloat"
+    "cchar" "cschar" "cshort" "cint" "clong" "clonglong" "cfloat" "cdouble"
+    "clongdouble" "cstringArray" "PFloat32" "PFloat64" "PInt64" "PInt32"
     "SomeSignedInt" "SomeUnsignedInt" "SomeInteger" "SomeOrdinal" "SomeReal"
-    "SomeNumber" "tgc_strategy" "tfile" "tfilemode")
+    "SomeNumber" "Slice" "shared" "guarded"
+    "NimNode" "GC_Strategy" "File" "FileHandle" "FileMode"
+    "TaintedString" "PFrame" "TFrame")
   "Nim types defined in <lib/system.nim>.")
 
 (defconst nim-exceptions
