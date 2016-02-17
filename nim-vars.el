@@ -301,8 +301,12 @@ updating.")
     "writeChars" "writeBuffer" "setFilePos" "getFilePos" "getFileHandle"
     "lines" "cstringArrayToSeq" "getDiscriminant" "selectBranch"
     ;; hasAlloc
-    "safeAdd"
-    ;; hasAlloc && not nimscript && not JS
+    "safeAdd")
+  "Standard library functions fundamental enough to count as builtins.
+Magic functions.")
+
+(defconst nim-builtins-without-nimscript
+  '(;; hasAlloc && not nimscript && not JS
     "deepCopy"
     ;; not nimscirpt
     "zeroMem" "copyMem" "moveMem" "equalMem"
@@ -321,8 +325,8 @@ updating.")
     ;; not nimscirpt && not hostOS "standalone" && Not JS
     "getCurrentException" "getCurrentExceptionMsg" "onRaise"
     "setCurrentException")
-  "Standard library functions fundamental enough to count as builtins.
-Magic functions.")
+  "Builtin functions copied from system.nim.
+But all those functions can not use in NimScript.")
 
 (defconst nim-operators
   '( "`" "{." ".}" "[" "]" "{" "}" "(" ")" )
