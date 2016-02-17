@@ -97,6 +97,10 @@ set nil to this value by ‘nim-mode-init-hook’.")
    `((,(rx symbol-start "result" symbol-end) . font-lock-variable-name-face)
      (nim-pragma-matcher . (4 'nim-font-lock-pragma-face)))))
 
+(defconst nim-font-lock-keywords-3
+  (list (cons (nim--format-keywords 'nim-builtins-without-nimscript)
+              font-lock-builtin-face)))
+
 (defsubst nim-syntax-count-quotes (quote-char &optional point limit)
   "Count number of quotes around point (max is 3).
 QUOTE-CHAR is the quote char to count.  Optional argument POINT is

@@ -79,7 +79,8 @@
   (setq-local font-lock-defaults
               `(,(append nim-font-lock-keywords
                          nim-font-lock-keywords-extra
-                         nim-font-lock-keywords-2)
+                         nim-font-lock-keywords-2
+                         nim-font-lock-keywords-3)
                 nil nil nil nil
                 (font-lock-syntactic-face-function
                  . nim-font-lock-syntactic-face-function)))
