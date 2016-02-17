@@ -245,14 +245,14 @@ updating.")
   "Nim types defined in <lib/system.nim>.")
 
 (defconst nim-exceptions
-  '("e_base" "easynch" "esynch" "esystem" "eio" "eos"
-    "einvalidlibrary" "eresourceexhausted" "earithmetic" "edivbyzero"
-    "eoverflow" "eaccessviolation" "eassertionfailed" "econtrolc"
-    "einvalidvalue" "eoutofmemory" "einvalidindex" "einvalidfield"
-    "eoutofrange" "estackoverflow" "enoexceptiontoreraise"
-    "einvalidobjectassignment" "einvalidobjectconversion"
-    "efloatingpoint" "efloatinginvalidop" "efloatdivbyzero"
-    "efloatoverflow" "efloatunderflow" "efloatinexact")
+  '("Exception" "SystemError" "IOError" "OSError" "LibraryError"
+    "ResourceExhaustedError" "ArithmeticError" "DivByZeroError" "OverflowError"
+    "AccessViolationError" "AssertionError" "ValueError" "KeyError"
+    "OutOfMemError" "IndexError" "FieldError" "RangeError"
+    "StackOverflowError" "ReraiseError" "ObjectAssignmentError"
+    "ObjectConversionError" "DeadThreadError" "FloatInexactError"
+    "FloatUnderflowError" "FloatingPointError" "FloatInvalidOpError"
+    "FloatDivByZeroError" "FloatOverflowError")
   "Nim exceptions defined in <lib/system.nim>.")
 
 (defconst nim-constants
