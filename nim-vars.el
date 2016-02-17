@@ -66,6 +66,12 @@
   "Font Lock face for pragmas."
   :group 'nim)
 
+(defface nim-non-overloadable-face
+  '((t :inherit font-lock-builtin-face
+       :slant italic))
+  "Font Lock face for nonoverloadable builtins."
+  :group 'nim)
+
 (defface nim-font-lock-number-face
   '((t :slant italic))
   "Font Lock face for numbers."
