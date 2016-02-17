@@ -96,11 +96,9 @@
   "checks if company-nim can complete here"
   (when (derived-mode-p 'nim-mode)
     (let ((thing 'stop))
-      (and
-       (if (company-in-string-or-comment)
-           nil t)
-       (setq thing (substring-no-properties (company-grab-symbol)))
-       (cons thing t)))))
+      (and (not (company-in-string-or-comment))
+           (setq thing (substring-no-properties (company-grab-symbol)))
+           (cons thing t)))))
 
 
 (defun company-nim-annotation (cand)
