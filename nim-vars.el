@@ -220,7 +220,7 @@ It makes underscores and dots word constituent chars.")
   '("addr" "and" "as" "asm" "atomic" "bind" "block" "break" "case"
     "cast" "const" "continue" "converter" "discard" "distinct" "div" "do"
     "elif" "else" "end" "enum" "except" "export" "finally" "for" "from"
-    "generic" "if" "import" "in" "include" "interface" "is" "isnot"
+    "generic" "if" "import" "in" "include" "interface" "isnot"
     "iterator" "lambda" "let" "macro" "method" "mixin" "mod" "nil" "not"
     "notin" "object" "of" "or" "out" "proc" "ptr" "raise" "ref" "return"
     "shared" "shl" "shr" "static" "template" "try" "tuple" "type" "var"
@@ -263,11 +263,16 @@ updating.")
     "on" "off")
   "Nim constants defined in <lib/system.nim>.")
 
+(defconst nim-nonoverloadable-builtins
+  '("declared" "defined" "definedInScope" "compiles" "low" "high" "sizeOf"
+    "is" "of" "shallowCopy" "getAst" "astToStr" "spawn" "procCall")
+  "Nim nonoverloadable builtins.")
+
 (defconst nim-builtins
-  '("defined" "definedinscope" "not" "+" "-" "=" "<" ">" "@" "&" "*"
+  '("not" "+" "-" "=" "<" ">" "@" "&" "*"
     ">=" "<=" "$" ">=%" ">%" "<%" "<=%" "," ":" "==" "/"  "div" "mod"
     "shr" "shl" "and" "or" "xor" "abs" "+%" "-%" "*%" "/%" "%%" "-+-"
-    "not_in" "is_not" "cmp" "high" "low" "sizeof" "succ" "pred" "inc"
+    "not_in" "is_not" "cmp" "succ" "pred" "inc"
     "dec" "newseq" "len" "incl" "excl" "card" "ord" "chr" "ze" "ze64"
     "tou8" "tou16" "tou32" "min" "max" "setlen" "newstring" "add"
     "compileoption" "del" "delete" "insert" "repr" "tofloat"
