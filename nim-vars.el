@@ -258,6 +258,10 @@ updating.")
     "FloatDivByZeroError" "FloatOverflowError")
   "Nim exceptions defined in <lib/system.nim>.")
 
+(defconst nim-variables
+  '("programResult" "globalRaiseHook" "localRaiseHook" "outOfMemHook")
+  "Nim variables defined in <lib/system.nim>.")
+
 (defconst nim-constants
   '("isMainModule" "CompileDate" "CompileTime" "NimVersion"
     "NimMajor" "NimMinor" "NimPatch" "NimStackTrace" "cpuEndian" "hostOS"
