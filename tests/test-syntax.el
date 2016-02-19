@@ -254,6 +254,7 @@
 
  ) ; end of describe function
 
+(require 'nimscript-mode)
 (describe
  "Syntax nimscript-mode"
  (before-each
