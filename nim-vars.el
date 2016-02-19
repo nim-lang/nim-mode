@@ -66,6 +66,12 @@
   "Font Lock face for pragmas."
   :group 'nim)
 
+(defface nim-non-overloadable-face
+  '((t :inherit font-lock-builtin-face
+       :slant italic))
+  "Font Lock face for nonoverloadable builtins."
+  :group 'nim)
+
 (defface nim-font-lock-number-face
   '((t :slant italic))
   "Font Lock face for numbers."
@@ -136,6 +142,10 @@ epc function."
   :type '(choice (repeat :tag "List of options" string)
                  (const :tag "" nil))
   :group 'nim)
+
+(defvar nim-suggest-ignore-dir-regex
+  (rx (or "\\" "/") (in "nN") "im" (or "\\" "/") "compiler" (or "\\" "/")))
+(defvar nim-inside-compiler-dir-p nil)
 
 (defvar nim-mode-map
   (let ((map (make-sparse-keymap)))
@@ -214,7 +224,7 @@ It makes underscores and dots word constituent chars.")
   '("addr" "and" "as" "asm" "atomic" "bind" "block" "break" "case"
     "cast" "const" "continue" "converter" "discard" "distinct" "div" "do"
     "elif" "else" "end" "enum" "except" "export" "finally" "for" "from"
-    "generic" "if" "import" "in" "include" "interface" "is" "isnot"
+    "generic" "if" "import" "in" "include" "interface" "isnot"
     "iterator" "lambda" "let" "macro" "method" "mixin" "mod" "nil" "not"
     "notin" "object" "of" "or" "out" "proc" "ptr" "raise" "ref" "return"
     "shared" "shl" "shr" "static" "template" "try" "tuple" "type" "var"
@@ -227,61 +237,100 @@ updating.")
 (defconst nim-types
   '("int" "int8" "int16" "int32" "int64" "uint" "uint8" "uint16" "uint32"
     "uint64" "float" "float32" "float64" "bool" "char" "string" "cstring"
-    "pointer" "ordinal" "nil" "expr" "stmt" "typedesc" "void" "auto" "any"
-    "untyped" "typed" "range" "array" "openarray" "Ordinal" "seq" "set"
-    "tgenericseq" "pgenericseq" "nimstringdesc" "nimstring" "byte" "natural"
-    "positive" "tobject" "pobject"
-    "tresult" "tendian" "taddress" "biggestint" "biggestfloat" "cchar" "cschar"
-    "cshort" "cint" "clong" "clonglong" "cfloat" "cdouble" "clongdouble"
-    "cstringarray" "pfloat32" "pfloat64" "pint64" "pint32"
+    "pointer" "expr" "stmt" "typedesc" "void" "auto" "any"
+    "untyped" "typed" "range" "array" "openArray" "Ordinal" "seq" "set"
+    "TGenericSeq" "PGenericSeq" "NimStringDesc" "NimString" "byte" "Natural"
+    "Positive" "RootObj" "RootRef" "RootEffect" "TimeEffect" "IOEffect"
+    "ReadIOEffect" "WriteIOEffect" "ExecIOEffect"
+    "TResult" "Endianness" "ByteAddress" "BiggestInt" "BiggestFloat"
+    "cchar" "cschar" "cshort" "cint" "clong" "clonglong" "cfloat" "cdouble"
+    "clongdouble" "cstringArray" "PFloat32" "PFloat64" "PInt64" "PInt32"
     "SomeSignedInt" "SomeUnsignedInt" "SomeInteger" "SomeOrdinal" "SomeReal"
-    "SomeNumber" "tgc_strategy" "tfile" "tfilemode")
+    "SomeNumber" "Slice" "shared" "guarded"
+    "NimNode" "GC_Strategy" "File" "FileHandle" "FileMode"
+    "TaintedString" "PFrame" "TFrame")
   "Nim types defined in <lib/system.nim>.")
 
 (defconst nim-exceptions
-  '("e_base" "easynch" "esynch" "esystem" "eio" "eos"
-    "einvalidlibrary" "eresourceexhausted" "earithmetic" "edivbyzero"
-    "eoverflow" "eaccessviolation" "eassertionfailed" "econtrolc"
-    "einvalidvalue" "eoutofmemory" "einvalidindex" "einvalidfield"
-    "eoutofrange" "estackoverflow" "enoexceptiontoreraise"
-    "einvalidobjectassignment" "einvalidobjectconversion"
-    "efloatingpoint" "efloatinginvalidop" "efloatdivbyzero"
-    "efloatoverflow" "efloatunderflow" "efloatinexact")
+  '("Exception" "SystemError" "IOError" "OSError" "LibraryError"
+    "ResourceExhaustedError" "ArithmeticError" "DivByZeroError" "OverflowError"
+    "AccessViolationError" "AssertionError" "ValueError" "KeyError"
+    "OutOfMemError" "IndexError" "FieldError" "RangeError"
+    "StackOverflowError" "ReraiseError" "ObjectAssignmentError"
+    "ObjectConversionError" "DeadThreadError" "FloatInexactError"
+    "FloatUnderflowError" "FloatingPointError" "FloatInvalidOpError"
+    "FloatDivByZeroError" "FloatOverflowError")
   "Nim exceptions defined in <lib/system.nim>.")
 
+(defconst nim-variables
+  '("programResult" "globalRaiseHook" "localRaiseHook" "outOfMemHook"
+    ;; not nimscript
+    "stdin" "stdout" "stderr")
+  "Nim variables defined in <lib/system.nim>.")
+
 (defconst nim-constants
-  '("ismainmodule" "compiledate" "compiletime" "nimversion"
-    "nimmajor" "nimminor" "nimpatch" "cpuendian" "hostos"
-    "hostcpu" "apptype" "inf" "neginf" "nan" "nimvm" "quitsuccess"
-    "quitfailure" "stdin" "stdout" "stderr" "true" "false"
-    "on" "off")
+  '("isMainModule" "CompileDate" "CompileTime" "NimVersion"
+    "NimMajor" "NimMinor" "NimPatch" "NimStackTrace" "cpuEndian" "hostOS"
+    "hostCPU" "appType" "Inf" "NegInf" "NaN" "nimvm" "QuitSuccess"
+    "QuitFailure" "true" "false" "nil"
+    "on" "off" "NoFakeVars")
   "Nim constants defined in <lib/system.nim>.")
 
+(defconst nim-nonoverloadable-builtins
+  '("declared" "defined" "definedInScope" "compiles" "low" "high" "sizeOf"
+    "is" "of" "shallowCopy" "getAst" "astToStr" "spawn" "procCall")
+  "Nim nonoverloadable builtins.")
+
 (defconst nim-builtins
-  '("defined" "definedinscope" "not" "+" "-" "=" "<" ">" "@" "&" "*"
-    ">=" "<=" "$" ">=%" ">%" "<%" "<=%" "," ":" "==" "/"  "div" "mod"
-    "shr" "shl" "and" "or" "xor" "abs" "+%" "-%" "*%" "/%" "%%" "-+-"
-    "not_in" "is_not" "cmp" "high" "low" "sizeof" "succ" "pred" "inc"
-    "dec" "newseq" "len" "incl" "excl" "card" "ord" "chr" "ze" "ze64"
-    "tou8" "tou16" "tou32" "min" "max" "setlen" "newstring" "add"
-    "compileoption" "del" "delete" "insert" "repr" "tofloat"
-    "tobiggestfloat" "toint" "tobiggestint" "addquitproc" "copy"
-    "zeromem" "copymem" "movemem" "equalmem" "alloc" "alloc0"
-    "realloc" "dealloc" "assert" "swap" "getrefcount" "getoccupiedmem"
-    "getfreemem" "gettotalmem" "countdown" "countup" "items"
-    "enumerate" "isnil" "find" "contains" "pop" "each" "gc_disable"
-    "gc_enable" "gc_fullcollect" "gc_setstrategy"
-    "gc_enablemarkandsweep" "gc_disablemarkandsweep"
-    "gc_getstatistics" "gc_ref" "gc_unref" "accumulateresult" "echo"
-    "newexception" "quit" "open" "reopen" "close" "endoffile"
-    "readchar" "flushfile" "readfile" "write" "readline" "writeln"
-    "getfilesize" "readbytes" "readchars" "readbuffer" "writebytes"
-    "writechars" "writebuffer" "setfilepos" "getfilepos" "lines"
-    "filehandle" "cstringarraytoseq" "getdiscriminant" "selectbranch"
-    "getcurrentexception" "getcurrentexceptionmsg" "likely" "unlikely"
-    )
+  '(; length 1 characters are ignored to highlight
+    "+" "-" "=" "<" ">" "@" "&" "*" "/"
+    ">=" "<=" "$" ">=%" ">%" "<%" "<=%" "==" "+%" "-%" "*%" "/%" "%%"
+    "div" "mod" "shr" "shl" "and" "or" "xor"
+    "not" "notin" "isnot" "cmp" "succ" "pred" "inc"
+    "dec" "newseq" "len" "xlen" "incl" "excl" "card" "ord" "chr" "ze" "ze64"
+    "toU8" "toU16" "toU32" "min" "max" "setLen" "newString" "add"
+    "compileOption" "del" "delete" "insert" "repr" "toFloat"
+    "toBiggestFloat" "toInt" "toBiggestInt" "addQuitProc" "copy"
+    "slurp" "staticRead" "gorge" "staticExec" "instantiationInfo"
+    "currentSourcePath" "raiseAssert" "failedAssertImpl" "assert" "doAssert"
+    "onFailedAssert" "shallow" "eval" "locals"
+    "swap" "getRefcount" "countdown" "countup" "min" "max" "abs" "clamp"
+    "items" "mitems" "pairs" "mpairs" "isNil"
+    "find" "contains" "pop" "fields" "fieldPairs" "each"
+    "accumulateresult" "echo" "debugEcho" "newException"
+    "getTypeInfo" "quit" "open" "reopen" "close" "endOfFile"
+    "readChar" "flushFile" "readAll" "readFile" "write" "writeFile"
+    "readLine" "writeLn" "writeLine"
+    "getFileSize" "readBytes" "readChars" "readBuffer" "writeBytes"
+    "writeChars" "writeBuffer" "setFilePos" "getFilePos" "getFileHandle"
+    "lines" "cstringArrayToSeq" "getDiscriminant" "selectBranch"
+    ;; hasAlloc
+    "safeAdd")
   "Standard library functions fundamental enough to count as builtins.
 Magic functions.")
+
+(defconst nim-builtins-without-nimscript
+  '(;; hasAlloc && not nimscript && not JS
+    "deepCopy"
+    ;; not nimscirpt
+    "zeroMem" "copyMem" "moveMem" "equalMem"
+    ;; not nimscirpt && hasAlloc
+    "alloc" "createU" "alloc0" "create" "realloc" "resize" "dealloc"
+    "allocShared" "createShareU" "allocShared0" "createShared"
+    "reallocShared" "resizeShared" "deallocShared" "freeShared"
+    "getOccupiedMem" "getFreeMem" "getTotalMem"
+    "GC_disable" "GC_enable" "GC_fullCollect" "GC_setStrategy"
+    "GC_enableMarkAndSweep" "GC_disableMarkAndSweep"
+    "GC_getStatistics" "GC_ref" "GC_unref"
+    ;; not nimscirpt && hasAlloc && hasThreadSupport
+    "getOccupiedSharedMem" "getFreeSharedMem" "getTotalSharedMem"
+    ;; not nimscirpt && Not JS
+    "likely" "unlikely" "rawProc" "rawEnv" "finished"
+    ;; not nimscirpt && not hostOS "standalone" && Not JS
+    "getCurrentException" "getCurrentExceptionMsg" "onRaise"
+    "setCurrentException")
+  "Builtin functions copied from system.nim.
+But all those functions can not use in NimScript.")
 
 (defconst nim-operators
   '( "`" "{." ".}" "[" "]" "{" "}" "(" ")" )
@@ -290,24 +339,20 @@ Magic functions.")
 ;; Nimscript
 (defvar nim-nimble-ini-format-regex (rx line-start "[Package]"))
 
-(defconst nimscript-keywords
-  `((,(rx (group symbol-start "task" symbol-end) (1+ " ")
-          (? (group  symbol-start (or "build" "tests" "bench") symbol-end)))
-     (1 font-lock-keyword-face)
-     (2 font-lock-builtin-face nil t))
-    (,(rx (group symbol-start
-                 ;; Just picked up only no upper case functions.
-                 (or "cd" "exec" "cmpic" "put" "get" "exists" "log"
-                     "strip" "switch" "requires")
-                 symbol-end))
-     (0 font-lock-keyword-face))
-    ("\\_<ScriptMode\\_>"
-     (0 font-lock-type-face))
-    (,(rx symbol-start
-          (or "packageName" "version" "author" "description" "license"
-              "srcDir" "binDir" "backend" "mode")
-          symbol-end)
-     (0 font-lock-variable-name-face))))
+(defconst nimscript-builtins
+  '("listDirs" "listFiles" "paramStr" "paramCount" "switch" "getCommand"
+    "setCommand" "cmpic" "getEnv" "existsEnv" "fileExists" "dirExists"
+    "existsFile" "existsDir" "toExe" "toDll" "rmDir" "rmFile" "mkDir"
+    "mvFile" "cpFile" "exec" "put" "get" "exists" "nimcacheDir" "thisDir"
+    "cd" "requires"
+    ;; templates
+    "--" "withDir" "task"))
+
+(defconst nimscript-variables
+  '("packageName" "version" "author" "description" "license"
+    "srcDir" "binDir" "backend" "mode" "skipDirs" "skipFiles"
+    "skipExt" "installDirs" "installFiles" "installExt" "bin"
+    "requiresData"))
 
 (provide 'nim-vars)
 ;;; nim-vars.el ends here

@@ -26,7 +26,8 @@
 ;; It contains company backend with nimsuggest support.
 ;; You have to add it to company-backends like:
 ;;
-;; (add-to-list 'company-backends 'company-nim)
+;; (add-to-list 'company-backends
+;;                '(company-nim :with company-nim-builtin))
 ;;
 ;; Also you should add company mode to nim-mode
 ;;
@@ -92,15 +93,19 @@
     (nim-call-epc 'sug (lambda (x) (funcall callback (company-nim--format-candidates arg x))))))
 
 
-(defun company-nim-prefix ()
+(defun company-nim-prefix (&optional use-dotty-syntax)
   "checks if company-nim can complete here"
   (when (derived-mode-p 'nim-mode)
     (let ((thing 'stop))
-      (and
-       (if (company-in-string-or-comment)
-           nil t)
-       (setq thing (substring-no-properties (company-grab-symbol)))
-       (cons thing t)))))
+      (and (not (company-in-string-or-comment))
+           (setq thing
+                 (substring-no-properties
+                  (if use-dotty-syntax
+                      ;; grab dot included symbol like XXX.YYY
+                      (with-syntax-table nim-dotty-syntax-table
+                        (company-grab-symbol))
+                    (company-grab-symbol))))
+           (cons thing t)))))
 
 
 (defun company-nim-annotation (cand)
@@ -148,8 +153,31 @@
     (location (company-nim-location arg))
     (candidates (cons :async (lambda (cb) (company-nim-candidates arg cb))))
     (ignore-case t)
-    (sorted t)
-    ))
+    (sorted t)))
+
+;;;###autoload
+(defun company-nim-builtin (command &optional arg &rest ignored)
+  "`company-mode` backend for Nim’s primitive functions."
+  (interactive (list 'interactive))
+  (cl-case command
+    (interactive (company-begin-backend 'company-nim-builtin))
+    (prefix (company-nim-prefix t))
+    (candidates
+     (when (and
+            ;; ignore auto-completion when point is empty string
+            ;; (but you can activate manually)
+            (or this-command (string< "" arg))
+            (or (equal "" arg) (not (string-match "\\." arg))))
+       (cl-remove-if-not
+        (lambda (candidate)
+          (company-nim-fuzzy-match arg candidate))
+        (cl-case major-mode
+          (nim-mode
+           (append nim-builtins nim-builtins-without-nimscript))
+          (nimscript-mode
+           (append nim-builtins nimscript-builtins nimscript-variables))))))
+    (ignore-case t)
+    (sorted t)))
 
 (provide 'company-nim)
 

@@ -26,12 +26,7 @@
 (eval-and-compile
   (defvar nim-rx-constituents
     (let* ((constituents1
-            (cl-loop for (sym . kwd) in `((keyword           . ,nim-keywords)
-                                          (dedenter          . ("elif" "else" "of" "except" "finally"))
-                                          (type              . ,nim-types)
-                                          (exception         . ,nim-exceptions)
-                                          (constant          . ,nim-constants)
-                                          (builtin           . ,nim-builtins)
+            (cl-loop for (sym . kwd) in `((dedenter          . ("elif" "else" "of" "except" "finally"))
                                           (defun             . ("proc" "method" "converter" "iterator" "template" "macro"))
                                           (block-start-defun . ("proc" "method" "converter" "iterator"
                                                                 "template" "macro"

@@ -63,13 +63,43 @@
 If you feel uncomfortable because of this font-lock keywords,
 set nil to this value by ‘nim-mode-init-hook’.")
 
+(defun nim--convert-to-non-casesensitive (str)
+  (when (< 1 (length str))
+    (let ((first-str (substring str 0 1))
+          (rest-str  (substring str 1 (length str))))
+      (format "%s_?%s" first-str
+              (mapconcat
+               (lambda (s)
+                 (if (string-match "[a-zA-Z]" s)
+                     (format "[%s%s]" (downcase s) (upcase s))
+                   s))
+               (delq "" (split-string rest-str "")) "_?")))))
+
+(defun nim--format-keywords (keywords)
+  (format "\\_<\\(%s\\)\\_>"
+          (mapconcat
+           'nim--convert-to-non-casesensitive
+           (symbol-value keywords)
+           "\\|")))
+
 (defconst nim-font-lock-keywords-2
-  `((,(nim-rx (or exception type)) . font-lock-type-face)
-    (,(nim-rx constant) . font-lock-constant-face)
-    (,(nim-rx builtin) . font-lock-builtin-face)
-    (,(nim-rx keyword) . font-lock-keyword-face)
-    (,(rx symbol-start "result" symbol-end) . font-lock-variable-name-face)
-    (nim-pragma-matcher . (4 'nim-font-lock-pragma-face))))
+  (append
+   (cl-loop
+    with pairs = `((nim-types . font-lock-type-face)
+                   (nim-variables . font-lock-variable-name-face)
+                   (nim-exceptions . 'error)
+                   (nim-constants . font-lock-constant-face)
+                   (nim-builtins . font-lock-builtin-face)
+                   (nim-nonoverloadable-builtins . 'nim-non-overloadable-face)
+                   (nim-keywords . font-lock-keyword-face))
+    for (keywords . face) in pairs
+    collect (cons (nim--format-keywords keywords) face))
+   `((,(rx symbol-start "result" symbol-end) . font-lock-variable-name-face)
+     (nim-pragma-matcher . (4 'nim-font-lock-pragma-face)))))
+
+(defconst nim-font-lock-keywords-3
+  (list (cons (nim--format-keywords 'nim-builtins-without-nimscript)
+              font-lock-builtin-face)))
 
 (defsubst nim-syntax-count-quotes (quote-char &optional point limit)
   "Count number of quotes around point (max is 3).
