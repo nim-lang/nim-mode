@@ -268,7 +268,7 @@ updating.")
   '("isMainModule" "CompileDate" "CompileTime" "NimVersion"
     "NimMajor" "NimMinor" "NimPatch" "NimStackTrace" "cpuEndian" "hostOS"
     "hostCPU" "appType" "Inf" "NegInf" "NaN" "nimvm" "QuitSuccess"
-    "QuitFailure" "true" "false"
+    "QuitFailure" "true" "false" "nil"
     "on" "off" "NoFakeVars")
   "Nim constants defined in <lib/system.nim>.")
 
