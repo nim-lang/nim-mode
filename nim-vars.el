@@ -339,6 +339,20 @@ But all those functions can not use in NimScript.")
 ;; Nimscript
 (defvar nim-nimble-ini-format-regex (rx line-start "[Package]"))
 
+(defconst nimscript-builtins
+  '("listDirs" "listFiles" "paramStr" "paramCount" "switch" "getCommand"
+    "setCommand" "cmpic" "getEnv" "existsEnv" "fileExists" "dirExists"
+    "existsFile" "existsDir" "toExe" "toDll" "rmDir" "rmFile" "mkDir"
+    "mvFile" "cpFile" "exec" "put" "get" "exists" "nimcacheDir" "thisDir"
+    "cd" "requires"
+    ;; templates
+    "--" "withDir" "task"))
+
+(defconst nimscript-variables
+  '("packageName" "version" "author" "description" "license"
+    "srcDir" "binDir" "backend" "mode" "skipDirs" "skipFiles"
+    "skipExt" "installDirs" "installFiles" "installExt" "bin"
+    "requiresData"))
 
 (provide 'nim-vars)
 ;;; nim-vars.el ends here
