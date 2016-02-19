@@ -143,6 +143,10 @@ epc function."
                  (const :tag "" nil))
   :group 'nim)
 
+(defvar nim-suggest-ignore-dir-regex
+  (rx (or "\\" "/") (in "nN") "im" (or "\\" "/") "compiler" (or "\\" "/")))
+(defvar nim-inside-compiler-dir-p nil)
+
 (defvar nim-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "M-.") 'nim-goto-sym)

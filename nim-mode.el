@@ -75,6 +75,12 @@
   ;; init hook
   (run-hooks nim-mode-init-hook)
 
+  (setq-local nim-inside-compiler-dir-p
+              (when (and buffer-file-name
+                         (string-match
+                          nim-suggest-ignore-dir-regex buffer-file-name))
+                t))
+
   ;; Font lock
   (setq-local font-lock-defaults
               `(,(append nim-font-lock-keywords
