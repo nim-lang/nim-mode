@@ -32,7 +32,8 @@ result of `(executable-find "nimsuggest")`, so if you can get value from
 ## company-mode
 If you use `company-mode` then add `company-nim` to `company-backends` like:
 ```el
-(add-to-list 'company-backends 'company-nim)
+(add-to-list 'company-backends
+               '(company-nim :with company-nim-builtin))
 ```
 
 ## nim-eldoc
@@ -54,3 +55,4 @@ for available options.
 ## Other convenience packages
 - [flycheck-nim](https://github.com/ALSchwalm/flycheck-nim)
 - [indent-guide](https://github.com/zk-phi/indent-guide)
+- [quickrun](https://github.com/syohex/emacs-quickrun)

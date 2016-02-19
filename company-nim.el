@@ -26,7 +26,8 @@
 ;; It contains company backend with nimsuggest support.
 ;; You have to add it to company-backends like:
 ;;
-;; (add-to-list 'company-backends 'company-nim)
+;; (add-to-list 'company-backends
+;;                '(company-nim :with company-nim-builtin))
 ;;
 ;; Also you should add company mode to nim-mode
 ;;
