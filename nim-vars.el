@@ -339,24 +339,6 @@ But all those functions can not use in NimScript.")
 ;; Nimscript
 (defvar nim-nimble-ini-format-regex (rx line-start "[Package]"))
 
-(defconst nimscript-keywords
-  `((,(rx (group symbol-start "task" symbol-end) (1+ " ")
-          (? (group  symbol-start (or "build" "tests" "bench") symbol-end)))
-     (1 font-lock-keyword-face)
-     (2 font-lock-builtin-face nil t))
-    (,(rx (group symbol-start
-                 ;; Just picked up only no upper case functions.
-                 (or "cd" "exec" "cmpic" "put" "get" "exists" "log"
-                     "strip" "switch" "requires")
-                 symbol-end))
-     (0 font-lock-keyword-face))
-    ("\\_<ScriptMode\\_>"
-     (0 font-lock-type-face))
-    (,(rx symbol-start
-          (or "packageName" "version" "author" "description" "license"
-              "srcDir" "binDir" "backend" "mode")
-          symbol-end)
-     (0 font-lock-variable-name-face))))
 
 (provide 'nim-vars)
 ;;; nim-vars.el ends here
