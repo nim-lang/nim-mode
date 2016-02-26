@@ -68,15 +68,15 @@
 
 (defun company-nim--format-candidate (cand)
   "Formats candidate for company, attaches properties to text."
-  (propertize (car (last (nim-epc-qualifiedPath cand)))
-              :nim-location-line (nim-epc-line cand)
-              :nim-location-column (nim-epc-column cand)
-              :nim-type (nim-epc-forth cand)
-              :nim-doc (nim-epc-doc cand)
-              :nim-file (nim-epc-filePath cand)
-              :nim-sk (nim-epc-symkind cand)
-              :nim-sig (assoc-default (nim-epc-symkind cand) company-nim-type-abbrevs))
-  )
+  (propertize
+   (car (last (nim-epc-qualifiedPath cand)))
+   :nim-location-line (nim-epc-line cand)
+   :nim-location-column (nim-epc-column cand)
+   :nim-type (nim-epc-forth cand)
+   :nim-doc (nim-epc-doc cand)
+   :nim-file (nim-epc-filePath cand)
+   :nim-sk (nim-epc-symkind cand)
+   :nim-sig (assoc-default (nim-epc-symkind cand) company-nim-type-abbrevs)))
 
 (defun company-nim--format-candidates (arg candidates)
   "Filters candidates, and returns formatted candadates lists."
@@ -84,13 +84,17 @@
           (if (string-equal arg ".")
               candidates
             (cl-remove-if-not
-             (lambda (c) (company-nim-fuzzy-match arg (car (last (nim-epc-qualifiedPath c)))))
+             (lambda (c)
+               (company-nim-fuzzy-match
+                arg (car (last (nim-epc-qualifiedPath c)))))
              candidates))))
 
 
 (defun company-nim-candidates (arg callback)
   (when (derived-mode-p 'nim-mode)
-    (nim-call-epc 'sug (lambda (x) (funcall callback (company-nim--format-candidates arg x))))))
+    (nim-call-epc
+     'sug
+     (lambda (x) (funcall callback (company-nim--format-candidates arg x))))))
 
 
 (defun company-nim-prefix (&optional use-dotty-syntax)
