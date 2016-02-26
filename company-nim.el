@@ -86,9 +86,12 @@
             (cl-remove-if-not
              (lambda (c)
                (company-nim-fuzzy-match
-                arg (car (last (nim-epc-qualifiedPath c)))))
+                arg
+                (let ((name (car (last (nim-epc-qualifiedPath c)))))
+                  (format "%s%s"
+                          (substring name 0 1)
+                          (downcase (substring name 1 (length name)))))))
              candidates))))
-
 
 (defun company-nim-candidates (arg callback)
   (when (derived-mode-p 'nim-mode)
