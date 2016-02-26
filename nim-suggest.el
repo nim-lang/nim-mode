@@ -67,7 +67,7 @@ hierarchy, starting from CURRENT-DIR"
                    nil)))
         (let ((epc-process (epc:start-epc
                             nim-nimsuggest-path
-                            (append nim-suggest-options
+                            (append nim-suggest-options nim-suggest-local-options
                                     ;; Add nimscript specific symbols in nimscript-mode
                                     (when (eq 'nimscript-mode major-mode)
                                       '("--define:nimscript" "--define:nimconfig"))
