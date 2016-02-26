@@ -159,29 +159,76 @@
     (ignore-case t)
     (sorted t)))
 
+(defun company-nim-builtin-prefix (arg)
+  (let ((prefix (company-nim-prefix t))
+        (thing (or arg "")))
+    (and
+     ;; ignore auto-completion when point is empty string
+     ;; (but you can activate manually)
+     (or this-command (string< "" thing))
+     (or (equal "" thing) (not (string-match "\\." thing)))
+     prefix)))
+
 ;;;###autoload
 (defun company-nim-builtin (command &optional arg &rest ignored)
   "`company-mode` backend for Nim’s primitive functions."
   (interactive (list 'interactive))
   (cl-case command
     (interactive (company-begin-backend 'company-nim-builtin))
-    (prefix (company-nim-prefix t))
+    (prefix (company-nim-builtin-prefix arg))
+    (annotation (company-nim-annotation arg))
+    (doc-buffer (company-nim-doc-buffer arg))
+    (meta (company-nim-meta arg))
+    (location (company-nim-location arg))
+    ;; TODO: use company-flx (fuzzy match library)
     (candidates
-     (when (and
-            ;; ignore auto-completion when point is empty string
-            ;; (but you can activate manually)
-            (or this-command (string< "" arg))
-            (or (equal "" arg) (not (string-match "\\." arg))))
-       (cl-remove-if-not
-        (lambda (candidate)
-          (company-nim-fuzzy-match arg candidate))
-        (cl-case major-mode
-          (nim-mode
-           (append nim-builtins nim-builtins-without-nimscript))
-          (nimscript-mode
-           (append nim-builtins nimscript-builtins nimscript-variables))))))
+     (all-completions
+      arg
+      (company-nim--format-candidates
+       arg (company-nim-get-builtin-candidates))
+      (lambda (candidate)
+        ;; Only first char is case sensitive in Nim and
+        ;; I think it’s convenience to distinguish between normal
+        ;; procs and types. (types often use capitalized character, so)
+        (if (string< "" arg)
+            (eq (string-to-char arg) (string-to-char candidate))
+          t))))
     (ignore-case t)
     (sorted t)))
+
+(defvar company-nim--builtin-cache nil)
+(defvar company-nimscript--builtin-cache nil)
+
+(defun company-nim-get-options ()
+  (append nim-suggest-options nim-suggest-local-options))
+
+(defun company-nim-get-builtin-candidates ()
+  "Get candidates based on system.nim."
+  (when (derived-mode-p 'nim-mode)
+    (let ((cache-sym (cl-case major-mode
+                       (nim-mode 'company-nim--builtin-cache)
+                       (nimscript-mode 'company-nimscript--builtin-cache))))
+      (or
+       ;; Use cached data, which corresponds to ‘company-nim-get-options’
+       (cl-loop for (option suggest) in (symbol-value cache-sym)
+                if (equal (cdr option) (company-nim-get-options))
+                do (cl-return (cdr suggest)))
+       ;; Save data asynchronously
+       (save-excursion
+         (add-to-list cache-sym
+                      (list (cons 'option (company-nim-get-options))
+                            (cons 'suggest nil)))
+         (insert "\n system.")
+         (nim-call-epc
+          'sug
+          `(lambda (suggests)
+             (cl-loop for i from 0 to (1- (length ,cache-sym))
+                      for c = (nth i ,cache-sym)
+                      if (and (equal (cdar c) (company-nim-get-options))
+                              (eq (cdadr c) nil))
+                      do (setf (cdadr (nth i ,cache-sym))
+                               suggests))))
+         (delete-char -8))))))
 
 (provide 'company-nim)
 
