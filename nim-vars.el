@@ -143,6 +143,11 @@ epc function."
                  (const :tag "" nil))
   :group 'nim)
 
+(defvar nim-suggest-local-options '()
+  "Options for Nimsuggest.
+Please use this variable to set nimsuggest’s options for
+specific directory or buffer.  See also ‘dir-locals-file’.")
+
 (defvar nim-suggest-ignore-dir-regex
   (rx (or "\\" "/") (in "nN") "im" (or "\\" "/") "compiler" (or "\\" "/")))
 (defvar nim-inside-compiler-dir-p nil)
