@@ -458,7 +458,10 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
             (setq offset
                   (if (looking-at "{.")
                       (+ 2 (current-column))
-                    (1+ (current-column)))))
+                    (while (progn
+                              (forward-char)
+                              (looking-at (rx blank)))
+                    (current-column)))))
           (cons 'column offset))))))
 
 (defun nim-smie--of (kind)
