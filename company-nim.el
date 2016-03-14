@@ -221,7 +221,7 @@
          (add-to-list cache-sym
                       (list (cons 'option (company-nim-get-options))
                             (cons 'suggest nil)))
-         (insert "\n system.")
+         (insert " system.")
          (nim-call-epc
           'sug
           `(lambda (suggests)
@@ -231,7 +231,7 @@
                               (eq (cdadr c) nil))
                       do (setf (cdadr (nth i ,cache-sym))
                                suggests))))
-         (delete-char -8))))))
+         (delete-char (- (length " system."))))))))
 
 (provide 'company-nim)
 
