@@ -187,7 +187,7 @@ DEFS is group of definitions from nimsuggest."
 ;;;###autoload
 (defun nim-eldoc-setup ()
   "Setup eldoc configuration for nim-mode."
-  (when (and (eq major-mode 'nim-mode) nim-nimsuggest-path)
+  (when (and (derived-mode-p 'nim-mode) nim-nimsuggest-path)
     (setq-local eldoc-documentation-function 'nim-eldoc-function)))
 
 ;;;###autoload
