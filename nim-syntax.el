@@ -133,60 +133,61 @@ is used to limit the scan."
 
 (defun nim-syntax-stringify ()
   "Put `syntax-table' property correctly on single/triple double quotes."
-  (let* ((num-quotes (length (match-string-no-properties 1)))
-         (ppss (prog2
-                   (backward-char num-quotes)
-                   (syntax-ppss)
-                 (forward-char num-quotes)))
-         (string-start (and (not (nth 4 ppss)) (nth 8 ppss)))
-         (quote-starting-pos (- (point) num-quotes))
-         (quote-ending-pos (point))
-         (num-closing-quotes
-          (and string-start
-               (nim-syntax-count-quotes
-                (char-before) string-start quote-starting-pos))))
-    (cond ((and string-start (= num-closing-quotes 0))
-           ;; This set of quotes doesn't match the string starting
-           ;; kind. Do nothing.
-           nil)
-          ((not string-start)
-           ;; This set of quotes delimit the start of a string.
-           (put-text-property quote-starting-pos (1+ quote-starting-pos)
-                              'syntax-table (string-to-syntax "|")))
-          ((and string-start (< string-start (point))
-                ;; Skip "" in the raw string literal
-                (eq ?r (char-before string-start))
-                (or
-                 ;;  v point is here
-                 ;; ""
-                 (and
-                  (eq ?\" (char-before (1- (point))))
-                  (eq ?\" (char-before (point))))
-                 ;; v point is here
-                 ;; ""
-                 (and
-                  (eq ?\" (char-before (point)))
-                  (eq ?\" (char-after  (point))))))
-           nil)
-          ((= num-quotes num-closing-quotes)
-           ;; This set of quotes delimit the end of a string.
-           ;; If there are some double quotes after quote-ending-pos,
-           ;; shift the point to right number of `extra-quotes' times.
-           (let* ((extra-quotes 0))
-             ;; Only count extra quotes when the double quotes is 3 to prevent
-             ;; wrong highlight for r"foo""bar" forms.
-             (when (eq num-quotes 3)
-               (while (eq ?\" (char-after (+ quote-ending-pos extra-quotes)))
-                 (setq extra-quotes (1+ extra-quotes))))
-             (put-text-property (+ (1- quote-ending-pos) extra-quotes)
-                                (+ quote-ending-pos      extra-quotes)
-                                'syntax-table (string-to-syntax "|"))))
-          ((> num-quotes num-closing-quotes)
-           ;; This may only happen whenever a triple quote is closing
-           ;; a single quoted string. Add string delimiter syntax to
-           ;; all three quotes.
-           (put-text-property quote-starting-pos quote-ending-pos
-                              'syntax-table (string-to-syntax "|"))))))
+  (unless (nth 4 (save-excursion (syntax-ppss)))
+    (let* ((num-quotes (length (match-string-no-properties 1)))
+           (ppss (prog2
+                     (backward-char num-quotes)
+                     (syntax-ppss)
+                   (forward-char num-quotes)))
+           (string-start (and (not (nth 4 ppss)) (nth 8 ppss)))
+           (quote-starting-pos (- (point) num-quotes))
+           (quote-ending-pos (point))
+           (num-closing-quotes
+            (and string-start
+                 (nim-syntax-count-quotes
+                  (char-before) string-start quote-starting-pos))))
+      (cond ((and string-start (= num-closing-quotes 0))
+             ;; This set of quotes doesn't match the string starting
+             ;; kind. Do nothing.
+             nil)
+            ((not string-start)
+             ;; This set of quotes delimit the start of a string.
+             (put-text-property quote-starting-pos (1+ quote-starting-pos)
+                                'syntax-table (string-to-syntax "|")))
+            ((and string-start (< string-start (point))
+                  ;; Skip "" in the raw string literal
+                  (eq ?r (char-before string-start))
+                  (or
+                   ;;  v point is here
+                   ;; ""
+                   (and
+                    (eq ?\" (char-before (1- (point))))
+                    (eq ?\" (char-before (point))))
+                   ;; v point is here
+                   ;; ""
+                   (and
+                    (eq ?\" (char-before (point)))
+                    (eq ?\" (char-after  (point))))))
+             nil)
+            ((= num-quotes num-closing-quotes)
+             ;; This set of quotes delimit the end of a string.
+             ;; If there are some double quotes after quote-ending-pos,
+             ;; shift the point to right number of `extra-quotes' times.
+             (let* ((extra-quotes 0))
+               ;; Only count extra quotes when the double quotes is 3 to prevent
+               ;; wrong highlight for r"foo""bar" forms.
+               (when (eq num-quotes 3)
+                 (while (eq ?\" (char-after (+ quote-ending-pos extra-quotes)))
+                   (setq extra-quotes (1+ extra-quotes))))
+               (put-text-property (+ (1- quote-ending-pos) extra-quotes)
+                                  (+ quote-ending-pos      extra-quotes)
+                                  'syntax-table (string-to-syntax "|"))))
+            ((> num-quotes num-closing-quotes)
+             ;; This may only happen whenever a triple quote is closing
+             ;; a single quoted string. Add string delimiter syntax to
+             ;; all three quotes.
+             (put-text-property quote-starting-pos quote-ending-pos
+                                'syntax-table (string-to-syntax "|")))))))
 
 (defun nim-syntax-commentify ()
   (let* ((hash (or (match-string-no-properties 2)
