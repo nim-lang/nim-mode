@@ -131,6 +131,15 @@ is used to limit the scan."
    ((nim-rx string-delimiter)
     (0 (ignore (nim-syntax-stringify))))))
 
+(defun nim-pretty-triple-double-quotes (pbeg pend &optional close-quote)
+  (when (and nim-pretty-triple-double-quotes
+             (bound-and-true-p prettify-symbols-mode))
+    (compose-region pbeg pend
+                    (if close-quote
+                        (or (cdr nim-pretty-triple-double-quotes)
+                            (car nim-pretty-triple-double-quotes))
+                      (car nim-pretty-triple-double-quotes)))))
+
 (defun nim-syntax-stringify ()
   "Put `syntax-table' property correctly on single/triple double quotes."
   (unless (nth 4 (save-excursion (syntax-ppss)))
@@ -153,7 +162,10 @@ is used to limit the scan."
             ((not string-start)
              ;; This set of quotes delimit the start of a string.
              (put-text-property quote-starting-pos (1+ quote-starting-pos)
-                                'syntax-table (string-to-syntax "|")))
+                                'syntax-table (string-to-syntax "|"))
+             (when (eq num-quotes 3)
+               (nim-pretty-triple-double-quotes
+                quote-starting-pos (+ quote-starting-pos 3))))
             ((and string-start (< string-start (point))
                   ;; Skip "" in the raw string literal
                   (eq ?r (char-before string-start))
@@ -179,9 +191,12 @@ is used to limit the scan."
                (when (eq num-quotes 3)
                  (while (eq ?\" (char-after (+ quote-ending-pos extra-quotes)))
                    (setq extra-quotes (1+ extra-quotes))))
-               (put-text-property (+ (1- quote-ending-pos) extra-quotes)
-                                  (+ quote-ending-pos      extra-quotes)
-                                  'syntax-table (string-to-syntax "|"))))
+               (let ((pbeg (+ (1- quote-ending-pos) extra-quotes))
+                     (pend (+ quote-ending-pos      extra-quotes)))
+                 (put-text-property
+                  pbeg pend 'syntax-table (string-to-syntax "|"))
+                 (when (eq num-quotes 3)
+                   (nim-pretty-triple-double-quotes (- pend 3) pend t)))))
             ((> num-quotes num-closing-quotes)
              ;; This may only happen whenever a triple quote is closing
              ;; a single quoted string. Add string delimiter syntax to
