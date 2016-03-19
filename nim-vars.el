@@ -135,6 +135,14 @@ other tokens like ’:’ or ’=’."
   :type 'hook
   :group 'nim)
 
+(defcustom nim-pretty-triple-double-quotes
+  ;; What character should be default? („…“, “…”, ‘…’, or etc.?)
+  (cons ?“ ?”)
+  "Change triple double quotes to another quote form.
+This configuration is enabled only in ‘prettify-symbols-mode’."
+  :type 'cons
+  :group 'nim)
+
 (defcustom nim-suggest-options '("--v2")
   "Options for Nimsuggest.
 Note that ‘--verbosity:0’ and ‘--epc’ are automatically passed nim-mode’s
