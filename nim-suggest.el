@@ -120,10 +120,20 @@ The callback is called with a list of nim-epc structs."
         (deferred:watch it
           (lambda (_) (delete-directory (file-name-directory tempfile) t)))))))
 
+(defvar nim-dirty-directory
+  ;; Even users changed the temp directory name,
+  ;; ‘file-name-as-directory’ ensures suffix directory separator.
+  (mapconcat 'file-name-as-directory
+             `(,temporary-file-directory "emacs-nim-mode") "")
+  "Directory name, which nimsuggest uses temporarily.")
+
 (defun nim-save-buffer-temporarly ()
   "Save the current buffer and return the location, so we
 can pass it to epc."
-  (let* ((dirname (make-temp-file "nim-dirty" t))
+  (unless (file-exists-p nim-dirty-directory)
+    (make-directory nim-dirty-directory))
+  (let* ((temporary-file-directory nim-dirty-directory)
+         (dirname (make-temp-file "nim-dirty" t))
          (filename (expand-file-name (file-name-nondirectory (buffer-file-name))
                                      (file-name-as-directory dirname))))
     (save-restriction
