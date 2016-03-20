@@ -10,7 +10,7 @@ if "" == staticExec("which cask"):
 if dirExists(thisDir() & "/.cask"):
   exec "cask install"
 
-const scratchBuffer = """"                                              \
+const scratchBuffer = """"                                                \
 (progn (require 'nim-mode)                                              \
        (nim-mode)                                                       \
        (setq initial-scratch-message                                    \
@@ -30,7 +30,7 @@ proc foo() =                                                         \\n\
   echo 'a' & 'b' & 'c'                                               \\n\
   echo astToStr(bar)                                                 \\n\
                                                                      \\n\
-# Note that you can exit C-x C-c from Emacs :)                       \\n\
+# Note that you can close the current Emacs buffer with C-x C-c.     \\n\
 \"))""""
 
 proc startEmacs() =
