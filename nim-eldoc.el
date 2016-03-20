@@ -42,7 +42,7 @@
 (defun nim-eldoc-function ()
   "Return a doc string appropriate for the current context, or nil."
   (interactive)
-  (when nim-nimsuggest-path
+  (when (and nim-nimsuggest-path eldoc-mode)
     (unless (nim-eldoc-same-try-p)
       (save-excursion
         (nim-eldoc--move)
