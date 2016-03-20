@@ -34,45 +34,60 @@ hierarchy, starting from CURRENT-DIR"
 (defun nim-find-project-main-file ()
   "Get the main file for the project."
   (let ((main-file (nim-find-file-in-heirarchy
-                (file-name-directory (buffer-file-name))
-                ".*\.nim\.cfg")))
-    (when main-file (file-name-base main-file))))
+                    (file-name-directory (buffer-file-name))
+                    ".*\.nim\.cfg")))
+    (when main-file main-file)))
 
 (defun nim-get-project-root ()
   "Return project directory."
   (file-name-directory
-   (nim-find-file-in-heirarchy (file-name-directory (buffer-file-name)) nim-project-root-regex)))
+   (nim-find-file-in-heirarchy
+    (file-name-directory (buffer-file-name)) nim-project-root-regex)))
 
 ;;; If you change the order here, make sure to change it over in
 ;;; nimsuggest.nim too.
-(defconst nim-epc-order '(:section :symkind :qualifiedPath :filePath :forth :line :column :doc))
+(defconst nim-epc-order
+  '(:section :symkind :qualifiedPath :filePath :forth :line :column :doc))
 
-(cl-defstruct nim-epc section symkind qualifiedPath filePath forth line column doc)
-(defun nim-parse-epc (list)
-  ;; (message "%S" list)
-  (cl-mapcar (lambda (sublist) (apply #'make-nim-epc
-                               (cl-mapcan #'list nim-epc-order sublist)))
-          list))
+(cl-defstruct nim-epc
+  section symkind qualifiedPath filePath forth line column doc)
+
+(defun nim-parse-epc (obj method)
+  "Parse OBJ according to METHOD."
+  (cl-case method
+    (chk obj)
+    ((sug con def use dus)
+     (cl-mapcar
+      (lambda (sublist)
+        (apply #'make-nim-epc (cl-mapcan #'list nim-epc-order sublist)))
+      obj))))
 
 (defvar nim-epc-processes-alist nil)
+
+(defvar nimsuggest-get-option-function nil
+  "Function to get options for nimsuggest.")
+
+(defun nimsuggest-get-options (main-file)
+  (append nim-suggest-options nim-suggest-local-options
+          (when (eq 'nimscript-mode major-mode)
+            '("--define:nimscript" "--define:nimconfig"))
+          (list (or (with-no-warnings nimsuggest-vervosity) "")
+                "--epc" main-file)))
 
 (defun nim-find-or-create-epc ()
   "Get the epc responsible for the current buffer."
   (let ((main-file (or (nim-find-project-main-file)
-                           (buffer-file-name))))
+                       (buffer-file-name))))
     (or (let ((epc-process (cdr (assoc main-file nim-epc-processes-alist))))
           (if (eq 'run (epc:manager-status-server-process epc-process))
               epc-process
-            (progn (setq nim-epc-processes-alist (assq-delete-all main-file nim-epc-processes-alist))
-                   nil)))
-        (let ((epc-process (epc:start-epc
-                            nim-nimsuggest-path
-                            (append nim-suggest-options nim-suggest-local-options
-                                    ;; Add nimscript specific symbols in nimscript-mode
-                                    (when (eq 'nimscript-mode major-mode)
-                                      '("--define:nimscript" "--define:nimconfig"))
-                                    ;; Essential options
-                                    (list "--epc" "--verbosity:0" main-file)))))
+            (prog1 ()
+              (setq nim-epc-processes-alist
+                    (assq-delete-all main-file nim-epc-processes-alist)))))
+        (let ((epc-process
+               (epc:start-epc
+                nim-nimsuggest-path
+                (nimsuggest-get-options main-file))))
           (push (cons main-file epc-process) nim-epc-processes-alist)
           epc-process))))
 
@@ -85,8 +100,9 @@ one of:
 
 sug: suggest a symbol
 con: suggest, but called at fun(_ <-
-def: where the is defined
+def: where the symbol is defined
 use: where the symbol is used
+dus: def + use
 
 The callback is called with a list of nim-epc structs."
   (unless nim-inside-compiler-dir-p
@@ -100,8 +116,9 @@ The callback is called with a list of nim-epc structs."
                (current-column)
                tempfile))
         (deferred:nextc it
-          (lambda (x) (funcall callback (nim-parse-epc x))))
-        (deferred:watch it (lambda (_x) (delete-directory (file-name-directory tempfile) t)))))))
+          (lambda (x) (funcall callback (nim-parse-epc x method))))
+        (deferred:watch it
+          (lambda (_) (delete-directory (file-name-directory tempfile) t)))))))
 
 (defun nim-save-buffer-temporarly ()
   "Save the current buffer and return the location, so we

@@ -359,5 +359,17 @@ But all those functions can not use in NimScript.")
     "skipExt" "installDirs" "installFiles" "installExt" "bin"
     "requiresData"))
 
+(defvar nimsuggest-check-vervosity "--verbosity:1"
+  "Verbosity for chk option.  Current no meaning though.")
+
+;; obsolete
+(defvar nimsuggest-vervosity "--verbosity:0"
+  "This variable will not be needed for latest nimsuggest.
+Please set this value to nil if you have latest nimsuggest,
+which supports ‘chk’ option for EPC.")
+
+(make-obsolete-variable
+ 'nimsuggest-vervosity 'nimsuggest-check-vervosity "0.1.0")
+
 (provide 'nim-vars)
 ;;; nim-vars.el ends here
