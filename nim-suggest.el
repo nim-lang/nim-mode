@@ -52,11 +52,15 @@ hierarchy, starting from CURRENT-DIR"
 (cl-defstruct nim-epc
   section symkind qualifiedPath filePath forth line column doc)
 
-(defun nim-parse-epc (list)
-  ;; (message "%S" list)
-  (cl-mapcar (lambda (sublist) (apply #'make-nim-epc
-                                 (cl-mapcan #'list nim-epc-order sublist)))
-             list))
+(defun nim-parse-epc (obj method)
+  "Parse OBJ according to METHOD."
+  (cl-case method
+    (chk obj)
+    ((sug con def use dus)
+     (cl-mapcar
+      (lambda (sublist)
+        (apply #'make-nim-epc (cl-mapcan #'list nim-epc-order sublist)))
+      obj))))
 
 (defvar nim-epc-processes-alist nil)
 
@@ -112,7 +116,7 @@ The callback is called with a list of nim-epc structs."
                (current-column)
                tempfile))
         (deferred:nextc it
-          (lambda (x) (funcall callback (nim-parse-epc x))))
+          (lambda (x) (funcall callback (nim-parse-epc x method))))
         (deferred:watch it
           (lambda (_) (delete-directory (file-name-directory tempfile) t)))))))
 
