@@ -55,15 +55,15 @@ hierarchy, starting from CURRENT-DIR"
 (defun nim-parse-epc (list)
   ;; (message "%S" list)
   (cl-mapcar (lambda (sublist) (apply #'make-nim-epc
-                               (cl-mapcan #'list nim-epc-order sublist)))
-          list))
+                                 (cl-mapcan #'list nim-epc-order sublist)))
+             list))
 
 (defvar nim-epc-processes-alist nil)
 
 (defun nim-find-or-create-epc ()
   "Get the epc responsible for the current buffer."
   (let ((main-file (or (nim-find-project-main-file)
-                           (buffer-file-name))))
+                       (buffer-file-name))))
     (or (let ((epc-process (cdr (assoc main-file nim-epc-processes-alist))))
           (if (eq 'run (epc:manager-status-server-process epc-process))
               epc-process
