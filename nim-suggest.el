@@ -41,13 +41,17 @@ hierarchy, starting from CURRENT-DIR"
 (defun nim-get-project-root ()
   "Return project directory."
   (file-name-directory
-   (nim-find-file-in-heirarchy (file-name-directory (buffer-file-name)) nim-project-root-regex)))
+   (nim-find-file-in-heirarchy
+    (file-name-directory (buffer-file-name)) nim-project-root-regex)))
 
 ;;; If you change the order here, make sure to change it over in
 ;;; nimsuggest.nim too.
-(defconst nim-epc-order '(:section :symkind :qualifiedPath :filePath :forth :line :column :doc))
+(defconst nim-epc-order
+  '(:section :symkind :qualifiedPath :filePath :forth :line :column :doc))
 
-(cl-defstruct nim-epc section symkind qualifiedPath filePath forth line column doc)
+(cl-defstruct nim-epc
+  section symkind qualifiedPath filePath forth line column doc)
+
 (defun nim-parse-epc (list)
   ;; (message "%S" list)
   (cl-mapcar (lambda (sublist) (apply #'make-nim-epc
@@ -101,7 +105,8 @@ The callback is called with a list of nim-epc structs."
                tempfile))
         (deferred:nextc it
           (lambda (x) (funcall callback (nim-parse-epc x))))
-        (deferred:watch it (lambda (_x) (delete-directory (file-name-directory tempfile) t)))))))
+        (deferred:watch it
+          (lambda (_) (delete-directory (file-name-directory tempfile) t)))))))
 
 (defun nim-save-buffer-temporarly ()
   "Save the current buffer and return the location, so we
