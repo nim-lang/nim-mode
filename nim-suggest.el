@@ -60,6 +60,16 @@ hierarchy, starting from CURRENT-DIR"
 
 (defvar nim-epc-processes-alist nil)
 
+(defvar nimsuggest-get-option-function nil
+  "Function to get options for nimsuggest.")
+
+(defun nimsuggest-get-options (main-file)
+  (append nim-suggest-options nim-suggest-local-options
+          (when (eq 'nimscript-mode major-mode)
+            '("--define:nimscript" "--define:nimconfig"))
+          (list (or (with-no-warnings nimsuggest-vervosity) "")
+                "--epc" main-file)))
+
 (defun nim-find-or-create-epc ()
   "Get the epc responsible for the current buffer."
   (let ((main-file (or (nim-find-project-main-file)
@@ -67,16 +77,13 @@ hierarchy, starting from CURRENT-DIR"
     (or (let ((epc-process (cdr (assoc main-file nim-epc-processes-alist))))
           (if (eq 'run (epc:manager-status-server-process epc-process))
               epc-process
-            (progn (setq nim-epc-processes-alist (assq-delete-all main-file nim-epc-processes-alist))
-                   nil)))
-        (let ((epc-process (epc:start-epc
-                            nim-nimsuggest-path
-                            (append nim-suggest-options nim-suggest-local-options
-                                    ;; Add nimscript specific symbols in nimscript-mode
-                                    (when (eq 'nimscript-mode major-mode)
-                                      '("--define:nimscript" "--define:nimconfig"))
-                                    ;; Essential options
-                                    (list "--epc" "--verbosity:0" main-file)))))
+            (prog1 ()
+              (setq nim-epc-processes-alist
+                    (assq-delete-all main-file nim-epc-processes-alist)))))
+        (let ((epc-process
+               (epc:start-epc
+                nim-nimsuggest-path
+                (nimsuggest-get-options main-file))))
           (push (cons main-file epc-process) nim-epc-processes-alist)
           epc-process))))
 
