@@ -10,7 +10,7 @@ if "" == staticExec("which cask"):
 if dirExists(thisDir() & "/.cask"):
   exec "cask install"
 
-const scratchBuffer = """"                                                \
+const scratchBuffer = """"\
 (progn (require 'nim-mode)                                              \
        (nim-mode)                                                       \
        (setq initial-scratch-message                                    \
