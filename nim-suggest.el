@@ -34,9 +34,9 @@ hierarchy, starting from CURRENT-DIR"
 (defun nim-find-project-main-file ()
   "Get the main file for the project."
   (let ((main-file (nim-find-file-in-heirarchy
-                (file-name-directory (buffer-file-name))
-                ".*\.nim\.cfg")))
-    (when main-file (file-name-base main-file))))
+                    (file-name-directory (buffer-file-name))
+                    ".*\.nim\.cfg")))
+    (when main-file main-file)))
 
 (defun nim-get-project-root ()
   "Return project directory."
