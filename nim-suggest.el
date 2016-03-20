@@ -89,8 +89,9 @@ one of:
 
 sug: suggest a symbol
 con: suggest, but called at fun(_ <-
-def: where the is defined
+def: where the symbol is defined
 use: where the symbol is used
+dus: def + use
 
 The callback is called with a list of nim-epc structs."
   (unless nim-inside-compiler-dir-p
