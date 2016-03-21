@@ -46,17 +46,18 @@
               for (hook . func) in flycheck-hooks-alist
               if (member func requires)
               collect (cons hook func)
-              else if (member hook '(after-save-hook after-change-functions))
-              collect (cons hook 'flycheck-nim-async-after-change)
+              else if (member hook '(after-change-functions))
+              collect (cons hook 'flycheck-epc-async-after-change)
+              else if (member hook '(after-save-hook))
+              collect (cons hook 'flycheck-epc-async-after-save)
               else if (member hook '(post-command-hook))
               collect (cons hook 'flycheck-epc-async-post-command))))
   ad-do-it)
 
 (require 'flycheck)
-(require 'nim-suggest)
 (require 'cl-lib)
 
-(defun flycheck-epc-define-checker (checker parser patterns base-func)
+(defun flycheck-epc-define-checker (checker parser patterns base-func mode)
   "Define flycheck CHECKER for EPC based on PARSER and PATTERNS.
 
 The BASE-FUNC is a function that returns string."
@@ -65,26 +66,45 @@ The BASE-FUNC is a function that returns string."
         (`(,prop . ,value)
          `((flycheck-command . ,command)
            (flycheck-error-parser . ,parser)
+           (flycheck-modes . ,mode)
            (flycheck-error-patterns
             . ,(mapcar (lambda (p)
                          (cons (flycheck-rx-to-string `(and ,@(cdr p)) 'no-group)
                                (car p)))
                        patterns))))
       (put checker prop value)))
-  (put 'nimsuggest-async 'flycheck-epc-base-func base-func)
+  (put checker 'flycheck-epc-base-func base-func)
   (add-to-list 'flycheck-checkers checker))
 
+(defun flycheck-epc-find-first-checker ()
+  (cl-loop for checker in flycheck-checkers
+           for modes = (flycheck-checker-modes checker)
+           if (memq major-mode modes)
+           collect (cl-return checker)))
+
 (defvar-local flycheck-epc-timer nil)
-(defvar flycheck-epc-timer-interval 2)
-(defun flycheck-epc-async-post-command (&rest _rst)
-  "Call async checker after command."
-  (let ((f (get 'nimsuggest-async 'flycheck-epc-base-func)))
-    (when f
+(defun flycheck-epc-async-delay (&rest _args)
+  (let ((func (get (flycheck-epc-find-first-checker) 'flycheck-epc-base-func)))
+    (when func
       (when (and flycheck-epc-timer
                  (timerp flycheck-epc-timer))
         (cancel-timer flycheck-epc-timer))
       (setq flycheck-epc-timer
-            (run-with-timer flycheck-epc-timer-interval nil f)))))
+            (run-with-timer
+             (or flycheck-idle-change-timer 0.5) nil
+             `(lambda ()
+                (unless flycheck-current-errors
+                  (flycheck-clear))
+                (,func)))))))
+
+(defun flycheck-epc-async-post-command (&rest args)
+  (flycheck-epc-async-delay args))
+
+(defun flycheck-epc-async-after-change (&rest args)
+  (flycheck-epc-async-delay args))
+
+(defun flycheck-epc-async-after-save (&rest args)
+  (flycheck-epc-async-delay args))
 
 (defun flycheck-epc-highlight ()
   "Highlight (overlay) errors based on ‘flycheck-current-errors’."
@@ -92,7 +112,7 @@ The BASE-FUNC is a function that returns string."
         flycheck-current-errors))
 
 ;; For nim specific
-
+(require 'nim-suggest)
 (flycheck-epc-define-checker
  'nimsuggest-async
  'flycheck-parse-with-patterns
@@ -105,7 +125,8 @@ The BASE-FUNC is a function that returns string."
                                 "\n\n"))))
           (warning line-start (file-name) "(" line ", " column ") "
                    (or "Hint:" "Warning:") (message) line-end))
- 'flycheck-nim-async)
+ 'flycheck-nim-async
+ '(nim-mode nimscript-mode))
 
 (defun flycheck-nim-async (&optional force)
   "Check current buffer using nimsuggest ’chk option."
@@ -118,10 +139,6 @@ The BASE-FUNC is a function that returns string."
        (if force
            'flycheck-nim-async-force-update
          'flycheck-nim-async-callback)))))
-
-(defun flycheck-nim-async-after-change (&rest _rst)
-  "Clear highlight and update."
-  (flycheck-nim-async t))
 
 (defvar nimsuggest-check-output "")
 (defun flycheck-nim-async-callback (output &optional force)
