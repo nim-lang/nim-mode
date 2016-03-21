@@ -81,8 +81,7 @@ hierarchy, starting from CURRENT-DIR"
 
 (defun nim-find-or-create-epc ()
   "Get the epc responsible for the current buffer."
-  (let ((main-file (or (nim-find-project-main-file)
-                       (buffer-file-name))))
+  (let ((main-file (nim-find-project-main-file)))
     (or (let ((epc-process (cdr (assoc main-file nim-epc-processes-alist))))
           (if (eq 'run (epc:manager-status-server-process epc-process))
               epc-process
