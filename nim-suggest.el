@@ -86,8 +86,7 @@ hierarchy, starting from CURRENT-DIR"
           (if (eq 'run (epc:manager-status-server-process epc-process))
               epc-process
             (prog1 ()
-              (setq nim-epc-processes-alist
-                    (assq-delete-all main-file nim-epc-processes-alist)))))
+              (nim-suggest-kill-zombie-processes main-file))))
         (let ((epc-process
                (epc:start-epc
                 nim-nimsuggest-path
@@ -151,6 +150,16 @@ can pass it to epc."
   "Delete temporary files directory for nimsuggest."
   (when (file-exists-p nim-dirty-directory)
     (delete-directory (file-name-directory nim-dirty-directory) t)))
+
+(defun nim-suggest-kill-zombie-processes (&optional mfile)
+  (setq nim-epc-processes-alist
+        (cl-loop for (file . manager) in nim-epc-processes-alist
+                 if (and (epc:live-p manager)
+                         (or (and mfile (equal mfile file))
+                             (not mfile)))
+                 collect (cons file manager)
+                 else do (epc:stop-epc manager))))
+
 (defun nim-goto-sym ()
   "Go to the definition of the symbol currently under the cursor."
   (interactive)
