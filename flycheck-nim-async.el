@@ -20,6 +20,8 @@
 
 ;;; Commentary:
 
+;; On the fly syntax check support using Nimsuggest and flycheck.el.
+
 ;; To use this plugin correctly, you need load this file before
 ;; loading ‘flycheck’ because this flycheck-nim-async plugin needs to
 ;; override ‘flycheck-hooks-alist’ variable.
@@ -29,7 +31,11 @@
 
 ;; Also you might need this configuration
 ;;
+;;   (require ’flycheck-nim-async)
 ;;   (setq nimsuggest-vervosity nil)
+;;
+;; Note this plugin is still working in progress, so function names
+;; might be changed in feature release.
 
 ;;; Code:
 
