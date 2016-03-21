@@ -31,12 +31,11 @@ hierarchy, starting from CURRENT-DIR"
        (let ((file (cl-first (directory-files dir t pattern nil))))
          (when file (throw 'found file)))))))
 
-(defun nim-find-project-main-file ()
-  "Get the main file for the project."
-  (let ((main-file (nim-find-file-in-heirarchy
-                    (file-name-directory (buffer-file-name))
-                    ".*\.nim\.cfg")))
-    (when main-file main-file)))
+(defun nim-find-cfg-file ()
+  "Get the nim.cfg file from current directory hierarchy."
+  (nim-find-file-in-heirarchy
+   (file-name-directory (buffer-file-name))
+   ".*\.nim\.cfg"))
 
 (defun nim-get-project-root ()
   "Return project directory."
@@ -73,6 +72,12 @@ hierarchy, starting from CURRENT-DIR"
             '("--define:nimscript" "--define:nimconfig"))
           (list (or (with-no-warnings nimsuggest-vervosity) "")
                 "--epc" main-file)))
+
+(defun nim-find-project-main-file ()
+  (or (and (eq 'nimscript-mode major-mode)
+           buffer-file-name)
+      (nim-find-cfg-file)
+      buffer-file-name))
 
 (defun nim-find-or-create-epc ()
   "Get the epc responsible for the current buffer."
