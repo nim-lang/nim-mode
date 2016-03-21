@@ -130,7 +130,8 @@ The callback is called with a list of nim-epc structs."
   ;; ‘file-name-as-directory’ ensures suffix directory separator.
   (mapconcat 'file-name-as-directory
              `(,temporary-file-directory "emacs-nim-mode") "")
-  "Directory name, which nimsuggest uses temporarily.")
+  "Directory name, which nimsuggest uses temporarily.
+Note that this directory is removed when you exit from Emacs.")
 
 (defun nim-save-buffer-temporarly ()
   "Save the current buffer and return the location, so we
@@ -146,6 +147,11 @@ can pass it to epc."
       (write-region (point-min) (point-max) filename nil 1))
     filename))
 
+(add-hook 'kill-emacs-hook 'nim-delete-nimsuggest-temp-directory)
+(defun nim-delete-nimsuggest-temp-directory ()
+  "Delete temporary files directory for nimsuggest."
+  (when (file-exists-p nim-dirty-directory)
+    (delete-directory (file-name-directory nim-dirty-directory) t)))
 (defun nim-goto-sym ()
   "Go to the definition of the symbol currently under the cursor."
   (interactive)
