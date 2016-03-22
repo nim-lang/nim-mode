@@ -31,12 +31,11 @@ hierarchy, starting from CURRENT-DIR"
        (let ((file (cl-first (directory-files dir t pattern nil))))
          (when file (throw 'found file)))))))
 
-(defun nim-find-project-main-file ()
-  "Get the main file for the project."
-  (let ((main-file (nim-find-file-in-heirarchy
-                    (file-name-directory (buffer-file-name))
-                    ".*\.nim\.cfg")))
-    (when main-file main-file)))
+(defun nim-find-cfg-file ()
+  "Get the nim.cfg file from current directory hierarchy."
+  (nim-find-file-in-heirarchy
+   (file-name-directory (buffer-file-name))
+   ".*\.nim\.cfg"))
 
 (defun nim-get-project-root ()
   "Return project directory."
@@ -74,16 +73,20 @@ hierarchy, starting from CURRENT-DIR"
           (list (or (with-no-warnings nimsuggest-vervosity) "")
                 "--epc" main-file)))
 
+(defun nim-find-project-main-file ()
+  (or (and (eq 'nimscript-mode major-mode)
+           buffer-file-name)
+      (nim-find-cfg-file)
+      buffer-file-name))
+
 (defun nim-find-or-create-epc ()
   "Get the epc responsible for the current buffer."
-  (let ((main-file (or (nim-find-project-main-file)
-                       (buffer-file-name))))
+  (let ((main-file (nim-find-project-main-file)))
     (or (let ((epc-process (cdr (assoc main-file nim-epc-processes-alist))))
           (if (eq 'run (epc:manager-status-server-process epc-process))
               epc-process
             (prog1 ()
-              (setq nim-epc-processes-alist
-                    (assq-delete-all main-file nim-epc-processes-alist)))))
+              (nim-suggest-kill-zombie-processes main-file))))
         (let ((epc-process
                (epc:start-epc
                 nim-nimsuggest-path
@@ -125,7 +128,8 @@ The callback is called with a list of nim-epc structs."
   ;; ‘file-name-as-directory’ ensures suffix directory separator.
   (mapconcat 'file-name-as-directory
              `(,temporary-file-directory "emacs-nim-mode") "")
-  "Directory name, which nimsuggest uses temporarily.")
+  "Directory name, which nimsuggest uses temporarily.
+Note that this directory is removed when you exit from Emacs.")
 
 (defun nim-save-buffer-temporarly ()
   "Save the current buffer and return the location, so we
@@ -140,6 +144,21 @@ can pass it to epc."
       (widen)
       (write-region (point-min) (point-max) filename nil 1))
     filename))
+
+(add-hook 'kill-emacs-hook 'nim-delete-nimsuggest-temp-directory)
+(defun nim-delete-nimsuggest-temp-directory ()
+  "Delete temporary files directory for nimsuggest."
+  (when (file-exists-p nim-dirty-directory)
+    (delete-directory (file-name-directory nim-dirty-directory) t)))
+
+(defun nim-suggest-kill-zombie-processes (&optional mfile)
+  (setq nim-epc-processes-alist
+        (cl-loop for (file . manager) in nim-epc-processes-alist
+                 if (and (epc:live-p manager)
+                         (or (and mfile (equal mfile file))
+                             (not mfile)))
+                 collect (cons file manager)
+                 else do (epc:stop-epc manager))))
 
 (defun nim-goto-sym ()
   "Go to the definition of the symbol currently under the cursor."
