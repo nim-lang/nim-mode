@@ -114,10 +114,16 @@ The callback is called with a list of nim-epc structs."
         (epc:call-deferred
          (nim-find-or-create-epc)
          method
-         (list (buffer-file-name)
-               (line-number-at-pos)
-               (current-column)
-               tempfile))
+         (cl-case method
+           (chk
+            (list (buffer-file-name)
+                  -1 -1
+                  tempfile))
+           (t
+            (list (buffer-file-name)
+                  (line-number-at-pos)
+                  (current-column)
+                  tempfile))))
         (deferred:nextc it
           (lambda (x) (funcall callback (nim-parse-epc x method))))
         (deferred:watch it
