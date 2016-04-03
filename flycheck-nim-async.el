@@ -66,7 +66,8 @@
 (defun flycheck-epc-define-checker (checker parser patterns base-func mode)
   "Define flycheck CHECKER for EPC based on PARSER and PATTERNS.
 
-The BASE-FUNC is a function that returns string."
+The BASE-FUNC is a function that returns string.
+MODE is list of ‘major-mode’, which you want to enable."
   (let ((command   '("echo dummy command")))
     (pcase-dolist
         (`(,prop . ,value)
