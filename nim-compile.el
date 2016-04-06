@@ -77,6 +77,19 @@ The result is written into the buffer
                                (display-buffer buffer)))))))))
 
 
+
+(defcustom nim-project-root-regex "\\(\.git\\|\.nim\.cfg\\|\.nimble\\)$"
+  "Regex to find project root directory."
+  :type 'string
+  :group 'nim)
+
+(defun nim-get-project-root ()
+  "Return project directory."
+  (file-name-directory
+   (nim-find-file-in-heirarchy
+    (file-name-directory (buffer-file-name)) nim-project-root-regex)))
+
+
 (require 'compile)
 (add-to-list 'compilation-error-regexp-alist 'nim)
 (add-to-list 'compilation-error-regexp-alist-alist
