@@ -49,11 +49,12 @@ hierarchy, starting from CURRENT-DIR"
   "Function to get options for nimsuggest.")
 
 (defun nimsuggest-get-options (main-file)
-  (append nim-suggest-options nim-suggest-local-options
-          (when (eq 'nimscript-mode major-mode)
-            '("--define:nimscript" "--define:nimconfig"))
-          (list (or (with-no-warnings nimsuggest-vervosity) "")
-                "--epc" main-file)))
+  (delq nil
+        (append nim-suggest-options nim-suggest-local-options
+                (when (eq 'nimscript-mode major-mode)
+                  '("--define:nimscript" "--define:nimconfig"))
+                (list (with-no-warnings nimsuggest-vervosity)
+                      "--epc" main-file))))
 
 (defun nim-find-project-main-file ()
   (or (and (eq 'nimscript-mode major-mode)
