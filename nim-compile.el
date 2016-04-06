@@ -53,10 +53,12 @@ success with the filename of the compiled file."
   (let ((default-directory (or (nim-get-project-root) default-directory)))
     (nim-compile (list "js" (buffer-file-name))
                  (lambda () (when callback
-                              (funcall callback (concat default-directory
-                                                        "nimcache/"
-                                                        (file-name-sans-extension (file-name-nondirectory (buffer-file-name)))
-                                                        ".js")))))))
+                         (funcall callback
+                                  (concat default-directory
+                                          "nimcache/"
+                                          (file-name-sans-extension
+                                           (file-name-nondirectory (buffer-file-name)))
+                                          ".js")))))))
 
 (defun nim-compile-region-to-js (start end)
   "Compile the current region to javascript.
