@@ -9,11 +9,6 @@
 (require 'epc)
 (require 'cl-lib)
 
-(defcustom nim-nimsuggest-path (executable-find "nimsuggest")
-  "Path to the nimsuggest binary."
-  :type 'string
-  :group 'nim)
-
 (defun nim-find-file-in-heirarchy (current-dir pattern)
   "Search for a file matching PATTERN upwards through the directory
 hierarchy, starting from CURRENT-DIR"
