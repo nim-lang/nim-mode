@@ -16,7 +16,7 @@ hierarchy, starting from CURRENT-DIR"
     (locate-dominating-file
      current-dir
      (lambda (dir)
-       (let ((file (cl-first (directory-files dir t pattern nil))))
+       (let ((file (car (directory-files dir t pattern nil))))
          (when file (throw 'found file)))))))
 
 (defun nim-find-cfg-file ()
