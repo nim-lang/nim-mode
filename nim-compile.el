@@ -23,9 +23,9 @@ You don't need to set this if the nim executable is inside your PATH."
   :type 'string
   :group 'nim)
 
-(defun nim-compile (args &optional on-success)
+(defun nim-compile (_args &optional on-success)
   "Invoke the compiler and call ON-SUCCESS in case of successful compilation."
-  (let ((on-success (or on-success (lambda () (message "Compilation successful.")))))
+  (let ((_on-success (or on-success (lambda () (message "Compilation successful.")))))
     (if (bufferp "*nim-compile*")
         (with-current-buffer "*nim-compile*"
           (erase-buffer)))))
