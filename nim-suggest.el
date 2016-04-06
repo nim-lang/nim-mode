@@ -1,11 +1,9 @@
-;;; nim-suggest.el --- -*- lexical-binding: t -*-
+;;; nim-suggest.el --- a plugin to use nimsuggest from Emacs -*- lexical-binding: t -*-
 ;;; Commentary:
 
 ;;
 
 ;;; Code:
-
-;;; Completion
 
 (require 'nim-vars)
 (require 'epc)
@@ -107,17 +105,23 @@ def: where the symbol is defined
 use: where the symbol is used
 dus: def + use
 
-The callback is called with a list of nim-epc structs."
+The CALLBACK is called with a list of ‘nim-epc’ structs."
   (unless nim-inside-compiler-dir-p
     (let ((tempfile (nim-save-buffer-temporarly)))
       (deferred:$
         (epc:call-deferred
          (nim-find-or-create-epc)
          method
-         (list (buffer-file-name)
-               (line-number-at-pos)
-               (current-column)
-               tempfile))
+         (cl-case method
+           (chk
+            (list (buffer-file-name)
+                  -1 -1
+                  tempfile))
+           (t
+            (list (buffer-file-name)
+                  (line-number-at-pos)
+                  (current-column)
+                  tempfile))))
         (deferred:nextc it
           (lambda (x) (funcall callback (nim-parse-epc x method))))
         (deferred:watch it

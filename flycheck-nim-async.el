@@ -66,7 +66,8 @@
 (defun flycheck-epc-define-checker (checker parser patterns base-func mode)
   "Define flycheck CHECKER for EPC based on PARSER and PATTERNS.
 
-The BASE-FUNC is a function that returns string."
+The BASE-FUNC is a function that returns string.
+MODE is list of ‘major-mode’, which you want to enable."
   (let ((command   '("echo dummy command")))
     (pcase-dolist
         (`(,prop . ,value)
@@ -138,13 +139,11 @@ The BASE-FUNC is a function that returns string."
   "Check current buffer using nimsuggest ’chk option."
   (interactive)
   (when (and nim-nimsuggest-path (derived-mode-p 'nim-mode))
-    (save-excursion
-      (goto-char (point-max))
-      (nim-call-epc
-       'chk
-       (if force
-           'flycheck-nim-async-force-update
-         'flycheck-nim-async-callback)))))
+    (nim-call-epc
+     'chk
+     (if force
+         'flycheck-nim-async-force-update
+       'flycheck-nim-async-callback))))
 
 (defvar nimsuggest-check-output "")
 (defun flycheck-nim-async-callback (output &optional force)
