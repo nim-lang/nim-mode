@@ -143,6 +143,17 @@ This configuration is enabled only in ‘prettify-symbols-mode’."
   :type 'cons
   :group 'nim)
 
+(defcustom nim-compile-command "nim"
+  "Path to the nim executable.
+You don't need to set this if the nim executable is inside your PATH."
+  :type 'string
+  :group 'nim)
+
+(defcustom nim-compile-user-args '()
+  "The arguments to pass to `nim-compile-command' to compile a file."
+  :type '(repeat string)
+  :group 'nim)
+
 (defcustom nim-nimsuggest-path nil
   "Path to the nimsuggest binary."
   :type '(choice (const :tag "Path of nimsuggest binary" string)
@@ -171,6 +182,7 @@ specific directory or buffer.  See also ‘dir-locals-file’.")
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "M-.") 'nim-goto-sym)
     (define-key map (kbd "C-c h") 'nim-explain-sym)
+    (define-key map (kbd "C-c C-c") 'nim-compile)
     (define-key map ":" 'nim-indent-electric-colon)
     (define-key map "\C-c<" 'nim-indent-shift-left)
     (define-key map "\C-c>" 'nim-indent-shift-right)
