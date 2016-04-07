@@ -14,11 +14,6 @@
   :type 'string
   :group 'nim)
 
-(defcustom nim-project-root-regex "\\(\.git\\|\.nim\.cfg\\|\.nimble\\)$"
-  "Regex to find project root directory."
-  :type 'string
-  :group 'nim)
-
 (defun nim-find-file-in-heirarchy (current-dir pattern)
   "Search for a file matching PATTERN upwards through the directory
 hierarchy, starting from CURRENT-DIR"
@@ -35,11 +30,7 @@ hierarchy, starting from CURRENT-DIR"
    (file-name-directory (buffer-file-name))
    ".*\.nim\.cfg"))
 
-(defun nim-get-project-root ()
-  "Return project directory."
-  (file-name-directory
-   (nim-find-file-in-heirarchy
-    (file-name-directory (buffer-file-name)) nim-project-root-regex)))
+(require 'nim-compile)
 
 ;;; If you change the order here, make sure to change it over in
 ;;; nimsuggest.nim too.
