@@ -3,35 +3,58 @@
 
 # You can execute this file by `nim e starterKit.nims`.
 
-if "" == staticExec("which cask"):
-  echo "install cask"
-  exec "curl -fsSL https://raw.githubusercontent.com/cask/cask/master/go | python"
+import strutils, ospaths
 
-if dirExists(thisDir() & "/.cask"):
+const caskInstallCommand =
+  "curl -fsSL https://raw.githubusercontent.com/cask/cask/master/go" &
+    "| python"
+
+if "" == findExe("cask"):
+  echo "Install Cask (a package manager for Emacs)"
+  exec caskInstallCommand
+
+if dirExists(thisDir() / ".cask"):
   exec "cask install"
 
-const scratchBuffer = """"\
-(progn (require 'nim-mode)                                              \
-       (nim-mode)                                                       \
-       (setq initial-scratch-message                                    \
-\"#[                                                                 \\n\
-nim-mode's specific keybinds:                                        \\n\
-C means Control-key                                                  \\n\
-M means Meta-key                                                     \\n\
-C-M-a        -- jump to head of proc                                 \\n\
-C-M-e        -- jump to end of proc                                  \\n\
-C-M-h        -- mark region of function                              \\n\
-                                                                     \\n\
-after M-x hs-minor-mode                                              \\n\
-C-c @ C-M-h  -- hide/fold functions                                  \\n\
-C-c @ C-M-s  -- show functions                                       \\n\
-]#                                                                   \\n\
-proc foo() =                                                         \\n\
-  echo 'a' & 'b' & 'c'                                               \\n\
-  echo astToStr(bar)                                                 \\n\
-                                                                     \\n\
-# Note that you can close the current Emacs buffer with C-x C-c.     \\n\
-\"))""""
+const nimCode = """#[
+nim-mode's specific keybinds:
+#############################
+
+C means Control-key
+M means Meta-key
+C-M-a        -- jump to head of proc
+C-M-e        -- jump to end of proc
+C-M-h        -- mark region of function
+
+After M-x hs-minor-mode
+#######################
+
+C-c @ C-M-h  -- hide/fold functions
+C-c @ C-M-s  -- show functions
+
+Nimsuggest related commands
+###########################
+(this needs extra configuration. See also README.md)
+
+M-.          --  jump to definition
+]#
+proc foo() =
+  echo 'a' & 'b' & 'c'
+  echo astToStr(bar)
+
+# Note that you can close the current Emacs buffer with C-x C-c.
+""".split(NewLines).join("\\n")
+
+const emacsConfig = """"
+(progn
+  (unless (version<= \"24.4\" emacs-version)
+    (error \"nim-mode needs emacs version 24.4 or later\"))
+  (require 'nim-mode)
+  (nim-mode)
+  (setq initial-scratch-message $#))
+"""".split(NewLines).join(" ")
+
+const scratchBuffer = emacsConfig.format("\\\"" & nimCode & "\\\"")
 
 proc startEmacs() =
   exec "cask exec emacs -Q -L . --eval " & scratchBuffer

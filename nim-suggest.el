@@ -8,38 +8,7 @@
 (require 'nim-vars)
 (require 'epc)
 (require 'cl-lib)
-
-(defcustom nim-nimsuggest-path (executable-find "nimsuggest")
-  "Path to the nimsuggest binary."
-  :type 'string
-  :group 'nim)
-
-(defcustom nim-project-root-regex "\\(\.git\\|\.nim\.cfg\\|\.nimble\\)$"
-  "Regex to find project root directory."
-  :type 'string
-  :group 'nim)
-
-(defun nim-find-file-in-heirarchy (current-dir pattern)
-  "Search for a file matching PATTERN upwards through the directory
-hierarchy, starting from CURRENT-DIR"
-  (catch 'found
-    (locate-dominating-file
-     current-dir
-     (lambda (dir)
-       (let ((file (cl-first (directory-files dir t pattern nil))))
-         (when file (throw 'found file)))))))
-
-(defun nim-find-cfg-file ()
-  "Get the nim.cfg file from current directory hierarchy."
-  (nim-find-file-in-heirarchy
-   (file-name-directory (buffer-file-name))
-   ".*\.nim\.cfg"))
-
-(defun nim-get-project-root ()
-  "Return project directory."
-  (file-name-directory
-   (nim-find-file-in-heirarchy
-    (file-name-directory (buffer-file-name)) nim-project-root-regex)))
+(require 'nim-compile)
 
 ;;; If you change the order here, make sure to change it over in
 ;;; nimsuggest.nim too.
@@ -65,16 +34,17 @@ hierarchy, starting from CURRENT-DIR"
   "Function to get options for nimsuggest.")
 
 (defun nimsuggest-get-options (main-file)
-  (append nim-suggest-options nim-suggest-local-options
-          (when (eq 'nimscript-mode major-mode)
-            '("--define:nimscript" "--define:nimconfig"))
-          (list (or (with-no-warnings nimsuggest-vervosity) "")
-                "--epc" main-file)))
+  (delq nil
+        (append nim-suggest-options nim-suggest-local-options
+                (when (eq 'nimscript-mode major-mode)
+                  '("--define:nimscript" "--define:nimconfig"))
+                (list (with-no-warnings nimsuggest-vervosity)
+                      "--epc" main-file))))
 
 (defun nim-find-project-main-file ()
   (or (and (eq 'nimscript-mode major-mode)
            buffer-file-name)
-      (nim-find-cfg-file)
+      (nim-find-config-file)
       buffer-file-name))
 
 (defun nim-find-or-create-epc ()
