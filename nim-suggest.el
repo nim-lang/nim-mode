@@ -14,22 +14,6 @@
   :type 'string
   :group 'nim)
 
-(defun nim-find-file-in-heirarchy (current-dir pattern)
-  "Search for a file matching PATTERN upwards through the directory
-hierarchy, starting from CURRENT-DIR"
-  (catch 'found
-    (locate-dominating-file
-     current-dir
-     (lambda (dir)
-       (let ((file (cl-first (directory-files dir t pattern nil))))
-         (when file (throw 'found file)))))))
-
-(defun nim-find-cfg-file ()
-  "Get the nim.cfg file from current directory hierarchy."
-  (nim-find-file-in-heirarchy
-   (file-name-directory (buffer-file-name))
-   ".*\.nim\.cfg"))
-
 (require 'nim-compile)
 
 ;;; If you change the order here, make sure to change it over in
@@ -66,7 +50,7 @@ hierarchy, starting from CURRENT-DIR"
 (defun nim-find-project-main-file ()
   (or (and (eq 'nimscript-mode major-mode)
            buffer-file-name)
-      (nim-find-cfg-file)
+      (nim-find-config-file)
       buffer-file-name))
 
 (defun nim-find-or-create-epc ()
