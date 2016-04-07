@@ -143,6 +143,13 @@ This configuration is enabled only in ‘prettify-symbols-mode’."
   :type 'cons
   :group 'nim)
 
+
+(defcustom nim-nimsuggest-path (executable-find "nimsuggest")
+  "Path to the nimsuggest binary."
+  :type '(choice (const :tag "Path of nimsuggest binary" string)
+                 (const :tag "" nil))
+  :group 'nim)
+
 (defcustom nim-suggest-options '("--v2")
   "Options for Nimsuggest.
 Note that ‘--verbosity:0’ and ‘--epc’ are automatically passed nim-mode’s

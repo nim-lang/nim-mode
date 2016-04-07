@@ -8,12 +8,6 @@
 (require 'nim-vars)
 (require 'epc)
 (require 'cl-lib)
-
-(defcustom nim-nimsuggest-path (executable-find "nimsuggest")
-  "Path to the nimsuggest binary."
-  :type 'string
-  :group 'nim)
-
 (require 'nim-compile)
 
 ;;; If you change the order here, make sure to change it over in
