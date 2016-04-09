@@ -105,15 +105,23 @@ The CALLBACK is called with a list of ‘nim-epc’ structs."
   "Directory name, which nimsuggest uses temporarily.
 Note that this directory is removed when you exit from Emacs.")
 
+
+(defun nim-suggest-get-temp-file-name ()
+  (mapconcat 'directory-file-name
+             `(,nim-dirty-directory ,buffer-file-name)
+             ""))
+
+(defun nim-make-tempdir (tempfile)
+  (let* ((tempdir (file-name-directory tempfile)))
+    (unless (file-exists-p tempdir)
+      (make-directory tempdir t))))
+
 (defun nim-save-buffer-temporarly ()
   "Save the current buffer and return the location, so we
 can pass it to epc."
-  (unless (file-exists-p nim-dirty-directory)
-    (make-directory nim-dirty-directory))
   (let* ((temporary-file-directory nim-dirty-directory)
-         (dirname (make-temp-file "nim-dirty" t))
-         (filename (expand-file-name (file-name-nondirectory (buffer-file-name))
-                                     (file-name-as-directory dirname))))
+         (filename (nim-suggest-get-temp-file-name)))
+    (nim-make-tempdir filename)
     (save-restriction
       (widen)
       (write-region (point-min) (point-max) filename nil 1))
