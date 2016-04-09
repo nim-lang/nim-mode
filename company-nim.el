@@ -136,6 +136,17 @@
          (get-text-property 0 :nim-doc cand)))
     (and (not (eq doc "")) (nim-doc-buffer cand))))
 
+(defun nim-doc-buffer (element)
+  "Displays documentation buffer with ELEMENT contents."
+  (let ((buf (get-buffer-create "*nim-doc*")))
+    (with-current-buffer buf
+      (view-mode -1)
+      (erase-buffer)
+      (insert (get-text-property 0 :nim-doc element))
+      (goto-char (point-min))
+      (view-mode 1)
+      buf)))
+
 (defun company-nim-location (cand)
   (let ((line (get-text-property 0 :nim-location-line cand))
         (path (get-text-property 0 :nim-file cand)))
