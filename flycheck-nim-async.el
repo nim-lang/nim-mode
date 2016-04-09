@@ -83,18 +83,20 @@ MODE is list of ‘major-mode’, which you want to enable."
 
 (defvar-local flycheck-epc-timer nil)
 (defun flycheck-epc-async-delay (&rest _args)
-  (let ((func (get (flycheck-epc-find-first-checker) 'flycheck-epc-base-func)))
-    (when func
-      (when (and flycheck-epc-timer
-                 (timerp flycheck-epc-timer))
-        (cancel-timer flycheck-epc-timer))
-      (setq flycheck-epc-timer
-            (run-with-timer
-             (or flycheck-idle-change-timer 0.5) nil
-             `(lambda ()
-                (unless flycheck-current-errors
-                  (flycheck-clear))
-                (,func)))))))
+  (when flycheck-mode
+    (let ((func (get (flycheck-epc-find-first-checker)
+                     'flycheck-epc-base-func)))
+      (when func
+        (when (and flycheck-epc-timer
+                   (timerp flycheck-epc-timer))
+          (cancel-timer flycheck-epc-timer))
+        (setq flycheck-epc-timer
+              (run-with-timer
+               (or flycheck-idle-change-timer 0.5) nil
+               `(lambda ()
+                  (unless flycheck-current-errors
+                    (flycheck-clear))
+                  (,func))))))))
 
 (defun flycheck-epc-async-after-change (&rest args)
   (flycheck-epc-async-delay args))
