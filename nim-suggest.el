@@ -77,7 +77,8 @@ dus: def + use
 
 The CALLBACK is called with a list of ‘nim-epc’ structs."
   (unless nim-inside-compiler-dir-p
-    (let ((tempfile (nim-save-buffer-temporarly)))
+    (let ((tempfile (nim-save-buffer-temporarly))
+          (buf (current-buffer)))
       (deferred:$
         (epc:call-deferred
          (nim-find-or-create-epc)
@@ -95,7 +96,9 @@ The CALLBACK is called with a list of ‘nim-epc’ structs."
         (deferred:nextc it
           (lambda (x) (funcall callback (nim-parse-epc x method))))
         (deferred:watch it
-          (lambda (_) (delete-directory (file-name-directory tempfile) t)))))))
+          (lambda (_)
+            (unless (get-buffer buf)
+              (delete-file tempfile))))))))
 
 (defvar nim-dirty-directory
   ;; Even users changed the temp directory name,
