@@ -1,86 +1,148 @@
-;;; nim-compile.el --- -*- lexical-binding: t -*-
+;;; nim-compile.el --- A support package of compilation for Nim -*- lexical-binding: t -*-
 
 ;;; Commentary:
 
 ;;
 
 ;;; Code:
-(require 'nim-suggest)
+(require 'cl-lib)
+(require 'rx)
+(require 'nim-vars)
 
-(defcustom nim-command "nim"
-  "Path to the nim executable.
-You don't need to set this if the nim executable is inside your PATH."
+(defvar nim-compile-command-checker-functions
+  '(nim-compile--project)
+  "Checker functions to decide build command.
+Functions (hooks) take one argument as file file string and
+return build command liek ‘nim c -r FILE.nim’")
+
+;; MEMO:
+;; Implemented based on compiler document:
+;;   http://nim-lang.org/docs/nimc.html#compiler-usage-configuration-files
+
+;; (5) for PROJECT/PROJECT.(nim.cfg/.nims)
+(defun nim-get-project-file (candidates &optional dir)
+  (let* ((projdir (file-name-base
+                   (directory-file-name (or dir default-directory))))
+         (projfile
+          (directory-file-name (mapconcat 'file-name-as-directory
+                                          `(,default-directory ,projdir)
+                                          ""))))
+    (cl-loop for ext in candidates
+             for file = (format "%s%s" projfile ext)
+             if (file-exists-p file)
+             do (cl-return file))))
+
+;; (3,4) (parentDir or projectDir)/nim.cfg
+(defconst nim-config-regex
+  (rx (group (or (group (or "nimcfg" "nim.cfg"))
+                 (group (? (and (0+ any) ".")) "nim.cfg"))
+             line-end)))
+
+(defun nim-find-config-file ()
+  "Get the config file from current directory hierarchy.
+The config file would one of those: config.nims, PROJECT.nim.cfg, or nim.cfg."
+  (nim-find-file-in-heirarchy
+   (file-name-directory (buffer-file-name))
+   nim-config-regex))
+
+(defun nim-find-file-in-heirarchy (current-dir pattern)
+  "Search for a file matching PATTERN upwards through the directory
+hierarchy, starting from CURRENT-DIR"
+  (catch 'found
+    (locate-dominating-file
+     current-dir
+     (lambda (dir)
+       (let ((pfile (nim-get-project-file '(".nims" ".nim.cfg") dir)))
+         (when pfile (throw 'found pfile)))
+       (let ((file (cl-first (directory-files dir t pattern nil))))
+         (when file (throw 'found file)))))))
+
+(defcustom nim-project-root-regex "\\(\.git\\|\.nim\.cfg\\|\.nimble\\)$"
+  "Regex to find project root directory."
   :type 'string
   :group 'nim)
 
-(defcustom nim-args-compile '()
-  "The arguments to pass to `nim-command' to compile a file."
-  :type '(repeat string)
-  :group 'nim)
+(defun nim-get-project-root ()
+  "Return project directory."
+  (file-name-directory
+   (nim-find-file-in-heirarchy
+    (file-name-directory (buffer-file-name)) nim-project-root-regex)))
 
-(defcustom nim-compiled-buffer-name "*nim-js*"
-  "The name of the scratch buffer used to compile Javascript from Nim."
-  :type 'string
-  :group 'nim)
-
-(defun nim-compile (args &optional on-success)
-  "Invoke the compiler and call ON-SUCCESS in case of successful compilation."
-  (let ((on-success (or on-success (lambda () (message "Compilation successful.")))))
-    (if (bufferp "*nim-compile*")
-        (with-current-buffer "*nim-compile*"
-          (erase-buffer)))))
-
-(defun nim-doc-buffer (element)
-  "Displays documentation buffer with ELEMENT contents."
-  (let ((buf (get-buffer-create "*nim-doc*")))
-    (with-current-buffer buf
-      (view-mode -1)
-      (erase-buffer)
-      (insert (get-text-property 0 :nim-doc element))
-      (goto-char (point-min))
-      (view-mode 1)
-      buf)))
-
-(defun nim-compile-file-to-js (&optional callback)
-  "Save current file and compiles it.
-Use the project directory, so it will work best with external
-libraries where `nim-compile-region-to-js' does not.  Return the
-filename of the compiled file.  The CALLBACK is executed on
-success with the filename of the compiled file."
-  (interactive)
-  (save-buffer)
-  (let ((default-directory (or (nim-get-project-root) default-directory)))
-    (nim-compile (list "js" (buffer-file-name))
-                 (lambda () (when callback
-                              (funcall callback (concat default-directory
-                                                        "nimcache/"
-                                                        (file-name-sans-extension (file-name-nondirectory (buffer-file-name)))
-                                                        ".js")))))))
-
-(defun nim-compile-region-to-js (start end)
-  "Compile the current region to javascript.
-The result is written into the buffer
-`nim-compiled-buffer-name'."
-  (interactive "r")
-
-  (let ((buffer (get-buffer-create nim-compiled-buffer-name))
-        (tmpdir (file-name-as-directory (make-temp-file "nim-compile" t))))
-    (let ((default-directory tmpdir))
-      (write-region start end "tmp.nim" nil 'foo)
-      (with-current-buffer buffer
-        (erase-buffer)
-        (let ((default-directory tmpdir))
-          (nim-compile '("js" "tmp.nim")
-                       (lambda () (with-current-buffer buffer
-                               (insert-file-contents
-                                (concat tmpdir (file-name-as-directory "nimcache") "tmp.js"))
-                               (display-buffer buffer)))))))))
-
-
+;; Compile command support
 (require 'compile)
-(add-to-list 'compilation-error-regexp-alist 'nim)
-(add-to-list 'compilation-error-regexp-alist-alist
-             '(nim "^\\s-*\\(.*\\)(\\([0-9]+\\),\\s-*\\([0-9]+\\))\\s-+\\(?:Error\\|\\(Hint\\)\\):" 1 2 3 (4)))
+
+(defun nim-compile--project (file)
+  "Return ‘nim build FILE’ if there is PROJECT.nims."
+  (let ((proj (nim-get-project-file '(".nims" ".nim.cfg"))))
+    (when (and proj (nim-nims-file-p proj)
+               (eq major-mode 'nim-mode))
+      (nim--fmt '("build") file))))
+
+(defun nim-nims-file-p (file)
+  (equal "nims" (file-name-extension file)))
+
+(defun nim-nimble-file-p (file)
+  (equal "nimble" (file-name-extension file)))
+
+(defun nim-compile--set-compile-command ()
+  "Set ‘compile-command’ for Nim language."
+  (let ((file (when buffer-file-name
+                (shell-quote-argument buffer-file-name)))
+        cmd)
+    (when file
+      (setq cmd
+            (cond
+             ((eq 'nimscript-mode major-mode)
+              (let ((pfile (nim-get-project-file '(".nims" ".nimble"))))
+                (cond
+                 ;; as build tool
+                 ((nim-nimble-file-p file)
+                  (let ((nim-compile-command "nimble"))
+                    (nim--fmt '("build") "")))
+                 ((and (nim-nims-file-p pfile)
+                       (equal pfile buffer-file-name))
+                  (nim--fmt '("build") pfile))
+                 (t
+                  ;; as script file
+                  (nim--fmt '("e") file)))))
+             (t
+              (let ((cmd (run-hook-with-args-until-success
+                          'nim-compile-command-checker-functions file)))
+                (or cmd (nim--fmt '("c" "-r") file))))))
+      (setq-local compile-command
+                  (if (or compilation-read-command current-prefix-arg)
+                      (compilation-read-command cmd)
+                    cmd)))))
+
+(defun nim--fmt (args file)
+  (mapconcat
+   'shell-quote-argument
+   (delq nil `(,nim-compile-command ,@args ,@nim-compile-user-args ,file))
+   " "))
+
+(define-derived-mode nim-compile-mode compilation-mode "nim-compile"
+  "major-mode for nim compilation buffer.")
+
+;;;###autoload
+(defun nim-compile ()
+  (interactive)
+  (when (derived-mode-p 'nim-mode)
+    (add-hook 'compilation-filter-hook 'nim--colorize-compilation-buffer)
+    (add-hook 'compilation-finish-functions 'nim--remove-colorize-hook)
+    (nim-compile--set-compile-command)
+    (funcall 'compile compile-command 'nim-compile-mode)))
+
+(require 'ansi-color)
+(defun nim--colorize-compilation-buffer ()
+  "Colorize compilation buffer."
+  (let ((inhibit-read-only t))
+    (ansi-color-apply-on-region compilation-filter-start (point-max))))
+
+(defun nim--remove-colorize-hook (_buf _process-state)
+  "Remove ‘nim--colorize-compilation-buffer’."
+  (when (get-buffer "*nim-compile*")
+    (remove-hook 'compilation-filter-hook 'nim--colorize-compilation-buffer)
+    (remove-hook 'compilation-finish-functions 'nim--remove-colorize-hook)))
 
 (provide 'nim-compile)
 ;;; nim-compile.el ends here
