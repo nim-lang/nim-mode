@@ -44,20 +44,12 @@
   (when (derived-mode-p 'nim-mode)
     (setq-local
      flycheck-hooks-alist
-     (cl-loop with requires = '(flycheck-error-list-update-source
-                                flycheck-error-list-highlight-errors
-                                flycheck-display-error-at-point-soon
-                                flycheck-hide-error-buffer
-                                flycheck-display-error-at-point)
-              for (hook . func) in flycheck-hooks-alist
-              if (member func requires)
-              collect (cons hook func)
-              else if (member hook '(after-change-functions))
-              collect (cons hook 'flycheck-epc-async-after-change)
-              else if (member hook '(after-save-hook))
+     (cl-loop for (hook . func) in flycheck-hooks-alist
+              if (eq func 'flycheck-handle-save)
               collect (cons hook 'flycheck-epc-async-after-save)
-              else if (member hook '(post-command-hook))
-              collect (cons hook 'flycheck-epc-async-post-command))))
+              else if (eq func 'flycheck-handle-change)
+              collect (cons hook 'flycheck-epc-async-after-change)
+              else collect (cons hook func))))
   ad-do-it)
 
 (require 'flycheck)
@@ -91,21 +83,20 @@ MODE is list of ‘major-mode’, which you want to enable."
 
 (defvar-local flycheck-epc-timer nil)
 (defun flycheck-epc-async-delay (&rest _args)
-  (let ((func (get (flycheck-epc-find-first-checker) 'flycheck-epc-base-func)))
-    (when func
-      (when (and flycheck-epc-timer
-                 (timerp flycheck-epc-timer))
-        (cancel-timer flycheck-epc-timer))
-      (setq flycheck-epc-timer
-            (run-with-timer
-             (or flycheck-idle-change-timer 0.5) nil
-             `(lambda ()
-                (unless flycheck-current-errors
-                  (flycheck-clear))
-                (,func)))))))
-
-(defun flycheck-epc-async-post-command (&rest args)
-  (flycheck-epc-async-delay args))
+  (when flycheck-mode
+    (let ((func (get (flycheck-epc-find-first-checker)
+                     'flycheck-epc-base-func)))
+      (when func
+        (when (and flycheck-epc-timer
+                   (timerp flycheck-epc-timer))
+          (cancel-timer flycheck-epc-timer))
+        (setq flycheck-epc-timer
+              (run-with-timer
+               (or flycheck-idle-change-timer 0.5) nil
+               `(lambda ()
+                  (unless flycheck-current-errors
+                    (flycheck-clear))
+                  (,func))))))))
 
 (defun flycheck-epc-async-after-change (&rest args)
   (flycheck-epc-async-delay args))

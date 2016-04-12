@@ -23,28 +23,6 @@
   :link '(url-link "http://nim-lang.org/")
   :group 'languages)
 
-(defcustom nim-type-abbrevs '(("skProc"         . "f")
-                              ("skIterator"     . "i")
-                              ("skTemplate"     . "T")
-                              ("skType"         . "t")
-                              ("skMethod"       . "f")
-                              ("skEnumField"    . "e")
-                              ("skGenericParam" . "p")
-                              ("skParam"        . "p")
-                              ("skModule"       . "m")
-                              ("skConverter"    . "C")
-                              ("skMacro"        . "M")
-                              ("skField"        . "F")
-                              ("skForVar"       . "v")
-                              ("skVar"          . "v")
-                              ("skLet"          . "v")
-                              ("skLabel"        . "l")
-                              ("skConst"        . "c")
-                              ("skResult"       . "r"))
-  "Abbrevs for nim-mode (used by company)."
-  :type 'assoc
-  :group 'nim)
-
 (defface nim-tab-face
   '((((class color) (background dark))
      (:background "grey22" :foreground "darkgray"))
