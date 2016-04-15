@@ -111,6 +111,8 @@
   ;; (I guess). To prevent this, temporary use default
   ;; show-paren-mode’s function instead.
   (setq-local show-paren-data-function #'show-paren--default)
+  ;; Work around for #111
+  (remove-hook 'post-self-insert-hook 'smie-blink-matching-open t)
 
   ;; Always indent with SPACES!
   (setq-local indent-tabs-mode nil)
