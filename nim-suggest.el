@@ -62,6 +62,10 @@
           (push (cons main-file epc-process) nim-epc-processes-alist)
           epc-process))))
 
+(defun nim-suggest-available-p ()
+  (and nim-nimsuggest-path
+       (not nim-inside-compiler-dir-p)))
+
 (defun nim-call-epc (method callback)
   "Call the nimsuggest process on point.
 
@@ -76,7 +80,7 @@ use: where the symbol is used
 dus: def + use
 
 The CALLBACK is called with a list of ‘nim-epc’ structs."
-  (unless nim-inside-compiler-dir-p
+  (when (nim-suggest-available-p)
     (let ((tempfile (nim-save-buffer-temporarly))
           (buf (current-buffer)))
       (deferred:$
