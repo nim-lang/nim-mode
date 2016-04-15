@@ -17,3 +17,33 @@ The tests are written with
 look at the existing tests. Currently, code samples for testing are in
 the `tests/samples/` subdirectory. The naming convention is
 `something-actual.nim` and `something-expected.nim`.
+
+Making New Issues
+=================
+
+nim-mode's most features are depending on nimsuggest, so if you think
+your issue is related to nimsuggest, please minimize the
+problem to avoid ambiguity.
+
+As example of turning off nimsuggest features, you can configure like:
+
+```lisp
+;; place this configuration in your .emacs or somewhere before emacs
+;; load nim-mode and you may need to reboot your Emacs to check.
+(defconst nim-nimsuggest-path nil)
+```
+
+Generally, nim-mode uses nimsuggest by `company-mode`, `eldoc-mode`,
+`flycheck-mode`, `nim-thing-at-point`, and `nim-goto-sym` (goto definition).
+
+If you are completely new to Emacs, please check next section as well.
+
+Emacs Configuration or Debugging
+================================
+
+Some configuration variables are placed in nim-vars.el. Please take a
+look if you are interested in. (indenting, faces, nimsuggest, etc.)
+
+If you new to Emacs, please visit [here](https://github.com/chrisdone/elisp-guide)
+and check `Evaluation` section (or other stuff). The C-x C-e or C-M-x
+is really convenient way to debug if you get errors in your configuration file.
