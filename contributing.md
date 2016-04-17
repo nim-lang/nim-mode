@@ -21,7 +21,7 @@ the `tests/samples/` subdirectory. The naming convention is
 Making New Issues
 =================
 
-nim-mode's most features are depending on nimsuggest, so if you think
+Most of `nim-mode`s features are depending on nimsuggest, so if you think
 your issue is related to nimsuggest, please minimize the
 problem to avoid ambiguity.
 
@@ -33,7 +33,7 @@ As example of turning off nimsuggest features, you can configure like:
 (defconst nim-nimsuggest-path nil)
 ```
 
-Generally, nim-mode uses nimsuggest by `company-mode`, `eldoc-mode`,
+Generally, `nim-mode` uses nimsuggest via `company-mode`, `eldoc-mode`,
 `flycheck-mode`, `nim-thing-at-point`, and `nim-goto-sym` (goto definition).
 
 If you are completely new to Emacs, please check next section as well.
