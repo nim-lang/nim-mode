@@ -73,7 +73,7 @@
   :group 'nim
 
   ;; init hook
-  (run-hooks nim-mode-init-hook)
+  (run-hooks 'nim-mode-init-hook)
 
   (setq-local nim-inside-compiler-dir-p
               (when (and buffer-file-name
