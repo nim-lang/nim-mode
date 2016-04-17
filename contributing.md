@@ -21,11 +21,11 @@ the `tests/samples/` subdirectory. The naming convention is
 Making New Issues
 =================
 
-Most of `nim-mode`s features are depending on nimsuggest, so if you think
-your issue is related to nimsuggest, please minimize the
-problem to avoid ambiguity.
+Most of `nim-mode`s features depend on nimsuggest. If you think your issue is
+related to nimsuggest, as a first debug step, see if the problem disappears when
+you disable nimsuggest.
 
-As example of turning off nimsuggest features, you can configure like:
+You can turn off nimsuggest by setting `nim-nimsuggest-path` to `nil`:
 
 ```lisp
 ;; place this configuration in your .emacs or somewhere before emacs
@@ -41,8 +41,9 @@ If you are completely new to Emacs, please check next section as well.
 Emacs Configuration or Debugging
 ================================
 
-Some configuration variables are placed in nim-vars.el. Please take a
-look if you are interested in. (indenting, faces, nimsuggest, etc.)
+Some configuration variables are placed in nim-vars.el. Please take a look if
+you are interested. They should be available via customize-group. (indenting,
+faces, nimsuggest, etc.)
 
 If you new to Emacs, please visit [here](https://github.com/chrisdone/elisp-guide)
 and check `Evaluation` section (or other stuff). The C-x C-e or C-M-x
