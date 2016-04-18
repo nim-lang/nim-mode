@@ -24,7 +24,7 @@
 ;;; Code:
 (eval-and-compile (require 'nim-rx))
 
-(defconst nim-font-lock-keywords
+(defvar nim-font-lock-keywords
   `((,(nim-rx (1+ "\t")) . 'nim-tab-face)
     (nim-proc-matcher
      (1 (if (match-string 2)
@@ -82,7 +82,7 @@ set nil to this value by ‘nim-mode-init-hook’.")
            (symbol-value keywords)
            "\\|")))
 
-(defconst nim-font-lock-keywords-2
+(defvar nim-font-lock-keywords-2
   (append
    (cl-loop
     with pairs = `((nim-types . font-lock-type-face)
@@ -97,7 +97,7 @@ set nil to this value by ‘nim-mode-init-hook’.")
    `((,(rx symbol-start "result" symbol-end) . font-lock-variable-name-face)
      (nim-pragma-matcher . (4 'nim-font-lock-pragma-face)))))
 
-(defconst nim-font-lock-keywords-3
+(defvar nim-font-lock-keywords-3
   (list (cons (nim--format-keywords 'nim-builtins-without-nimscript)
               font-lock-builtin-face)))
 
@@ -407,6 +407,20 @@ character address of the specified TYPE."
    'nim-skip-comment-and-string
    (lambda () (not (re-search-forward (nim-rx font-lock-defun) nil t)))
    (lambda (ppss) (or (nth 3 ppss) (nth 4 ppss)))))
+
+(defun nim-syntax-disable-maybe ()
+  "Turn off some syntax highlight if buffer size is greater than limit.
+The limit refers to ‘nim-syntax-disable-limit’."
+  (when (and nim-syntax-disable-limit
+             (< nim-syntax-disable-limit (point-max)))
+    (cl-mapcar (lambda (s) (apply `((lambda () (setq-local ,s nil)))))
+               nim-syntax-disable-keywords-list)
+    (message (concat "nim-mode: this buffer size was greater than "
+                     "nim-syntax-disable-limit(%d), so some syntax highlights "
+                     "were turned off.")
+             nim-syntax-disable-limit)))
+
+(add-hook 'nim-mode-init-hook 'nim-syntax-disable-maybe)
 
 (provide 'nim-syntax)
 ;;; nim-syntax.el ends here

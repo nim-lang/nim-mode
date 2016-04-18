@@ -165,6 +165,22 @@ specific directory or buffer.  See also ‘dir-locals-file’.")
     (define-key map "\C-c>" 'nim-indent-shift-right)
     map))
 
+;; Turn off syntax highlight for big files
+;; FIXME: what number should we set as default?
+(defcustom nim-syntax-disable-limit 400000
+  "Number of buffer size limit to turn off some syntax highlights.
+See also ‘nim-syntax-disable-keywords-list’."
+  :type '(choice (const :tag "unsigned integer" number)
+                 (const :tag "nil" nil))
+  :group 'nim)
+
+(defvar nim-syntax-disable-keywords-list
+  '(nim-font-lock-keywords
+    nim-font-lock-keywords3
+    nim-font-lock-keywords-extra)
+  "Font-lock-keywords when current buffer size is greater than ‘nim-syntax-disable-limit’.")
+
+;; Syntax table
 (defconst nim-mode-syntax-table
   (let ((table (make-syntax-table)))
     ;; Give punctuation syntax to ASCII that normally has symbol
