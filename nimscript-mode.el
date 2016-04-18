@@ -24,7 +24,7 @@
 (require 'nim-syntax)
 (require 'nim-mode)
 
-(defconst nimscript-keywords
+(defvar nimscript-keywords
   (append
    `(,(cons (nim--format-keywords 'nimscript-builtins)
             font-lock-builtin-face)

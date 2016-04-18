@@ -24,7 +24,7 @@
 ;;; Code:
 (eval-and-compile (require 'nim-rx))
 
-(defconst nim-font-lock-keywords
+(defvar nim-font-lock-keywords
   `((,(nim-rx (1+ "\t")) . 'nim-tab-face)
     (nim-proc-matcher
      (1 (if (match-string 2)
@@ -82,7 +82,7 @@ set nil to this value by ‘nim-mode-init-hook’.")
            (symbol-value keywords)
            "\\|")))
 
-(defconst nim-font-lock-keywords-2
+(defvar nim-font-lock-keywords-2
   (append
    (cl-loop
     with pairs = `((nim-types . font-lock-type-face)
@@ -97,7 +97,7 @@ set nil to this value by ‘nim-mode-init-hook’.")
    `((,(rx symbol-start "result" symbol-end) . font-lock-variable-name-face)
      (nim-pragma-matcher . (4 'nim-font-lock-pragma-face)))))
 
-(defconst nim-font-lock-keywords-3
+(defvar nim-font-lock-keywords-3
   (list (cons (nim--format-keywords 'nim-builtins-without-nimscript)
               font-lock-builtin-face)))
 
