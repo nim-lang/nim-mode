@@ -12,8 +12,8 @@ install:
       sh build.sh
       bin/nim c koch
       ./koch boot -d:release
+      cd ..
     fi
-    cd ..
   - evm install $EVM_EMACS --use --skip
   - cask
 cache:
