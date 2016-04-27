@@ -1,18 +1,36 @@
 language: generic
 sudo: no
+language: c
 install:
   - curl -fsSkL https://gist.github.com/rejeep/ebcd57c3af83b049833b/raw > travis.sh && source ./travis.sh
+  - |
+    if [ ! -x nim-$nim_version/bin/nim ]; then
+      # If the Nim executable does not exist (means we haven't installed Nim yet)
+      # build nim
+      wget http://nim-lang.org/download/nim-$nim_version.tar.xz
+      tar xvJf nim-$nim_version.tar.xz
+      cd nim-$nim_version
+      sh build.sh
+      bin/nim c koch
+      ./koch boot -d:release
+    fi
+    cd ..
   - evm install $EVM_EMACS --use --skip
   - cask
+cache:
+  directories:
+    - nim-0.13.0
+before_script:
+  - export PATH="nim-0.13.0/bin${PATH:+:$PATH}"
 env:
-  - EVM_EMACS=emacs-24.4-travis
-  - EVM_EMACS=emacs-24.5-travis
-  - EVM_EMACS=emacs-git-snapshot-travis
+  - EVM_EMACS=emacs-24.4-travis nim_version=0.13.0
+  - EVM_EMACS=emacs-24.5-travis nim_version=0.13.0
+  - EVM_EMACS=emacs-git-snapshot-travis nim_version=0.13.0
 matrix:
   fast_finish: true
   allow_failures:
     env:
-      - EVM_EMACS=emacs-git-snapshot-travis
+      - EVM_EMACS=emacs-git-snapshot-travis nim_version=0.13.0
 script:
   - emacs --version
   - make test
