@@ -24,7 +24,6 @@
 
 ;;; Code:
 
-
 (require 'nim-mode)
 
 (describe
@@ -35,7 +34,7 @@
   (progn (org-reload)
          (setq org-confirm-babel-evaluate nil)
          (org-babel-do-load-languages 'org-babel-load-languages
-                                      '((emacs-lisp . t) (shell . t) (python . t) (nim . t) (org . t))))
+                                      '((emacs-lisp . t) (nim . t) (org . t))))
   (erase-buffer)
 
   (org-mode))
