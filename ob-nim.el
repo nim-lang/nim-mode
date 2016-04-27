@@ -1,10 +1,7 @@
 ;;; ob-nim.el --- Babel Functions for C and Similar Languages -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2010-2016 Free Software Foundation, Inc.
-
 ;; Author: Lompik
 ;; Keywords: literate programming, reproducible research
-;; Homepage: http://orgmode.org
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
