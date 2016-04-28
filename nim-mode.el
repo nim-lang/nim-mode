@@ -56,7 +56,6 @@
 (require 'nim-compile)
 (require 'nim-suggest)
 (require 'commenter)
-(require 'ob-nim)
 
 (put 'nim-mode 'font-lock-defaults '(nim-font-lock-keywords nil t))
 

@@ -42,6 +42,7 @@ Parameter may be used, like nim cpp"
   :version "24.3"
   :type 'string)
 
+;;;###autoload
 (defun org-babel-execute:nim (body params)
   "Execute a block of nim code with org-babel.
 This function is called by `org-babel-execute-src-block'."
