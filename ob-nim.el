@@ -30,6 +30,7 @@
 
 (require 'org)
 (require 'ob)
+(require 'cl-lib)
 
 (declare-function org-entry-get "org"
 		  (pom property &optional inherit literal-nil))
@@ -130,7 +131,6 @@ its header arguments."
          (colnames (if (fboundp 'org-babel--get-vars)
                        (cdr (assq :colname-names params))
                      (cdar (org-babel-get-header params :colname-names))))
-	 (colnames (cdr (assq :colname-names params)))
          (imports (org-babel-read
                    (or (cdr (assoc :import params))
                        (org-entry-get nil "import" t))
@@ -139,29 +139,29 @@ its header arguments."
          (imports (if imports
                       (if (listp imports) imports (list imports))
                     nil)))
-    (if colnames (add-to-list 'imports 'tables))
-    (if colnames (add-to-list 'imports 'strutils))
+    (if colnames (push 'tables imports))
+    (if colnames (push 'strutils imports))
     (mapconcat 'identity
-	       (list
-		;; imports
-		(if imports
-		    (mapconcat
-		     (lambda (inc) (format "import %s" inc))
-		     imports "\n"))
-		;; variables
-		(if colnames
-		    ;;with colnames .. as tables
-		    (let ((vc (mapcar* (lambda (el)
-					 (cons el (assoc (car el) colnames )))
-				       vars)))
-		      (mapconcat 'org-babel-nim-var-to-nim-cn vc  "\n"))
-		  ;; else as arrays
-		  (mapconcat 'org-babel-nim-var-to-nim vars "\n"))
-		;; table sizes
-		(mapconcat 'org-babel-nim-table-sizes-to-nim vars "\n")
-		;; tables headers utility
-		;; body
-		body "\n") "\n")))
+               (list
+                ;; imports
+                (if imports
+                    (mapconcat
+                     (lambda (inc) (format "import %s" inc))
+                     imports "\n"))
+                ;; variables
+                (if colnames
+                    ;;with colnames .. as tables
+                    (let ((vc (mapcar* (lambda (el)
+                                         (cons el (assoc (car el) colnames )))
+                                       vars)))
+                      (mapconcat 'org-babel-nim-var-to-nim-cn vc  "\n"))
+                  ;; else as arrays
+                  (mapconcat 'org-babel-nim-var-to-nim vars "\n"))
+                ;; table sizes
+                (mapconcat 'org-babel-nim-table-sizes-to-nim vars "\n")
+                ;; tables headers utility
+                ;; body
+                body "\n") "\n")))
 
 
 (defun org-babel-prep-session:nim (_session _params)
@@ -213,7 +213,7 @@ If VAL is a table it is exported as a `array' of `array' in nim."
 	     (lambda (v)
 	       (concat
 		" ["
-		(mapconcat (lambda (w) (format ,(cadr type) (if w w nim_nil))) v ",")
+		(mapconcat (lambda (w) (format ,(cadr type) (if w w ,nim_nil))) v ",")
 		"]" ))
 	     val
 	     ",\n")
@@ -279,7 +279,7 @@ of the same value."
 	(cons "" (format format-data val))
       (funcall format-data (apply #'mapcar* #'list val)	       coln))))
 
-(defun org-babel-nim-val-to-nim-type-cn (val colnames)
+(defun org-babel-nim-val-to-nim-type-cn (val _colnames)
   "Determine the type of VAL.
 Return a list (TYPE-NAME FORMAT).  TYPE-NAME should be the name of the type.
 FORMAT can be either a format string or a function which is called with VAL.
@@ -314,7 +314,7 @@ If VAL is a table it is exported a `Table' of `array' with COLNAMES as keys."
 	       (concat
 		(format "  \"%s\"" (pop coln))
 		": ["
-		(mapconcat (lambda (w) (format ,(cadr type) (if w w nim_nil))) v ",")
+		(mapconcat (lambda (w) (format ,(cadr type) (if w w ,nim_nil))) v ",")
 		"]" ))
 	     val
 	     ",\n")
@@ -332,8 +332,8 @@ If VAL is a table it is exported a `Table' of `array' with COLNAMES as keys."
       type))))
 
 (defun org-babel-nim-var-to-nim-cn (valscn)
-  "Convert an elisp val into a string (with colnames) of nim code specifying a var
-of the same value."
+  "Convert an elisp val into a string (with colnames) of nim code specifying a
+var of the same value."
   ;; TODO list support
   (let* ((colnames (cddr valscn))
 	 (pair (car valscn))
