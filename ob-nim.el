@@ -151,9 +151,9 @@ its header arguments."
                 ;; variables
                 (if colnames
                     ;;with colnames .. as tables
-                    (let ((vc (mapcar* (lambda (el)
-                                         (cons el (assoc (car el) colnames )))
-                                       vars)))
+                    (let ((vc (cl-mapcar (lambda (el)
+                                           (cons el (assoc (car el) colnames )))
+                                         vars)))
                       (mapconcat 'org-babel-nim-var-to-nim-cn vc  "\n"))
                   ;; else as arrays
                   (mapconcat 'org-babel-nim-var-to-nim vars "\n"))
@@ -277,7 +277,7 @@ of the same value."
   (let ((format-data (cadr type)))
     (if (stringp format-data)
 	(cons "" (format format-data val))
-      (funcall format-data (apply #'mapcar* #'list val)	       coln))))
+      (funcall format-data (apply #'cl-mapcar #'list val)	       coln))))
 
 (defun org-babel-nim-val-to-nim-type-cn (val _colnames)
   "Determine the type of VAL.

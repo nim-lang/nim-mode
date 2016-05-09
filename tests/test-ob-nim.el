@@ -31,10 +31,10 @@
  (before-each
   (set-buffer (get-buffer-create "*Test*"))
 
-  (progn (org-reload)
-         (setq org-confirm-babel-evaluate nil)
-         (org-babel-do-load-languages 'org-babel-load-languages
-                                      '((emacs-lisp . t) (nim . t) (org . t))))
+  (progn
+    (setq org-confirm-babel-evaluate nil)
+    (org-babel-do-load-languages 'org-babel-load-languages
+                                 '((emacs-lisp . t) (nim . t) (org . t))))
   (erase-buffer)
 
   (org-mode))
@@ -42,7 +42,8 @@
  (after-each
   (kill-buffer (get-buffer-create "*Test*")))
 
- (it "should process `begin_src' headers"
+ (it "should process `begin_src' headers
+"
      (insert "
 #+header: :var x = 3
 #+begin_src nim :import sequtils strutils :define release ssl
@@ -55,7 +56,8 @@ when defined(release):
      (org-babel-next-src-block)
      (expect (org-babel-execute-src-block) :to-equal "3/6"))
 
- (it "should convert table with no colname"
+ (it "should convert table with no colname
+"
      (insert "#+name: eg
 | col1 | col2 |
 |------+------|
@@ -74,7 +76,8 @@ print_2d(x)
      (org-babel-next-src-block)
      (expect (org-babel-execute-src-block) :to-equal '(("col1" "col2") ("a" 1) ("b" 2.0))))
 
- (it "should convert table with colname"
+ (it "should convert table with colname
+"
      (insert "#+name: eg
 | col1 | col2 |
 |------+------|
