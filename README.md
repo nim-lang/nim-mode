@@ -36,6 +36,25 @@ If you use `company-mode` then add `company-nim` to `company-backends` like:
                '(company-nim :with company-nim-builtin))
 ```
 
+## org-mode babel integration
+nim-mode adds support for evaluating org-mode source code blocks (`C-c
+C-c` inside a code block). To enable this feature add nim to your
+babel languages after loading nim-mode:
+
+```el
+(org-babel-do-load-languages
+  'org-babel-load-languages
+  '((emacs-lisp . t) (org . t) (nim . t)  ...))
+```
+
+Passing variables and org tables with `:var` headers is supported. org
+tables are passed as 2D nim's `array` without the `:colnames` header. With
+`:colnames`, org tables will be nim's `Table` with the org table header as
+keys.
+
+Additionally, you can specify libraries in the header for example `:import sequtils
+tables ..` and also define symbols with `:define release ssl ...`.
+
 ## nim-eldoc
 This feature is automatically turned on if `nim-suggest-path` is non-nil.
 
