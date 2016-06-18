@@ -140,8 +140,8 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
        (nim-smie--of kind))
       ;; else
       (`(:before . "else") (nim-smie-rule-adjust-else-stmt))
-      ;; var/let/const/type/import
-      (`(:after . ,(or "var" "let" "const" "type" "import"))
+      ;; var/let/const/type/import/using
+      (`(:after . ,(or "var" "let" "const" "type" "import" "using"))
        nim-indent-offset)
       (`(:list-intro . ,(or "var" "let" "const" "type" "import"))
        (nim-smie--list-intro-vlcti token))
