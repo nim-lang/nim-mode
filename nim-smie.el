@@ -52,6 +52,7 @@
        (exp (id) (exp) (virtual-indents))
        (virtual-indents (stmt "__after_break"))
        (& (exp "&" exp) (&))
+       (concept ("concept" exp-comma))
        (import ("import" exp-comma))
        (exp-comma (exp "," exp exp-comma ";") (exp-comma))
        (var   ("var"   vlc-body))
@@ -93,7 +94,7 @@
      '((nonassoc "case" "object") (assoc "of"))
      '((assoc "for") (assoc ":"))
      '((assoc "try") (assoc "except") (assoc "finally") (assoc  ":"))
-     '((assoc "=") (assoc "object"))
+     '((assoc "=") (assoc "object" "concept"))
      ;; Functions
      `((assoc ,@nim-smie--defuns) (assoc "="))
      ;; While
@@ -145,6 +146,10 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
        nim-indent-offset)
       (`(:list-intro . ,(or "var" "let" "const" "type" "import"))
        (nim-smie--list-intro-vlcti token))
+      (`(:list-intro . "concept")
+       (nim-set-force-indent
+        (save-excursion (back-to-indentation)
+                        (+ (current-column) nim-indent-offset))))
       ;; enum
       (`(:before . "enum")
        (save-excursion (back-to-indentation)
@@ -656,11 +661,14 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
          ((equal "," tok)
           (unless (looking-at-p (nim-rx "," (0+ " ") (or comment line-end)))
             (setq tok "")))
-         ;; var inside paren of proc
+         ;; ignore ‘var’ if it starts with middle of the line to prevent
+         ;; wrong indent calculation like:
+         ;;   1. type a = concept var XXX
+         ;;   2. proc x(a: var int): ...
+         ;;   3. maybe more since nim can use the ‘var’ anywhere
          ((and (equal "var" tok)
-               (looking-back ":\\( +\\)?" nil)
-               (not (looking-at-p (nim-rx "var" (0+ " ") (or comment line-end)))))
-          (setq tok ""))
+               (not (nim-get-indent-start-p '("var"))))
+          (setq tok "."))
          ;; Infix colon
          ((member tok2 '(":"))
           (if-let ((data (nim-get-indent-start-p nil t)))
