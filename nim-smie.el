@@ -84,7 +84,8 @@
         ("try" exp "except" exp "except" exp "finally" ":" stmt)
         ("while" any ":" stmt)
         ("for" any ":" stmt)
-        ("block" any ":" stmt)))
+        ("block" any ":" stmt))
+       (using ("using" exp-colon)))
      ;; You can choose: `assoc', `left', `right' or `nonassoc'.
      '((nonassoc "if" "when" "case" "for" "try")
        (assoc "of") (assoc "elif") (assoc "else"))
