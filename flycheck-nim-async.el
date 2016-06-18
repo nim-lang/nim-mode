@@ -77,7 +77,7 @@ MODE is list of ‘major-mode’, which you want to enable."
 
 (defun flycheck-epc-find-first-checker ()
   (cl-loop for checker in flycheck-checkers
-           for modes = (flycheck-checker-modes checker)
+           for modes = (flycheck-checker-get checker 'modes)
            if (memq major-mode modes)
            collect (cl-return checker)))
 
