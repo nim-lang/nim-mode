@@ -84,7 +84,8 @@
         ("try" exp "except" exp "except" exp "finally" ":" stmt)
         ("while" any ":" stmt)
         ("for" any ":" stmt)
-        ("block" any ":" stmt)))
+        ("block" any ":" stmt))
+       (using ("using" exp-colon)))
      ;; You can choose: `assoc', `left', `right' or `nonassoc'.
      '((nonassoc "if" "when" "case" "for" "try")
        (assoc "of") (assoc "elif") (assoc "else"))
@@ -139,8 +140,8 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
        (nim-smie--of kind))
       ;; else
       (`(:before . "else") (nim-smie-rule-adjust-else-stmt))
-      ;; var/let/const/type/import
-      (`(:after . ,(or "var" "let" "const" "type" "import"))
+      ;; var/let/const/type/import/using
+      (`(:after . ,(or "var" "let" "const" "type" "import" "using"))
        nim-indent-offset)
       (`(:list-intro . ,(or "var" "let" "const" "type" "import"))
        (nim-smie--list-intro-vlcti token))

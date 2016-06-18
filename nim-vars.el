@@ -252,8 +252,8 @@ It makes underscores and dots word constituent chars.")
     "generic" "if" "import" "in" "include" "interface" "isnot"
     "iterator" "lambda" "let" "macro" "method" "mixin" "mod" "nil" "not"
     "notin" "object" "of" "or" "out" "proc" "ptr" "raise" "ref" "return"
-    "shared" "shl" "shr" "static" "template" "try" "tuple" "type" "var"
-    "when" "while" "with" "without" "xor" "yield")
+    "shared" "shl" "shr" "static" "template" "try" "tuple" "type" "using"
+    "var" "when" "while" "with" "without" "xor" "yield")
   "Nim keywords.
 The above string is taken from URL
 `http://nim-lang.org/manual.html#identifiers-keywords', for easy
