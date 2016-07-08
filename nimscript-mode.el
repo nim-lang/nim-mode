@@ -36,12 +36,15 @@
      ("\\_<ScriptMode\\_>" (0 font-lock-type-face)))))
 
 ;;;###autoload
-(define-derived-mode nimscript-mode nim-mode "NimScript"
+(define-derived-mode nimscript-mode prog-mode "NimScript"
   "A major-mode for NimScript files.
 This major-mode is activated when you enter *.nims and *.nimble
 suffixed files, but if it’s .nimble file, also another logic is
 applied. See also ‘nimscript-mode-maybe’."
   :group 'nim
+
+  (nim--common-init)
+
   (setq-local font-lock-defaults
               `(,(append
                   nim-font-lock-keywords

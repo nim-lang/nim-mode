@@ -67,29 +67,13 @@
         font-lock-comment-face)
     font-lock-string-face))
 
-;;;###autoload
-(define-derived-mode nim-mode prog-mode "Nim"
-  "A major mode for the Nim programming language."
-  :group 'nim
-
-  ;; init hook
-  (run-hooks 'nim-mode-init-hook)
-
+(defun nim--common-init ()
+  "Common configuration for ‘nim-mode’ and ‘nimscript-mode’."
   (setq-local nim-inside-compiler-dir-p
               (when (and buffer-file-name
                          (string-match
                           nim-suggest-ignore-dir-regex buffer-file-name))
                 t))
-
-  ;; Font lock
-  (setq-local font-lock-defaults
-              `(,(append nim-font-lock-keywords
-                         nim-font-lock-keywords-extra
-                         nim-font-lock-keywords-2
-                         nim-font-lock-keywords-3)
-                nil nil nil nil
-                (font-lock-syntactic-face-function
-                 . nim-font-lock-syntactic-face-function)))
 
   ;; Comment
   (setq-local comment-use-syntax t)
@@ -147,6 +131,26 @@
 ;; add ‘nim-indent-function’ to electric-indent’s
 ;; blocklist. ‘electric-indent-inhibit’ isn’t enough for old emacs.
 (add-to-list 'electric-indent-functions-without-reindent 'nim-indent-line)
+
+;;;###autoload
+(define-derived-mode nim-mode prog-mode "Nim"
+  "A major mode for the Nim programming language."
+  :group 'nim
+
+  ;; init hook
+  (run-hooks 'nim-mode-init-hook)
+
+  (nim--common-init)
+
+  ;; Font lock
+  (setq-local font-lock-defaults
+              `(,(append nim-font-lock-keywords
+                         nim-font-lock-keywords-extra
+                         nim-font-lock-keywords-2
+                         nim-font-lock-keywords-3)
+                nil nil nil nil
+                (font-lock-syntactic-face-function
+                 . nim-font-lock-syntactic-face-function))))
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.nim\\'" . nim-mode))
