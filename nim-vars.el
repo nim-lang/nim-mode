@@ -241,9 +241,9 @@ It makes underscores and dots word constituent chars.")
 
 (defconst nim-keywords
   '("addr" "and" "as" "asm" "atomic" "bind" "block" "break" "case"
-    "cast" "concept" "const" "continue" "converter" "defer" "discard" "distinct" "div"
-    "do" "elif" "else" "end" "enum" "except" "export" "finally" "for" "from"
-    "generic" "if" "import" "in" "include" "interface" "isnot"
+    "cast" "concept" "const" "continue" "converter" "defer" "discard" "distinct"
+    "div" "do" "elif" "else" "end" "enum" "except" "export" "finally" "for"
+    "from" "generic" "if" "import" "in" "include" "interface" "isnot"
     "iterator" "lambda" "let" "macro" "method" "mixin" "mod" "nil" "not"
     "notin" "object" "of" "or" "out" "proc" "ptr" "raise" "ref" "return"
     "shared" "shl" "shr" "static" "template" "try" "tuple" "type" "using"
