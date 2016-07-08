@@ -24,17 +24,6 @@
 (require 'nim-syntax)
 (require 'nim-mode)
 
-(defvar nimscript-keywords
-  (append
-   `(,(cons (nim--format-keywords 'nimscript-builtins)
-            font-lock-builtin-face)
-     ,(cons (nim--format-keywords 'nimscript-variables)
-            font-lock-variable-name-face))
-   `((,(rx symbol-start "task" symbol-end (1+ " ")
-           (group  symbol-start (or "build" "tests" "bench") symbol-end))
-      (1 font-lock-builtin-face))
-     ("\\_<ScriptMode\\_>" (0 font-lock-type-face)))))
-
 ;;;###autoload
 (define-derived-mode nimscript-mode prog-mode "NimScript"
   "A major-mode for NimScript files.
@@ -45,16 +34,7 @@ applied. See also ‘nimscript-mode-maybe’."
 
   (nim--common-init)
 
-  (setq-local font-lock-defaults
-              `(,(append
-                  nim-font-lock-keywords
-                  nim-font-lock-keywords-extra
-                  nim-font-lock-keywords-2
-                  ;; Add extra keywords for NimScript
-                  nimscript-keywords)
-                nil nil nil nil
-                (font-lock-syntactic-face-function
-                 . nim-font-lock-syntactic-face-function))))
+  (nim--set-font-lock-keywords 'nimscript-mode))
 
 ;;;###autoload
 (defun nimscript-mode-maybe ()

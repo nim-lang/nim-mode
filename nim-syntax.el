@@ -101,6 +101,17 @@ set nil to this value by ‘nim-mode-init-hook’.")
   (list (cons (nim--format-keywords 'nim-builtins-without-nimscript)
               font-lock-builtin-face)))
 
+(defvar nimscript-keywords
+  (append
+   `(,(cons (nim--format-keywords 'nimscript-builtins)
+            font-lock-builtin-face)
+     ,(cons (nim--format-keywords 'nimscript-variables)
+            font-lock-variable-name-face))
+   `((,(rx symbol-start "task" symbol-end (1+ " ")
+           (group  symbol-start (or "build" "tests" "bench") symbol-end))
+      (1 font-lock-builtin-face))
+     ("\\_<ScriptMode\\_>" (0 font-lock-type-face)))))
+
 (defsubst nim-syntax-count-quotes (quote-char &optional point limit)
   "Count number of quotes around point (max is 3).
 QUOTE-CHAR is the quote char to count.  Optional argument POINT is

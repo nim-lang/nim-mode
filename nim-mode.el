@@ -143,17 +143,30 @@
   (nim--common-init)
 
   ;; Font lock
-  (setq-local font-lock-defaults
-              `(,(append nim-font-lock-keywords
-                         nim-font-lock-keywords-extra
-                         nim-font-lock-keywords-2
-                         nim-font-lock-keywords-3)
-                nil nil nil nil
-                (font-lock-syntactic-face-function
-                 . nim-font-lock-syntactic-face-function))))
+  (nim--set-font-lock-keywords 'nim-mode))
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.nim\\'" . nim-mode))
+
+(defun nim--set-font-lock-keywords (mode)
+  (let ((keywords
+         (cl-case mode
+           (nim-mode
+            (append nim-font-lock-keywords
+                    nim-font-lock-keywords-extra
+                    nim-font-lock-keywords-2
+                    nim-font-lock-keywords-3))
+           (nimscript-mode
+            (append nim-font-lock-keywords
+                    nim-font-lock-keywords-extra
+                    nim-font-lock-keywords-2
+                    ;; Add extra keywords for NimScript
+                    nimscript-keywords)))))
+    (setq-local font-lock-defaults
+              `(,keywords
+                nil nil nil nil
+                (font-lock-syntactic-face-function
+                 . nim-font-lock-syntactic-face-function)))))
 
 (defun nim-indent-post-self-insert-function ()
   "Adjust indentation after insertion of some characters.
