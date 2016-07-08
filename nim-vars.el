@@ -174,12 +174,6 @@ See also ‘nim-syntax-disable-keywords-list’."
                  (const :tag "nil" nil))
   :group 'nim)
 
-(defvar nim-syntax-disable-keywords-list
-  '(nim-font-lock-keywords
-    nim-font-lock-keywords3
-    nim-font-lock-keywords-extra)
-  "Font-lock-keywords when current buffer size is greater than ‘nim-syntax-disable-limit’.")
-
 ;; Syntax table
 (defconst nim-mode-syntax-table
   (let ((table (make-syntax-table)))
@@ -247,9 +241,9 @@ It makes underscores and dots word constituent chars.")
 
 (defconst nim-keywords
   '("addr" "and" "as" "asm" "atomic" "bind" "block" "break" "case"
-    "cast" "concept" "const" "continue" "converter" "discard" "distinct" "div"
-    "do" "elif" "else" "end" "enum" "except" "export" "finally" "for" "from"
-    "generic" "if" "import" "in" "include" "interface" "isnot"
+    "cast" "concept" "const" "continue" "converter" "defer" "discard" "distinct"
+    "div" "do" "elif" "else" "end" "enum" "except" "export" "finally" "for"
+    "from" "generic" "if" "import" "in" "include" "interface" "isnot"
     "iterator" "lambda" "let" "macro" "method" "mixin" "mod" "nil" "not"
     "notin" "object" "of" "or" "out" "proc" "ptr" "raise" "ref" "return"
     "shared" "shl" "shr" "static" "template" "try" "tuple" "type" "using"
