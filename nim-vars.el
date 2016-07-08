@@ -174,12 +174,6 @@ See also ‘nim-syntax-disable-keywords-list’."
                  (const :tag "nil" nil))
   :group 'nim)
 
-(defvar nim-syntax-disable-keywords-list
-  '(nim-font-lock-keywords
-    nim-font-lock-keywords3
-    nim-font-lock-keywords-extra)
-  "Font-lock-keywords when current buffer size is greater than ‘nim-syntax-disable-limit’.")
-
 ;; Syntax table
 (defconst nim-mode-syntax-table
   (let ((table (make-syntax-table)))

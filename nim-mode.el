@@ -148,14 +148,20 @@
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.nim\\'" . nim-mode))
 
-(defun nim--set-font-lock-keywords (mode)
+(defun nim--set-font-lock-keywords (mode &optional arg)
   (let ((keywords
          (cl-case mode
            (nim-mode
-            (append nim-font-lock-keywords
-                    nim-font-lock-keywords-extra
-                    nim-font-lock-keywords-2
-                    nim-font-lock-keywords-3))
+            (cl-typecase (or arg font-lock-maximum-decoration)
+              (null (nim--get-font-lock-keywords 0))
+              (list
+               (nim--set-font-lock-keywords
+                'nim-mode
+                (or (assoc-default 'nim-mode font-lock-maximum-decoration)
+                    (assoc-default t font-lock-maximum-decoration)
+                    t)))
+              (number (nim--get-font-lock-keywords font-lock-maximum-decoration))
+              (t (nim--get-font-lock-keywords t))))
            (nimscript-mode
             (append nim-font-lock-keywords
                     nim-font-lock-keywords-extra
@@ -167,6 +173,28 @@
                 nil nil nil nil
                 (font-lock-syntactic-face-function
                  . nim-font-lock-syntactic-face-function)))))
+
+(defun nim--get-font-lock-keywords (level)
+  "Return font lock keywords, according to ‘font-lock-maximum-decoration’ LEVEL.
+
+You can set below values as LEVEL:
+
+0 or nil - only comment and string will be highlighted
+1 - only basic keywords like if, or when
+2 - don’t highlight some extra highlights
+t - default
+
+Note that without above values will be treated as t."
+  (cl-case level
+    (0 nil)
+    (1 nim-font-lock-keywords)
+    (2 (append nim-font-lock-keywords
+               nim-font-lock-keywords-2
+               nim-font-lock-keywords-3))
+    (t (append nim-font-lock-keywords
+               nim-font-lock-keywords-extra
+               nim-font-lock-keywords-2
+               nim-font-lock-keywords-3))))
 
 (defun nim-indent-post-self-insert-function ()
   "Adjust indentation after insertion of some characters.

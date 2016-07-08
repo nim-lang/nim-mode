@@ -421,15 +421,12 @@ character address of the specified TYPE."
 
 (defun nim-syntax-disable-maybe ()
   "Turn off some syntax highlight if buffer size is greater than limit.
-The limit refers to ‘nim-syntax-disable-limit’."
+The limit refers to ‘nim-syntax-disable-limit’.  This function
+will be used if only user didn't set ‘font-lock-maximum-decoration’."
   (when (and nim-syntax-disable-limit
-             (< nim-syntax-disable-limit (point-max)))
-    (cl-mapcar (lambda (s) (apply `((lambda () (setq-local ,s nil)))))
-               nim-syntax-disable-keywords-list)
-    (message (concat "nim-mode: this buffer size was greater than "
-                     "nim-syntax-disable-limit(%d), so some syntax highlights "
-                     "were turned off.")
-             nim-syntax-disable-limit)))
+             (< nim-syntax-disable-limit (point-max))
+             (eq t font-lock-maximum-decoration))
+    (setq-local font-lock-maximum-decoration 2)))
 
 (add-hook 'nim-mode-init-hook 'nim-syntax-disable-maybe)
 
