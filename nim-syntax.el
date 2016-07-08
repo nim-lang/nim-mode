@@ -58,7 +58,9 @@
     ;; Highlight word after ‘is’ and ‘distinct’
     (,(nim-rx " " symbol-start (or "is" "distinct") symbol-end (1+ " ")
               (group identifier))
-     (1 font-lock-type-face)))
+     (1 font-lock-type-face))
+    ;; pragma
+    (nim-pragma-matcher . (4 'nim-font-lock-pragma-face)))
   "Extra font-lock keywords.
 If you feel uncomfortable because of this font-lock keywords,
 set nil to this value by ‘nim-mode-init-hook’.")
@@ -94,8 +96,7 @@ set nil to this value by ‘nim-mode-init-hook’.")
                    (nim-keywords . font-lock-keyword-face))
     for (keywords . face) in pairs
     collect (cons (nim--format-keywords keywords) face))
-   `((,(rx symbol-start "result" symbol-end) . font-lock-variable-name-face)
-     (nim-pragma-matcher . (4 'nim-font-lock-pragma-face)))))
+   `((,(rx symbol-start "result" symbol-end) . font-lock-variable-name-face))))
 
 (defvar nim-font-lock-keywords-3
   (list (cons (nim--format-keywords 'nim-builtins-without-nimscript)
