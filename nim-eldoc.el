@@ -191,7 +191,8 @@ DEFS is group of definitions from nimsuggest."
   (when (and (derived-mode-p 'nim-mode) (nim-suggest-available-p)
              (or eldoc-mode global-eldoc-mode))
     (message "nim-mode: eldoc feature turned on automatically")
-    (setq-local eldoc-documentation-function 'nim-eldoc-function)))
+    (add-function :before-until (local 'eldoc-documentation-function)
+                  #'nim-eldoc-function)))
 
 ;;;###autoload
 (add-hook 'nim-mode-hook 'nim-eldoc-setup)
