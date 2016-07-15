@@ -231,20 +231,19 @@ the line will be re-indented automatically if needed."
             (indent-line-to indentation)))))
      ;; Electric colon
      (t
-      (let ((c last-command-event))
-        (cl-case c
-          (?: (nim-electric-colon c))))))))
+      (let ((char last-command-event))
+        (when (and  (memq char electric-indent-chars)
+                    (not (nim-syntax-comment-or-string-p)))
+          (cl-case char
+            (?:  (nim-electric-colon))
+            (?\s (nim-electric-space)))))))))
 
-(defun nim-electric-colon (char)
-  "After CHAR, reindent if needed."
-  (when (and (eq ?: char)
-             (memq ?: electric-indent-chars)
-             (not current-prefix-arg)
+(defun nim-electric-colon ()
+  (when (and (not current-prefix-arg)
              ;; Trigger electric colon only at end of line
              (eolp)
              ;; Avoid re-indenting on extra colon
-             (not (equal ?: (char-before (1- (point)))))
-             (not (nim-syntax-comment-or-string-p)))
+             (not (equal ?: (char-before (1- (point))))))
     ;; Just re-indent dedenters
     (let ((dedenter-pos (nim-info-dedenter-statement-p))
           (current-pos (point)))
@@ -256,6 +255,18 @@ the line will be re-indented automatically if needed."
                      (line-number-at-pos current-pos))
             ;; Reindent region if this is a multiline statement
             (indent-region dedenter-pos current-pos)))))))
+
+(defun nim-electric-space ()
+  (let (next)
+    (when (and
+           (eq (current-indentation) (current-column))
+           (looking-back "^ +" (point-at-bol))
+           (cl-oddp (current-indentation))
+           (let* ((levels (nim-indent-calculate-levels))
+                  (next-indent (cadr (member (1- (current-indentation)) levels))))
+             (prog1 (and next-indent (< (current-indentation) next-indent))
+               (setq next next-indent))))
+      (indent-line-to next))))
 
 ;; hideshow.el (hs-minor-mode)
 (defun nim-hideshow-forward-sexp-function (_arg)
