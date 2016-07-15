@@ -196,6 +196,10 @@ Note that without above values will be treated as t."
                nim-font-lock-keywords-2
                nim-font-lock-keywords-3))))
 
+;;;;;;;;;;;;;;
+;; Electric
+;; (https://www.emacswiki.org/emacs/Electricity)
+
 (defun nim-indent-post-self-insert-function ()
   "Adjust indentation after insertion of some characters.
 This function is intended to be added to `post-self-insert-hook.'
@@ -226,42 +230,32 @@ the line will be re-indented automatically if needed."
           (when (and (numberp indentation) (< (current-indentation) indentation))
             (indent-line-to indentation)))))
      ;; Electric colon
-     ((and (eq ?: last-command-event)
-           (memq ?: electric-indent-chars)
-           (not current-prefix-arg)
-           ;; Trigger electric colon only at end of line
-           (eolp)
-           ;; Avoid re-indenting on extra colon
-           (not (equal ?: (char-before (1- (point)))))
-           (not (nim-syntax-comment-or-string-p)))
-      ;; Just re-indent dedenters
-      (let ((dedenter-pos (nim-info-dedenter-statement-p))
-            (current-pos (point)))
-        (when dedenter-pos
-          (save-excursion
-            (goto-char dedenter-pos)
-            (nim--indent-line-core)
-            (unless (= (line-number-at-pos dedenter-pos)
-                       (line-number-at-pos current-pos))
-              ;; Reindent region if this is a multiline statement
-              (indent-region dedenter-pos current-pos)))))))))
+     (t
+      (let ((c last-command-event))
+        (cl-case c
+          (?: (nim-electric-colon c))))))))
 
-(defun nim-indent-electric-colon (arg)
-  "Insert a colon and maybe de-indent the current line.
-With numeric ARG, just insert that many colons.  With
-\\[universal-argument], just insert a single colon."
-  (interactive "*P")
-  (self-insert-command (if (not (integerp arg)) 1 arg))
-  (when (and (not arg)
+(defun nim-electric-colon (char)
+  "After CHAR, reindent if needed."
+  (when (and (eq ?: char)
+             (memq ?: electric-indent-chars)
+             (not current-prefix-arg)
+             ;; Trigger electric colon only at end of line
              (eolp)
-             (not (equal ?: (char-after (- (point-marker) 2))))
+             ;; Avoid re-indenting on extra colon
+             (not (equal ?: (char-before (1- (point)))))
              (not (nim-syntax-comment-or-string-p)))
-    (let ((indentation (current-indentation))
-          (calculated-indentation (nim-indent-calculate-indentation)))
-      (when (> indentation calculated-indentation)
+    ;; Just re-indent dedenters
+    (let ((dedenter-pos (nim-info-dedenter-statement-p))
+          (current-pos (point)))
+      (when dedenter-pos
         (save-excursion
-          (indent-line-to calculated-indentation))))))
-(put 'nim-indent-electric-colon 'delete-selection t)
+          (goto-char dedenter-pos)
+          (nim--indent-line-core)
+          (unless (= (line-number-at-pos dedenter-pos)
+                     (line-number-at-pos current-pos))
+            ;; Reindent region if this is a multiline statement
+            (indent-region dedenter-pos current-pos)))))))
 
 ;; hideshow.el (hs-minor-mode)
 (defun nim-hideshow-forward-sexp-function (_arg)
