@@ -126,7 +126,10 @@
 
   ;; Because indentation is not redundant, we cannot safely reindent code.
   (setq-local electric-indent-inhibit t)
-  (setq-local electric-indent-chars (cons ?: electric-indent-chars)))
+  (setq-local electric-indent-chars '(?: ?\s))
+  (when electric-indent-mode
+    (add-function :around
+                  (local 'delete-backward-char) 'nim-electric-backspace)))
 
 ;; add ‘nim-indent-function’ to electric-indent’s
 ;; blocklist. ‘electric-indent-inhibit’ isn’t enough for old emacs.
@@ -267,6 +270,21 @@ the line will be re-indented automatically if needed."
              (prog1 (and next-indent (< (current-indentation) next-indent))
                (setq next next-indent))))
       (indent-line-to next))))
+
+(defun nim-electric-backspace (&rest args)
+  "Delete preceding char or levels of indentation."
+  (interactive "p\nP")
+  (let (back)
+    (if (and (eq (current-indentation) (current-column))
+             (memq last-command-event '(? ?)) ; C-h and backspace
+             (called-interactively-p 'interactive)
+             (not (nim-syntax-comment-or-string-p))
+             (not (bolp))
+             (not current-prefix-arg)
+             (let ((levels (reverse (nim-indent-calculate-levels))))
+               (setq back (cadr (member (current-indentation) levels)))))
+        (indent-line-to back)
+      (apply 'delete-backward-char args))))
 
 ;; hideshow.el (hs-minor-mode)
 (defun nim-hideshow-forward-sexp-function (_arg)
