@@ -180,8 +180,10 @@ Or return stop symbol to continue auto-completion using other
 (defun company-nim-builtin-prefix (arg)
   (let ((prefix (company-nim-prefix t))
         (thing (or arg "")))
-    (and (or (equal "" thing) (not (string-match "\\." thing)))
-         prefix)))
+    (if (and (not 'stop)
+             (or (equal "" thing) (not (string-match "\\." thing))))
+        prefix
+      'stop)))
 
 ;;;###autoload
 (defun company-nim-builtin (command &optional arg &rest ignored)
