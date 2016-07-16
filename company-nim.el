@@ -101,17 +101,17 @@
 (defun company-nim-prefix (&optional use-dotty-syntax)
   "checks if company-nim can complete here"
   (when (derived-mode-p 'nim-mode)
-    (let ((thing 'stop))
-      (and (not (company-in-string-or-comment))
-           (setq thing
-                 (substring-no-properties
-                  (if use-dotty-syntax
-                      ;; grab dot included symbol like XXX.YYY
-                      (with-syntax-table nim-dotty-syntax-table
-                        (company-grab-symbol))
-                    (company-grab-symbol))))
-           (cons thing t)))))
-
+    (let (thing)
+      (if (and (not (company-in-string-or-comment))
+               (setq thing
+                     (substring-no-properties
+                      (if use-dotty-syntax
+                          ;; grab dot included symbol like XXX.YYY
+                          (with-syntax-table nim-dotty-syntax-table
+                            (company-grab-symbol))
+                        (company-grab-symbol)))))
+          (cons thing t)
+        'stop))))
 
 (defun company-nim-annotation (cand)
   (let ((ann (get-text-property 0 :nim-type cand))
