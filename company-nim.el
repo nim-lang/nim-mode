@@ -106,16 +106,19 @@ Or return stop symbol to continue auto-completion using other
   (when (derived-mode-p 'nim-mode)
     (let (thing)
       (if (and (not (company-in-string-or-comment))
+               ;; ignore auto-completion when point is empty string
+               ;; (but you can activate manually)
+               (or this-command
+                   (and (string< "" thing)
+                        ;; Stop completion at beginning of word
+                        (not (eq ?\s (char-before)))))
                (setq thing
                      (substring-no-properties
                       (if use-dotty-syntax
                           ;; grab dot included symbol like XXX.YYY
                           (with-syntax-table nim-dotty-syntax-table
                             (company-grab-symbol))
-                        (company-grab-symbol))))
-               ;; ignore auto-completion when point is empty string
-               ;; (but you can activate manually)
-               (or this-command (string< "" thing)))
+                        (company-grab-symbol)))))
           (cons thing t)
         'stop))))
 
