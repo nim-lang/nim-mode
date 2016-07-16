@@ -275,7 +275,8 @@ the line will be re-indented automatically if needed."
   "Delete preceding char or levels of indentation."
   (interactive "p\nP")
   (let (back)
-    (if (and (eq (current-indentation) (current-column))
+    (if (and electric-indent-mode
+             (eq (current-indentation) (current-column))
              (memq last-command-event '(? ?)) ; C-h and backspace
              (called-interactively-p 'interactive)
              (not (nim-syntax-comment-or-string-p))
