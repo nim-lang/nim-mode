@@ -109,7 +109,10 @@
                           ;; grab dot included symbol like XXX.YYY
                           (with-syntax-table nim-dotty-syntax-table
                             (company-grab-symbol))
-                        (company-grab-symbol)))))
+                        (company-grab-symbol))))
+               ;; ignore auto-completion when point is empty string
+               ;; (but you can activate manually)
+               (or this-command (string< "" thing)))
           (cons thing t)
         'stop))))
 
@@ -174,12 +177,8 @@
 (defun company-nim-builtin-prefix (arg)
   (let ((prefix (company-nim-prefix t))
         (thing (or arg "")))
-    (and
-     ;; ignore auto-completion when point is empty string
-     ;; (but you can activate manually)
-     (or this-command (string< "" thing))
-     (or (equal "" thing) (not (string-match "\\." thing)))
-     prefix)))
+    (and (or (equal "" thing) (not (string-match "\\." thing)))
+         prefix)))
 
 ;;;###autoload
 (defun company-nim-builtin (command &optional arg &rest ignored)
