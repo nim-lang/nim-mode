@@ -186,14 +186,14 @@
  (test-faces-by-range
   "should highlight docstring"
   (test-concat-dir "tests/syntax/docstring.nim")
-  '(((56 . 100)  . font-lock-doc-face)
-    ((128 . 176) . font-lock-doc-face)))
+  '(((56 . 99)  . font-lock-doc-face)
+    ((128 . 175) . font-lock-doc-face)))
 
  ;; multi line comment or doc comment
  (test-faces-by-range
   "should highlight multi line comment and doc string"
   (test-concat-dir "tests/syntax/multiline_comment.nim")
-  '(((1 . 5) . font-lock-comment-delimiter-face)
+  '(((1 . 5) . font-lock-comment-face)
     ((48 . 75)  . font-lock-string-face)
     ((77 . 78) . font-lock-comment-delimiter-face)
     ((80 . 185)  . font-lock-comment-face)
@@ -202,17 +202,17 @@
     ((482 . 536)  . font-lock-doc-face)
     ((545 . 553)  . font-lock-string-face)
     ((564 . 566)  . font-lock-comment-face)
-    ((567 . 576)  . font-lock-comment-delimiter-face)
+    ((567 . 576)  . font-lock-comment-face) ;
     ((611 . 614)  . font-lock-string-face)
-    ((615 . 620)  . font-lock-comment-face)
+    ((615 . 619)  . font-lock-comment-face)
     ((626 . 629)  . font-lock-string-face)
-    ((630 . 635)  . font-lock-comment-face)
+    ((630 . 634)  . font-lock-comment-face)
     ((641 . 645)  . font-lock-string-face)
-    ((646 . 651)  . font-lock-comment-face)
+    ((646 . 650)  . font-lock-comment-face)
     ((657 . 661)  . font-lock-string-face)
-    ((662 . 667)  . font-lock-comment-face)
+    ((662 . 666)  . font-lock-comment-face)
     ((673 . 682)  . font-lock-string-face)
-    ((683 . 701)  . font-lock-comment-face)))
+    ((683 . 700)  . font-lock-comment-face)))
 
  ;; varargs inside proc
  (test-faces-by-range
