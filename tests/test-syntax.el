@@ -252,6 +252,13 @@
     ((202 . 212) . font-lock-type-face)
     ((282 . 293) . font-lock-type-face)))
 
+ (test-faces-by-range
+  "should highlight single line comment correctly"
+  ;; Note this test was added because I got wrong highlight
+  ;; only nimscript file, so don’t change the extension name.
+  (test-concat-dir "tests/syntax/single_comment.nims")
+  '(((1 . 70) . font-lock-comment-face)
+    ((73 . 76) . font-lock-keyword-face)))
  ) ; end of describe function
 
 (require 'nimscript-mode)
