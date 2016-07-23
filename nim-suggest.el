@@ -62,6 +62,7 @@
           (push (cons main-file epc-process) nim-epc-processes-alist)
           epc-process))))
 
+;;;###autoload
 (defun nim-suggest-available-p ()
   (and nim-nimsuggest-path
        (not nim-inside-compiler-dir-p)
