@@ -174,7 +174,7 @@ See also ‘nim-syntax-disable-keywords-list’."
   :group 'nim)
 
 ;; Syntax table
-(defconst nim-mode-syntax-table
+(defvar nim-mode-syntax-table
   (let ((table (make-syntax-table)))
     ;; Give punctuation syntax to ASCII that normally has symbol
     ;; syntax or has word syntax and isn't a letter.
