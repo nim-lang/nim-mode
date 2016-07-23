@@ -113,6 +113,11 @@ other tokens like ’:’ or ’=’."
   :type 'hook
   :group 'nim)
 
+(defcustom nim-common-init-hook nil
+  "A hook for both nim-mode and nimscript-mode."
+  :type 'hook
+  :group 'nim)
+
 (defcustom nim-pretty-triple-double-quotes
   ;; What character should be default? („…“, “…”, ‘…’, or etc.?)
   (cons ?“ ?”)
@@ -174,7 +179,7 @@ See also ‘nim-syntax-disable-keywords-list’."
   :group 'nim)
 
 ;; Syntax table
-(defconst nim-mode-syntax-table
+(defvar nim-mode-syntax-table
   (let ((table (make-syntax-table)))
     ;; Give punctuation syntax to ASCII that normally has symbol
     ;; syntax or has word syntax and isn't a letter.

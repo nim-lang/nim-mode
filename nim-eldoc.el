@@ -195,7 +195,7 @@ DEFS is group of definitions from nimsuggest."
                   #'nim-eldoc-function)))
 
 ;;;###autoload
-(add-hook 'nim-mode-hook 'nim-eldoc-setup)
+(add-hook 'nim-common-init-hook 'nim-eldoc-setup)
 
 (provide 'nim-eldoc)
 ;;; nim-eldoc.el ends here

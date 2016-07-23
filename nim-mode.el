@@ -69,6 +69,8 @@
 
 (defun nim--common-init ()
   "Common configuration for ‘nim-mode’ and ‘nimscript-mode’."
+  (run-hooks 'nim-common-init-hook)
+
   (setq-local nim-inside-compiler-dir-p
               (when (and buffer-file-name
                          (string-match
@@ -123,6 +125,10 @@
   (add-hook 'post-self-insert-hook
             #'nim-indent-post-self-insert-function 'append 'local)
   (add-hook 'which-func-functions #'nim-info-current-defun nil t)
+
+  ;; Workaround with org
+  (when (and (fboundp 'org-in-src-block-p) (org-in-src-block-p))
+    (modify-syntax-entry ?# "<" nim-mode-syntax-table))
 
   ;; Because indentation is not redundant, we cannot safely reindent code.
   (setq-local electric-indent-inhibit t)
