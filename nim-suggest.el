@@ -64,7 +64,12 @@
 
 (defun nim-suggest-available-p ()
   (and nim-nimsuggest-path
-       (not nim-inside-compiler-dir-p)))
+       (not nim-inside-compiler-dir-p)
+       ;; Prevent turn on nimsuggest related feature on org-src block
+       (not (eq major-mode 'org-mode))
+       (not (and (fboundp 'org-in-src-block-p)
+                 (or (org-in-src-block-p)
+                     (org-in-src-block-p t))))))
 
 (defun nim-call-epc (method callback)
   "Call the nimsuggest process on point.
