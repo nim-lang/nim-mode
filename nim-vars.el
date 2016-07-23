@@ -113,6 +113,11 @@ other tokens like ’:’ or ’=’."
   :type 'hook
   :group 'nim)
 
+(defcustom nim-common-init-hook nil
+  "A hook for both nim-mode and nimscript-mode."
+  :type 'hook
+  :group 'nim)
+
 (defcustom nim-pretty-triple-double-quotes
   ;; What character should be default? („…“, “…”, ‘…’, or etc.?)
   (cons ?“ ?”)
