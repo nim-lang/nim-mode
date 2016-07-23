@@ -15,6 +15,9 @@
 Functions (hooks) take one argument as file file string and
 return build command liek ‘nim c -r FILE.nim’")
 
+(defvar nim-compile-default-command
+  '("c" "-r" "--verbosity:0" "--hint[Processing]:off"))
+
 ;; MEMO:
 ;; Implemented based on compiler document:
 ;;   http://nim-lang.org/docs/nimc.html#compiler-usage-configuration-files
@@ -108,7 +111,7 @@ hierarchy, starting from CURRENT-DIR"
              (t
               (let ((cmd (run-hook-with-args-until-success
                           'nim-compile-command-checker-functions file)))
-                (or cmd (nim--fmt '("c" "-r") file))))))
+                (or cmd (nim--fmt nim-compile-default-command file))))))
       (setq-local compile-command
                   (if (or compilation-read-command current-prefix-arg)
                       (compilation-read-command cmd)
