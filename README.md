@@ -3,10 +3,16 @@ nim-mode
 
 [![Travis CI](https://travis-ci.org/nim-lang/nim-mode.svg?branch=master)](https://travis-ci.org/nim-lang/nim-mode)
 
-An emacs major mode for the Nim programming language.
+An emacs major mode for the Nim programming language. Currently only emacs 25 and higher is supported, if you try to install on latest stable release, you will run into [this problem](https://github.com/nim-lang/nim-mode/issues/100). 
 
-* [Install Nim](http://nim-lang.org/download.html)
-* Install `nim-mode.el` via MELPA.
+* Install nim either by the [official download](http://nim-lang.org/download.html) or your systems package manager if available.
+* Install `nim-mode.el` via [MELPA](https://melpa.org/#/getting-started).
+  * `M-x list-packages`  opens the list of all packages (M is the emacs name for Alt)
+  * `C-s nim-mode`       moves cursor to nim mode
+  * `ESC`                ends search
+  * `i`                  tags for install
+  * `x`                  executes install
+  * `y`                  to confirm question
 
 ## Nimsuggest
 In nim-mode repository, some *.el files depend on
