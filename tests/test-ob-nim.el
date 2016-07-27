@@ -42,19 +42,19 @@
  (after-each
   (kill-buffer (get-buffer-create "*Test*")))
 
- ;; (it "should process `begin_src' headers
-;; "
-;;      (insert "
-;; #+header: :var x = 3
-;; #+begin_src nim :import sequtils strutils :define release ssl
-;; when defined(release):
-;;   when defined(ssl):
-;;     var temp = @[1, 2].map (proc(i:int ) : string= $(i*x) )
-;;     echo temp.join(\"/\")
-;; #+end_src")
-;;      (goto-char 0)
-;;      (org-babel-next-src-block)
-;;      (expect (org-babel-execute-src-block) :to-equal "3/6"))
+ (xit "should process `begin_src' headers
+"
+     (insert "
+#+header: :var x = 3
+#+begin_src nim :import sequtils strutils :define release ssl
+when defined(release):
+  when defined(ssl):
+    var temp = @[1, 2].map (proc(i:int ) : string= $(i*x) )
+    echo temp.join(\"/\")
+#+end_src")
+     (goto-char 0)
+     (org-babel-next-src-block)
+     (expect (org-babel-execute-src-block) :to-equal "3/6"))
 
  (it "should convert table with no colname
 "
