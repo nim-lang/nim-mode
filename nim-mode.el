@@ -7,7 +7,7 @@
 ;; Version: 0.2.0
 ;; Keywords: nim languages
 ;; Compatibility: GNU Emacs 24.4
-;; Package-Requires: ((emacs "24.4") (epc "0.1.1") (let-alist "1.0.1") (commenter "0.5.1") (flycheck "0.25.1") (company "0.8.12"))
+;; Package-Requires: ((emacs "24.4") (epc "0.1.1") (let-alist "1.0.1") (commenter "0.5.1") (flycheck "28") (company "0.8.12"))
 ;;
 ;; Taken over from James H. Fisher <jameshfisher@gmail.com>
 ;;
@@ -67,29 +67,15 @@
         font-lock-comment-face)
     font-lock-string-face))
 
-;;;###autoload
-(define-derived-mode nim-mode prog-mode "Nim"
-  "A major mode for the Nim programming language."
-  :group 'nim
-
-  ;; init hook
-  (run-hooks 'nim-mode-init-hook)
+(defun nim--common-init ()
+  "Common configuration for ‘nim-mode’ and ‘nimscript-mode’."
+  (run-hooks 'nim-common-init-hook)
 
   (setq-local nim-inside-compiler-dir-p
               (when (and buffer-file-name
                          (string-match
                           nim-suggest-ignore-dir-regex buffer-file-name))
                 t))
-
-  ;; Font lock
-  (setq-local font-lock-defaults
-              `(,(append nim-font-lock-keywords
-                         nim-font-lock-keywords-extra
-                         nim-font-lock-keywords-2
-                         nim-font-lock-keywords-3)
-                nil nil nil nil
-                (font-lock-syntactic-face-function
-                 . nim-font-lock-syntactic-face-function)))
 
   ;; Comment
   (setq-local comment-use-syntax t)
@@ -140,16 +126,88 @@
             #'nim-indent-post-self-insert-function 'append 'local)
   (add-hook 'which-func-functions #'nim-info-current-defun nil t)
 
+  ;; Workaround with org
+  (when (and (fboundp 'org-in-src-block-p) (org-in-src-block-p))
+    (modify-syntax-entry ?# "<" nim-mode-syntax-table))
+
   ;; Because indentation is not redundant, we cannot safely reindent code.
   (setq-local electric-indent-inhibit t)
-  (setq-local electric-indent-chars (cons ?: electric-indent-chars)))
+  (setq-local electric-indent-chars '(?: ?\s))
+  (when electric-indent-mode
+    (add-function :around
+                  (local 'delete-backward-char) 'nim-electric-backspace)))
 
 ;; add ‘nim-indent-function’ to electric-indent’s
 ;; blocklist. ‘electric-indent-inhibit’ isn’t enough for old emacs.
 (add-to-list 'electric-indent-functions-without-reindent 'nim-indent-line)
 
 ;;;###autoload
+(define-derived-mode nim-mode prog-mode "Nim"
+  "A major mode for the Nim programming language."
+  :group 'nim
+
+  ;; init hook
+  (run-hooks 'nim-mode-init-hook)
+
+  (nim--common-init)
+
+  ;; Font lock
+  (nim--set-font-lock-keywords 'nim-mode))
+
+;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.nim\\'" . nim-mode))
+
+(defun nim--set-font-lock-keywords (mode &optional arg)
+  (let ((keywords
+         (cl-case mode
+           (nim-mode
+            (cl-typecase (or arg font-lock-maximum-decoration)
+              (null (nim--get-font-lock-keywords 0))
+              (list
+               (nim--set-font-lock-keywords
+                'nim-mode
+                (or (assoc-default 'nim-mode font-lock-maximum-decoration)
+                    (assoc-default t font-lock-maximum-decoration)
+                    t)))
+              (number (nim--get-font-lock-keywords font-lock-maximum-decoration))
+              (t (nim--get-font-lock-keywords t))))
+           (nimscript-mode
+            (append nim-font-lock-keywords
+                    nim-font-lock-keywords-extra
+                    nim-font-lock-keywords-2
+                    ;; Add extra keywords for NimScript
+                    nimscript-keywords)))))
+    (setq-local font-lock-defaults
+              `(,keywords
+                nil nil nil nil
+                (font-lock-syntactic-face-function
+                 . nim-font-lock-syntactic-face-function)))))
+
+(defun nim--get-font-lock-keywords (level)
+  "Return font lock keywords, according to ‘font-lock-maximum-decoration’ LEVEL.
+
+You can set below values as LEVEL:
+
+0 or nil - only comment and string will be highlighted
+1 - only basic keywords like if, or when
+2 - don’t highlight some extra highlights
+t - default
+
+Note that without above values will be treated as t."
+  (cl-case level
+    (0 nil)
+    (1 nim-font-lock-keywords)
+    (2 (append nim-font-lock-keywords
+               nim-font-lock-keywords-2
+               nim-font-lock-keywords-3))
+    (t (append nim-font-lock-keywords
+               nim-font-lock-keywords-extra
+               nim-font-lock-keywords-2
+               nim-font-lock-keywords-3))))
+
+;;;;;;;;;;;;;;
+;; Electric
+;; (https://www.emacswiki.org/emacs/Electricity)
 
 (defun nim-indent-post-self-insert-function ()
   "Adjust indentation after insertion of some characters.
@@ -181,42 +239,59 @@ the line will be re-indented automatically if needed."
           (when (and (numberp indentation) (< (current-indentation) indentation))
             (indent-line-to indentation)))))
      ;; Electric colon
-     ((and (eq ?: last-command-event)
-           (memq ?: electric-indent-chars)
-           (not current-prefix-arg)
-           ;; Trigger electric colon only at end of line
-           (eolp)
-           ;; Avoid re-indenting on extra colon
-           (not (equal ?: (char-before (1- (point)))))
-           (not (nim-syntax-comment-or-string-p)))
-      ;; Just re-indent dedenters
-      (let ((dedenter-pos (nim-info-dedenter-statement-p))
-            (current-pos (point)))
-        (when dedenter-pos
-          (save-excursion
-            (goto-char dedenter-pos)
-            (nim--indent-line-core)
-            (unless (= (line-number-at-pos dedenter-pos)
-                       (line-number-at-pos current-pos))
-              ;; Reindent region if this is a multiline statement
-              (indent-region dedenter-pos current-pos)))))))))
+     (t
+      (let ((char last-command-event))
+        (when (and  (memq char electric-indent-chars)
+                    (not (nim-syntax-comment-or-string-p)))
+          (cl-case char
+            (?:  (nim-electric-colon))
+            (?\s (nim-electric-space)))))))))
 
-(defun nim-indent-electric-colon (arg)
-  "Insert a colon and maybe de-indent the current line.
-With numeric ARG, just insert that many colons.  With
-\\[universal-argument], just insert a single colon."
-  (interactive "*P")
-  (self-insert-command (if (not (integerp arg)) 1 arg))
-  (when (and (not arg)
+(defun nim-electric-colon ()
+  (when (and (not current-prefix-arg)
+             ;; Trigger electric colon only at end of line
              (eolp)
-             (not (equal ?: (char-after (- (point-marker) 2))))
-             (not (nim-syntax-comment-or-string-p)))
-    (let ((indentation (current-indentation))
-          (calculated-indentation (nim-indent-calculate-indentation)))
-      (when (> indentation calculated-indentation)
+             ;; Avoid re-indenting on extra colon
+             (not (equal ?: (char-before (1- (point))))))
+    ;; Just re-indent dedenters
+    (let ((dedenter-pos (nim-info-dedenter-statement-p))
+          (current-pos (point)))
+      (when dedenter-pos
         (save-excursion
-          (indent-line-to calculated-indentation))))))
-(put 'nim-indent-electric-colon 'delete-selection t)
+          (goto-char dedenter-pos)
+          (nim--indent-line-core)
+          (unless (= (line-number-at-pos dedenter-pos)
+                     (line-number-at-pos current-pos))
+            ;; Reindent region if this is a multiline statement
+            (indent-region dedenter-pos current-pos)))))))
+
+(defun nim-electric-space ()
+  (let (next)
+    (when (and
+           (eq (current-indentation) (current-column))
+           (looking-back "^ +" (point-at-bol))
+           (cl-oddp (current-indentation))
+           (let* ((levels (nim-indent-calculate-levels))
+                  (next-indent (cadr (member (1- (current-indentation)) levels))))
+             (prog1 (and next-indent (< (current-indentation) next-indent))
+               (setq next next-indent))))
+      (indent-line-to next))))
+
+(defun nim-electric-backspace (&rest args)
+  "Delete preceding char or levels of indentation."
+  (interactive "p\nP")
+  (let (back)
+    (if (and electric-indent-mode
+             (eq (current-indentation) (current-column))
+             (memq last-command-event '(? ?)) ; C-h and backspace
+             (called-interactively-p 'interactive)
+             (not (nim-syntax-comment-or-string-p))
+             (not (bolp))
+             (not current-prefix-arg)
+             (let ((levels (reverse (nim-indent-calculate-levels))))
+               (setq back (cadr (member (current-indentation) levels)))))
+        (indent-line-to back)
+      (apply 'delete-backward-char args))))
 
 ;; hideshow.el (hs-minor-mode)
 (defun nim-hideshow-forward-sexp-function (_arg)

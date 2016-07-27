@@ -58,7 +58,9 @@
     ;; Highlight word after ‘is’ and ‘distinct’
     (,(nim-rx " " symbol-start (or "is" "distinct") symbol-end (1+ " ")
               (group identifier))
-     (1 font-lock-type-face)))
+     (1 font-lock-type-face))
+    ;; pragma
+    (nim-pragma-matcher . (4 'nim-font-lock-pragma-face)))
   "Extra font-lock keywords.
 If you feel uncomfortable because of this font-lock keywords,
 set nil to this value by ‘nim-mode-init-hook’.")
@@ -94,12 +96,22 @@ set nil to this value by ‘nim-mode-init-hook’.")
                    (nim-keywords . font-lock-keyword-face))
     for (keywords . face) in pairs
     collect (cons (nim--format-keywords keywords) face))
-   `((,(rx symbol-start "result" symbol-end) . font-lock-variable-name-face)
-     (nim-pragma-matcher . (4 'nim-font-lock-pragma-face)))))
+   `((,(rx symbol-start "result" symbol-end) . font-lock-variable-name-face))))
 
 (defvar nim-font-lock-keywords-3
   (list (cons (nim--format-keywords 'nim-builtins-without-nimscript)
               font-lock-builtin-face)))
+
+(defvar nimscript-keywords
+  (append
+   `(,(cons (nim--format-keywords 'nimscript-builtins)
+            font-lock-builtin-face)
+     ,(cons (nim--format-keywords 'nimscript-variables)
+            font-lock-variable-name-face))
+   `((,(rx symbol-start "task" symbol-end (1+ " ")
+           (group  symbol-start (or "build" "tests" "bench") symbol-end))
+      (1 font-lock-builtin-face))
+     ("\\_<ScriptMode\\_>" (0 font-lock-type-face)))))
 
 (defsubst nim-syntax-count-quotes (quote-char &optional point limit)
   "Count number of quotes around point (max is 3).
@@ -219,7 +231,7 @@ is used to limit the scan."
      ((and (eq nil (nth 4 ppss)) (eq 1 (length hash)))
       (put-text-property start-pos (1+ start-pos)
                          'syntax-table (string-to-syntax "<"))
-      (put-text-property (point-at-eol) (point-at-eol)
+      (put-text-property (1- (point-at-eol)) (point-at-eol)
                          'syntax-table (string-to-syntax ">")))
      ;; ignore
      ((or (eq t (nth 4 ppss)) ; t means single line comment
@@ -410,15 +422,12 @@ character address of the specified TYPE."
 
 (defun nim-syntax-disable-maybe ()
   "Turn off some syntax highlight if buffer size is greater than limit.
-The limit refers to ‘nim-syntax-disable-limit’."
+The limit refers to ‘nim-syntax-disable-limit’.  This function
+will be used if only user didn't set ‘font-lock-maximum-decoration’."
   (when (and nim-syntax-disable-limit
-             (< nim-syntax-disable-limit (point-max)))
-    (cl-mapcar (lambda (s) (apply `((lambda () (setq-local ,s nil)))))
-               nim-syntax-disable-keywords-list)
-    (message (concat "nim-mode: this buffer size was greater than "
-                     "nim-syntax-disable-limit(%d), so some syntax highlights "
-                     "were turned off.")
-             nim-syntax-disable-limit)))
+             (< nim-syntax-disable-limit (point-max))
+             (eq t font-lock-maximum-decoration))
+    (setq-local font-lock-maximum-decoration 2)))
 
 (add-hook 'nim-mode-init-hook 'nim-syntax-disable-maybe)
 

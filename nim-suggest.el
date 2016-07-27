@@ -62,9 +62,15 @@
           (push (cons main-file epc-process) nim-epc-processes-alist)
           epc-process))))
 
+;;;###autoload
 (defun nim-suggest-available-p ()
   (and nim-nimsuggest-path
-       (not nim-inside-compiler-dir-p)))
+       (not nim-inside-compiler-dir-p)
+       ;; Prevent turn on nimsuggest related feature on org-src block
+       (not (eq major-mode 'org-mode))
+       (not (and (fboundp 'org-in-src-block-p)
+                 (or (org-in-src-block-p)
+                     (org-in-src-block-p t))))))
 
 (defun nim-call-epc (method callback)
   "Call the nimsuggest process on point.
@@ -112,11 +118,21 @@ The CALLBACK is called with a list of ‘nim-epc’ structs."
   "Directory name, which nimsuggest uses temporarily.
 Note that this directory is removed when you exit from Emacs.")
 
-
 (defun nim-suggest-get-temp-file-name ()
   (mapconcat 'directory-file-name
-             `(,nim-dirty-directory ,buffer-file-name)
+             `(,nim-dirty-directory ,(nim-suggest--temp-file-name))
              ""))
+
+(defun nim-suggest--temp-file-name ()
+  (cl-case system-type
+    ((ms-dos windows-nt cygwin)
+     ;; For bug #119, convert ":" to "꞉" (U+A789)
+     (concat "/"
+             (replace-regexp-in-string
+              ":" (char-to-string #xA789)
+              buffer-file-name)))
+    (t ; for *nix system
+     buffer-file-name)))
 
 (defun nim-make-tempdir (tempfile)
   (let* ((tempdir (file-name-directory tempfile)))

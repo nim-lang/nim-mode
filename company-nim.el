@@ -99,19 +99,28 @@
 
 
 (defun company-nim-prefix (&optional use-dotty-syntax)
-  "checks if company-nim can complete here"
+  "Return prefix string for completion.
+Or return stop symbol to continue auto-completion using other
+‘company-backends’.  If USE-DOTTY-SYNTAX is non-nil, use
+ ‘nim-dotty-syntax-table’ to get string at point."
   (when (derived-mode-p 'nim-mode)
-    (let ((thing 'stop))
-      (and (not (company-in-string-or-comment))
-           (setq thing
-                 (substring-no-properties
-                  (if use-dotty-syntax
-                      ;; grab dot included symbol like XXX.YYY
-                      (with-syntax-table nim-dotty-syntax-table
-                        (company-grab-symbol))
-                    (company-grab-symbol))))
-           (cons thing t)))))
-
+    (let (thing)
+      (if (and (not (company-in-string-or-comment))
+               ;; ignore auto-completion when point is empty string
+               ;; (but you can activate manually)
+               (or this-command
+                   (and (string< "" thing)
+                        ;; Stop completion at beginning of word
+                        (not (eq ?\s (char-before)))))
+               (setq thing
+                     (substring-no-properties
+                      (if use-dotty-syntax
+                          ;; grab dot included symbol like XXX.YYY
+                          (with-syntax-table nim-dotty-syntax-table
+                            (company-grab-symbol))
+                        (company-grab-symbol)))))
+          (cons thing t)
+        'stop))))
 
 (defun company-nim-annotation (cand)
   (let ((ann (get-text-property 0 :nim-type cand))
@@ -174,12 +183,10 @@
 (defun company-nim-builtin-prefix (arg)
   (let ((prefix (company-nim-prefix t))
         (thing (or arg "")))
-    (and
-     ;; ignore auto-completion when point is empty string
-     ;; (but you can activate manually)
-     (or this-command (string< "" thing))
-     (or (equal "" thing) (not (string-match "\\." thing)))
-     prefix)))
+    (if (and (not 'stop)
+             (or (equal "" thing) (not (string-match "\\." thing))))
+        prefix
+      'stop)))
 
 ;;;###autoload
 (defun company-nim-builtin (command &optional arg &rest ignored)

@@ -42,7 +42,7 @@
  (after-each
   (kill-buffer (get-buffer-create "*Test*")))
 
- (it "should process `begin_src' headers
+ (xit "should process `begin_src' headers
 "
      (insert "
 #+header: :var x = 3

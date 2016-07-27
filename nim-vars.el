@@ -113,6 +113,11 @@ other tokens like ’:’ or ’=’."
   :type 'hook
   :group 'nim)
 
+(defcustom nim-common-init-hook nil
+  "A hook for both nim-mode and nimscript-mode."
+  :type 'hook
+  :group 'nim)
+
 (defcustom nim-pretty-triple-double-quotes
   ;; What character should be default? („…“, “…”, ‘…’, or etc.?)
   (cons ?“ ?”)
@@ -160,7 +165,6 @@ specific directory or buffer.  See also ‘dir-locals-file’.")
     (define-key map (kbd "M-.") 'nim-goto-sym)
     (define-key map (kbd "C-c h") 'nim-explain-sym)
     (define-key map (kbd "C-c C-c") 'nim-compile)
-    (define-key map ":" 'nim-indent-electric-colon)
     (define-key map "\C-c<" 'nim-indent-shift-left)
     (define-key map "\C-c>" 'nim-indent-shift-right)
     map))
@@ -174,14 +178,8 @@ See also ‘nim-syntax-disable-keywords-list’."
                  (const :tag "nil" nil))
   :group 'nim)
 
-(defvar nim-syntax-disable-keywords-list
-  '(nim-font-lock-keywords
-    nim-font-lock-keywords3
-    nim-font-lock-keywords-extra)
-  "Font-lock-keywords when current buffer size is greater than ‘nim-syntax-disable-limit’.")
-
 ;; Syntax table
-(defconst nim-mode-syntax-table
+(defvar nim-mode-syntax-table
   (let ((table (make-syntax-table)))
     ;; Give punctuation syntax to ASCII that normally has symbol
     ;; syntax or has word syntax and isn't a letter.
@@ -247,13 +245,13 @@ It makes underscores and dots word constituent chars.")
 
 (defconst nim-keywords
   '("addr" "and" "as" "asm" "atomic" "bind" "block" "break" "case"
-    "cast" "const" "continue" "converter" "discard" "distinct" "div" "do"
-    "elif" "else" "end" "enum" "except" "export" "finally" "for" "from"
-    "generic" "if" "import" "in" "include" "interface" "isnot"
+    "cast" "concept" "const" "continue" "converter" "defer" "discard" "distinct"
+    "div" "do" "elif" "else" "end" "enum" "except" "export" "finally" "for"
+    "from" "generic" "if" "import" "in" "include" "interface" "isnot"
     "iterator" "lambda" "let" "macro" "method" "mixin" "mod" "nil" "not"
     "notin" "object" "of" "or" "out" "proc" "ptr" "raise" "ref" "return"
-    "shared" "shl" "shr" "static" "template" "try" "tuple" "type" "var"
-    "when" "while" "with" "without" "xor" "yield")
+    "shared" "shl" "shr" "static" "template" "try" "tuple" "type" "using"
+    "var" "when" "while" "with" "without" "xor" "yield")
   "Nim keywords.
 The above string is taken from URL
 `http://nim-lang.org/manual.html#identifiers-keywords', for easy
@@ -390,6 +388,11 @@ which supports ‘chk’ option for EPC.")
 
 (make-obsolete-variable
  'nimsuggest-vervosity 'nimsuggest-check-vervosity "0.1.0")
+
+;; flycheck-nimsuggest
+(defvar nim-use-flycheck-nimsuggest t
+  "Set nil if you really don’t want to use flycheck-nimsuggest.
+Mainly this variable is debug purpose.")
 
 (provide 'nim-vars)
 ;;; nim-vars.el ends here
