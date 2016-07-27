@@ -42,7 +42,8 @@
 (defun nim-eldoc-function ()
   "Return a doc string appropriate for the current context, or nil."
   (interactive)
-  (when (and (or eldoc-mode global-eldoc-mode)
+  (when (and (or (bound-and-true-p eldoc-mode)
+                 (bound-and-true-p global-eldoc-mode))
              (not (eq ?\  (char-after (point)))))
     (unless (nim-eldoc-same-try-p)
       (save-excursion
@@ -189,7 +190,8 @@ DEFS is group of definitions from nimsuggest."
 (defun nim-eldoc-setup ()
   "Setup eldoc configuration for nim-mode."
   (when (and (derived-mode-p 'nim-mode) (nim-suggest-available-p)
-             (or eldoc-mode global-eldoc-mode))
+             (or (bound-and-true-p eldoc-mode)
+                 (bound-and-true-p global-eldoc-mode)))
     (message "nim-mode: eldoc feature turned on automatically")
     (add-function :before-until (local 'eldoc-documentation-function)
                   #'nim-eldoc-function)))
