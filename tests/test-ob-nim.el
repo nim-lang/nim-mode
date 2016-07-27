@@ -46,9 +46,9 @@
 "
      (insert "
 #+header: :var x = 3
-#+begin_src nim :import sequtils strutils :define release ssl
+#+begin_src nim :import sequtils strutils :define release mydef
 when defined(release):
-  when defined(ssl):
+  when defined(mydef):
     var temp = @[1, 2].map (proc(i:int ) : string= $(i*x) )
     echo temp.join(\"/\")
 #+end_src")
