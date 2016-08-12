@@ -34,6 +34,9 @@
   "Function to get options for nimsuggest.")
 
 (defun nimsuggest-get-options (project-path)
+  "Get prerequisite options for EPC mode.
+
+PROJECT-PATH is added as the last option."
   (delq nil
         (append nim-suggest-options nim-suggest-local-options
                 (when (eq 'nimscript-mode major-mode)
@@ -42,6 +45,8 @@
                       "--epc" project-path))))
 
 (defun nim-find-project-path ()
+  "Return project-path."
+  ;; project-path is something like default directory, which nimsuggest treats.
   (or (and (eq 'nimscript-mode major-mode)
            buffer-file-name)
       (nim-find-config-file)
@@ -64,6 +69,7 @@
 
 ;;;###autoload
 (defun nim-suggest-available-p ()
+  "Return non-nil if nimsuggest is available in current buffer."
   (and nim-nimsuggest-path
        (not nim-inside-compiler-dir-p)
        ;; Prevent turn on nimsuggest related feature on org-src block
@@ -119,6 +125,7 @@ The CALLBACK is called with a list of ‘nim-epc’ structs."
 Note that this directory is removed when you exit from Emacs.")
 
 (defun nim-suggest-get-temp-file-name ()
+  "Get temp file name."
   (mapconcat 'directory-file-name
              `(,nim-dirty-directory
                ,(cl-case system-type
@@ -133,13 +140,13 @@ Note that this directory is removed when you exit from Emacs.")
              ""))
 
 (defun nim-make-tempdir (tempfile)
+  "Make temporary directory for TEMPFILE."
   (let* ((tempdir (file-name-directory tempfile)))
     (unless (file-exists-p tempdir)
       (make-directory tempdir t))))
 
 (defun nim-save-buffer-temporarly ()
-  "Save the current buffer and return the location, so we
-can pass it to epc."
+  "Save the current buffer and return the location."
   (let* ((temporary-file-directory nim-dirty-directory)
          (filename (nim-suggest-get-temp-file-name)))
     (nim-make-tempdir filename)
@@ -155,6 +162,7 @@ can pass it to epc."
     (delete-directory (file-name-directory nim-dirty-directory) t)))
 
 (defun nim-suggest-kill-zombie-processes (&optional ppath)
+  "Kill needless zombie processes, which correspond to PPATH."
   (setq nim-epc-processes-alist
         (cl-loop for (file . manager) in nim-epc-processes-alist
                  if (and (epc:live-p manager)
@@ -169,7 +177,7 @@ can pass it to epc."
   (nim-call-epc 'def
                 (lambda (defs)
                   (let ((def (cl-first defs)))
-                    (when (not def) (error "Symbol not found"))
+                    (when (not def) (error "Definition not found"))
                     (find-file (nim-epc-filePath def))
                     (goto-char (point-min))
                     (forward-line (1- (nim-epc-line def)))))))
