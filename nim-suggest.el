@@ -39,8 +39,11 @@
 PROJECT-PATH is added as the last option."
   (delq nil
         (append nim-suggest-options nim-suggest-local-options
-                (when (eq 'nimscript-mode major-mode)
-                  '("--define:nimscript" "--define:nimconfig"))
+                ;; FIXME:
+                ;; In recent nim’s update, this configuration no
+                ;; longer can use.
+                ;; (when (eq 'nimscript-mode major-mode)
+                ;;   '("--define:nimscript" "--define:nimconfig"))
                 (list (with-no-warnings nimsuggest-vervosity)
                       "--epc" project-path))))
 
