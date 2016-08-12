@@ -33,15 +33,15 @@
 (defvar nimsuggest-get-option-function nil
   "Function to get options for nimsuggest.")
 
-(defun nimsuggest-get-options (main-file)
+(defun nimsuggest-get-options (project-path)
   (delq nil
         (append nim-suggest-options nim-suggest-local-options
                 (when (eq 'nimscript-mode major-mode)
                   '("--define:nimscript" "--define:nimconfig"))
                 (list (with-no-warnings nimsuggest-vervosity)
-                      "--epc" main-file))))
+                      "--epc" project-path))))
 
-(defun nim-find-project-main-file ()
+(defun nim-find-project-path ()
   (or (and (eq 'nimscript-mode major-mode)
            buffer-file-name)
       (nim-find-config-file)
@@ -49,17 +49,17 @@
 
 (defun nim-find-or-create-epc ()
   "Get the epc responsible for the current buffer."
-  (let ((main-file (nim-find-project-main-file)))
-    (or (let ((epc-process (cdr (assoc main-file nim-epc-processes-alist))))
+  (let ((ppath (nim-find-project-path)))
+    (or (let ((epc-process (cdr (assoc ppath nim-epc-processes-alist))))
           (if (eq 'run (epc:manager-status-server-process epc-process))
               epc-process
             (prog1 ()
-              (nim-suggest-kill-zombie-processes main-file))))
+              (nim-suggest-kill-zombie-processes ppath))))
         (let ((epc-process
                (epc:start-epc
                 nim-nimsuggest-path
-                (nimsuggest-get-options main-file))))
-          (push (cons main-file epc-process) nim-epc-processes-alist)
+                (nimsuggest-get-options ppath))))
+          (push (cons ppath epc-process) nim-epc-processes-alist)
           epc-process))))
 
 ;;;###autoload
@@ -156,12 +156,12 @@ can pass it to epc."
   (when (file-exists-p nim-dirty-directory)
     (delete-directory (file-name-directory nim-dirty-directory) t)))
 
-(defun nim-suggest-kill-zombie-processes (&optional mfile)
+(defun nim-suggest-kill-zombie-processes (&optional ppath)
   (setq nim-epc-processes-alist
         (cl-loop for (file . manager) in nim-epc-processes-alist
                  if (and (epc:live-p manager)
-                         (or (and mfile (equal mfile file))
-                             (not mfile)))
+                         (or (and ppath (equal ppath file))
+                             (not ppath)))
                  collect (cons file manager)
                  else do (epc:stop-epc manager))))
 
