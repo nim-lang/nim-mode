@@ -24,6 +24,9 @@
 (require 'nim-syntax)
 (require 'nim-mode)
 
+(defvar nimscirpt-mode-syntax-table
+  (copy-syntax-table nim-mode-syntax-table))
+
 ;;;###autoload
 (define-derived-mode nimscript-mode prog-mode "NimScript"
   "A major-mode for NimScript files.
