@@ -228,10 +228,12 @@ is used to limit the scan."
                         (looking-at "##?\\[")
                         (length (match-string 0))))))
     (cond
+     ;; single line comment
      ((and (eq nil (nth 4 ppss)) (eq 1 (length hash)))
       (put-text-property start-pos (1+ start-pos)
                          'syntax-table (string-to-syntax "<"))
-      (put-text-property (1- (point-at-eol)) (point-at-eol)
+      ;; the 1+ is needed to work with ‘comment-indent-new-line’ (C-M-j key)
+      (put-text-property (point-at-eol) (1+ (point-at-eol))
                          'syntax-table (string-to-syntax ">")))
      ;; ignore
      ((or (eq t (nth 4 ppss)) ; t means single line comment
