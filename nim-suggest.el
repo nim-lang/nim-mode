@@ -119,7 +119,10 @@ The CALLBACK is called with a list of ‘nim-epc’ structs."
         (deferred:watch it
           (lambda (_)
             (unless (get-buffer buf)
-              (delete-file tempfile))))))))
+              (delete-file tempfile))))
+        (deferred:error it
+          (lambda (err)
+            (message "%s" (error-message-string err))))))))
 
 (defvar nim-dirty-directory
   ;; Even users changed the temp directory name,
