@@ -20,9 +20,11 @@ nim-suggest.el), so if you want to use more integration in Emacs,
 please visit the link to install nimsuggest.
 
 Brief descriptions for the nimsuggest related files:
-  1. nim-company.el: auto completion feature
+  1. company-nim.el: auto completion feature
   2. nim-thing-at-point.el: thing-at-point for nim
   3. nim-eldoc: show information in minibuffer
+  4. flycheck-nimsuggest: lint current file asynchronously
+     (only support .nim files currently)
 
 Normally it would be enough to install nimsuggest with `nimble install nimsuggest`, but currently nim-mode only support specific install way. (Nim 0.14.02 + nimsuggest at 9c8db4b)
 
@@ -42,14 +44,14 @@ git checkout 9c8db4b
 nim e compile_without_nimble.nims
 ```
 
-After you install nimsuggest, you may need following configuration.
+After you install nimsuggest, you may need following configuration in your emacs configuration file to use nimsuggest properly:
 
 ```el
 (setq nim-nimsuggest-path "path/to/nimsuggest")
 ```
 
 Note that above `nim-nimsuggest-path` variable is automatically set
-result of `(executable-find "nimsuggest")`, so if you can get value from the `executable-find`, you might don't need above configuration.
+the result of `(executable-find "nimsuggest")`, so if you can get value from the `executable-find`, you might don't need above configuration.
 
 ## company-mode
 If you use `company-mode` then add `company-nim` to `company-backends` like:
@@ -75,6 +77,5 @@ preferred (whether single line or multi line comment) when user invokes
 for available options.
 
 ## Other convenience packages
-- [flycheck-nim](https://github.com/ALSchwalm/flycheck-nim)
 - [indent-guide](https://github.com/zk-phi/indent-guide)
 - [quickrun](https://github.com/syohex/emacs-quickrun)
