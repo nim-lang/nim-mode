@@ -3,8 +3,6 @@ nim-mode
 
 [![Travis CI](https://travis-ci.org/nim-lang/nim-mode.svg?branch=master)](https://travis-ci.org/nim-lang/nim-mode)
 
-An emacs major mode for the Nim programming language. Currently only emacs 25 and higher is supported, if you try to install on latest stable release, you will run into [this problem](https://github.com/nim-lang/nim-mode/issues/100). On arch linux you can install latest version of emacs with `yaourt emacs-git`, but be warned a complete build will need about 45 minutes (also depends on your hardware).
-
 * Install nim either by the [official download](http://nim-lang.org/download.html) or your systems package manager if available.
 * Install `nim-mode.el` via [MELPA](https://melpa.org/#/getting-started).
   * `M-x list-packages`  opens the list of all packages (M is the emacs name for Alt)
@@ -26,16 +24,23 @@ Brief descriptions for the nimsuggest related files:
   2. nim-thing-at-point.el: thing-at-point for nim
   3. nim-eldoc: show information in minibuffer
 
-Normally it would be enough to install nimsuggest with `nimble install nimsuggest`, but this mode requires that you use the branch `major-restructure`, otherwise you could run into [problem #134](https://github.com/nim-lang/nim-mode/issues/134). So the instructions to build and install are the following:
+Normally it would be enough to install nimsuggest with `nimble install nimsuggest`, but currently nim-mode only support specific install way. (Nim 0.14.02 + nimsuggest at 9c8db4b)
 
-```bash
-git clone git@github.com:nim-lang/nimsuggest.git
-cd nimsuggest
-git checkout major-restructure
-nimble install
+
+```sh
+# use nim version v0.14.02
+cd /path/to/nim_repository
+git checkout tags/0.14.02
+git clone --depth 1 https://github.com/nim-lang/csources
+cd csources && sh build.sh
+cd ..
+bin/nim c koch && ./koch boot -d:release
+
+# build nimsuggest
+cd /path/to/nimsuggest_repository
+git checkout 9c8db4b
+nim e compile_without_nimble.nims
 ```
-
-At this point in time it is untested weather the `major-restructure` branch could break nimsuggest for other editors.
 
 After you install nimsuggest, you may need following configuration.
 
@@ -44,8 +49,7 @@ After you install nimsuggest, you may need following configuration.
 ```
 
 Note that above `nim-nimsuggest-path` variable is automatically set
-result of `(executable-find "nimsuggest")`, so if you can get value from
- the `executable-find`, you might don't need above configuration.
+result of `(executable-find "nimsuggest")`, so if you can get value from the `executable-find`, you might don't need above configuration.
 
 ## company-mode
 If you use `company-mode` then add `company-nim` to `company-backends` like:
