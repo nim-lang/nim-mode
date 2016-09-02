@@ -7,7 +7,7 @@
 ;; Version: 0.2.0
 ;; Keywords: nim languages
 ;; Compatibility: GNU Emacs 24.4
-;; Package-Requires: ((emacs "24.4") (epc "0.1.1") (let-alist "1.0.1") (commenter "0.5.1") (flycheck "28") (company "0.8.12"))
+;; Package-Requires: ((emacs "24.4") (epc "0.1.1") (let-alist "1.0.1") (commenter "0.5.1") (flycheck "28"))
 ;;
 ;; Taken over from James H. Fisher <jameshfisher@gmail.com>
 ;;
@@ -311,6 +311,11 @@ Argument ARG is ignored."
    "#"
    nim-hideshow-forward-sexp-function
    nil))
+
+;; capf
+(autoload 'nim-capf-setup "nim-capf")
+(add-hook 'nim-mode-hook 'nim-capf-setup)
+(add-hook 'nimscript-mode-hook 'nim-capf-setup)
 
 (provide 'nim-mode)
 
