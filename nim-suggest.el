@@ -190,5 +190,20 @@ Note that this directory is removed when you exit from Emacs.")
                     (goto-char (point-min))
                     (forward-line (1- (nim-epc-line def)))))))
 
+;;;###autoload
+(define-minor-mode nimsuggest-mode
+  "Minor mode for nimsuggest."
+  :lighter " nimsuggest"
+  (if nimsuggest-mode
+      ;; Turn on
+      (when (and (derived-mode-p 'nim-mode) (nim-suggest-available-p))
+        ;; EL-DOC
+        (when (or (bound-and-true-p eldoc-mode)
+                  (bound-and-true-p global-eldoc-mode))
+          (add-function :before-until (local 'eldoc-documentation-function)
+                        'nim-eldoc-function)))
+    ;; Turn off
+    ;; FIXME: find proper way to turn off flycheck
+    (remove-function (local 'eldoc-documentation-function) 'nim-eldoc-function)))
 (provide 'nim-suggest)
 ;;; nim-suggest.el ends here

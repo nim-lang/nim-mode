@@ -186,18 +186,8 @@ DEFS is group of definitions from nimsuggest."
                        finally return 0)))
         (substring short-str 0 (- (length short-str) minus-offset))))))
 
-;;;###autoload
-(defun nim-eldoc-setup ()
-  "Setup eldoc configuration for nim-mode."
-  (when (and (derived-mode-p 'nim-mode) (nim-suggest-available-p)
-             (or (bound-and-true-p eldoc-mode)
-                 (bound-and-true-p global-eldoc-mode)))
-    (message "nim-mode: eldoc feature turned on automatically")
-    (add-function :before-until (local 'eldoc-documentation-function)
-                  #'nim-eldoc-function)))
-
-;;;###autoload
-(add-hook 'nim-common-init-hook 'nim-eldoc-setup)
+;; backward compatibility
+(defalias 'nim-eldoc-setup 'ignore)
 
 (provide 'nim-eldoc)
 ;;; nim-eldoc.el ends here
