@@ -11,19 +11,11 @@
 ;;
 ;;; Code:
 
-(make-obsolete-variable
- 'company-nim nil
- "please check README page, but no harm for deleting this variable")
-
-(make-obsolete-variable
- 'company-nim-builtin nil
- "please check README page, but no harm for deleting this variable")
-
-(define-obsolete-function-alias 'company-nim nil ""
+(define-obsolete-function-alias 'company-nim 'ignore
   "please delete related configuration to ‘company-nim’.
 This is no longer required for company-mode.")
 
-(define-obsolete-function-alias 'company-nim-builtin nil ""
+(define-obsolete-function-alias 'company-nim-builtin 'ignore
   "please delete related configuration to ‘company-nim-builtin’.
 This is no longer required for company-mode.")
 
