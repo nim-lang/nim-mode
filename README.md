@@ -1,10 +1,29 @@
-nim-mode
+nim-mode [![Travis CI](https://travis-ci.org/nim-lang/nim-mode.svg?branch=master)](https://travis-ci.org/nim-lang/nim-mode)
 ===========
 
-[![Travis CI](https://travis-ci.org/nim-lang/nim-mode.svg?branch=master)](https://travis-ci.org/nim-lang/nim-mode)
+A major mode for editing Nim source code
 
-* Install nim either by the [official download](http://nim-lang.org/download.html) or your systems package manager if available.
+## Note (9/5/2016)
+company-mode's configuration (adding company-backends) is no longer
+required for auto-completion. capf (completion-at-point-function),
+which is Emacs's default feature was added and company-mode also
+support this feature for auto-completion.
+
+So, you can remove below configuration if you have:
+
+```lisp
+(add-to-list 'company-backends
+               '(company-nim :with company-nim-builtin))
+```
+
+Also `nimsuggest-mode` was newly added. So if you were already using
+nim-mode, please take a look nimsuggest's installing section to
+activate `nimsuggest-mode`.
+
+## Installation
+
 * Install `nim-mode.el` via [MELPA](https://melpa.org/#/getting-started).
+  * Check the MELPA's link and add the package archive if you don't set yet
   * `M-x list-packages`  opens the list of all packages (M is the emacs name for Alt)
   * `C-s nim-mode`       moves cursor to nim mode
   * `ESC`                ends search
@@ -12,56 +31,97 @@ nim-mode
   * `x`                  executes install
   * `y`                  to confirm question
 
+Please take a look next `Nimsuggest` section if you interested in
+editor integration like completion, jump-to-definition, or linting.
+
 ## Nimsuggest
+(if you are impatient, skip until `install nimsuggest` to install it)
 
-In nim-mode repository, some *.el files depend on
-[nimsuggest](https://github.com/nim-lang/nimsuggest) (not
-nim-suggest.el), so if you want to use more integration in Emacs,
-please visit the link to install nimsuggest.
+Nimsuggest is an editor agnostic tool for Nim and nim-mode provides:
 
-Brief descriptions for the nimsuggest related files:
-  1. company-nim.el: auto completion feature
-  2. nim-thing-at-point.el: thing-at-point for nim
-  3. nim-eldoc: show information in minibuffer
-  4. flycheck-nimsuggest: lint current file asynchronously
-     (only support .nim files currently)
+1. Completion feature -- `M-/` key and auto-complete if you install
+   [company-mode](https://github.com/company-mode/company-mode)
+2. Asynchronous linting -- (1)
+3. Showing info under the cursor in minibuffer -- (1)
+4. Jump to definition feature -- `M-.` for go to def and `M-,` for
+   back to before the go to def position
 
-Normally it would be enough to install nimsuggest with `nimble install nimsuggest`, but currently nim-mode only support specific install way. (Nim 0.14.02 + nimsuggest at 9c8db4b)
+(1): those are automatically turned on if you turned on `nimsuggest-mode`
+
+### install nimsuggest
+
+Normally it would be enough to install nimsuggest with `nimble install
+nimsuggest`, but due to Nim's rapid development process currently
+nim-mode only support specific install ways.
 
 
-```sh
-# use nim version v0.14.02
-cd /path/to/nim_repository
-git checkout tags/0.14.02
-git clone --depth 1 https://github.com/nim-lang/csources
-cd csources && sh build.sh
-cd ..
-bin/nim c koch && ./koch boot -d:release
+1. Use stable version (Nim 0.14.02 + nimsuggest at 9c8db4b):
 
-# build nimsuggest
-cd /path/to/nimsuggest_repository
-git checkout 9c8db4b
-nim e compile_without_nimble.nims
-```
+   * Install nim either by the
+     [official download](http://nim-lang.org/download.html) or your
+     systems package manager if available.
 
-After you install nimsuggest, you may need following configuration in your emacs configuration file to use nimsuggest properly:
+    Or using git
+
+   ```sh
+   git clone https://github.com/nim-lang/Nim.git
+   cd /path/to/nim_repository
+   git checkout tags/0.14.02
+   git clone --depth 1 https://github.com/nim-lang/csources
+   cd csources && sh build.sh
+   cd ..
+   bin/nim c koch && ./koch boot -d:release
+   ```
+
+   and then install & build nimsuggest
+
+   ```sh
+   git clone https://github.com/nim-lang/nimsuggest.git
+   cd /path/to/nimsuggest_repository
+   git checkout 9c8db4b
+   nim e compile_without_nimble.nims
+
+   ```
+
+2. Use latest version:
+   This way may or may not work (depending on Nim or nimsuggest's
+   state and we can't support all the way), so use above way
+   if you prefer stable.
+   ```sh
+   git clone https://github.com/nim-lang/nimsuggest.git
+   cd /path/to/nimsuggest_repository
+   nim e compile_without_nimble.nims
+   ```
+
+After you installed nimsuggest, you may need following configuration in
+your emacs configuration file (e.g, ~/.emacs.d/init.el):
 
 ```el
 (setq nim-nimsuggest-path "path/to/nimsuggest")
+;; Currently nimsuggest doesn't support nimscript files, so only nim-mode...
+(add-hook 'nim-mode-hook 'nimsuggest-mode)
+;; if you installed company-mode (optional)
+(add-hook 'nim-mode-hook 'company-mode)
+(add-hook 'nimscript-mode-hook 'company-mode)
+;; or use below instead if you want to activate `company-mode` all programming
+;; related modes.
+;; (add-hook 'prog-mode-hook 'company-mode)
 ```
 
 Note that above `nim-nimsuggest-path` variable is automatically set
-the result of `(executable-find "nimsuggest")`, so if you can get value from the `executable-find`, you might don't need above configuration.
+the result of `(executable-find "nimsuggest")`, so if you can get
+value from the `executable-find`, you may not need this
+configuration unless you want to set specific version of nimsuggest.
 
-## company-mode
-If you use `company-mode` then add `company-nim` to `company-backends` like:
-```el
-(add-to-list 'company-backends
-               '(company-nim :with company-nim-builtin))
-```
+## Other convenience packages for editing Nim source code
 
-## nim-eldoc
-This feature is automatically turned on if `nim-suggest-path` is non-nil.
+Those packages are convenience packages and can be installed same way
+as nim-mode (M-x list-packages ...)
+
+- [indent-guide](https://github.com/zk-phi/indent-guide): show visible indent levels
+- [quickrun](https://github.com/syohex/emacs-quickrun):
+- [company-mode](https://github.com/company-mode/company-mode): auto-complete feature
+- [ob-nim](https://github.com/Lompik/ob-nim): org-mode integration focused on Nim
 
 ## auto-indent mode
 If you use `auto-indent-mode`, you need to add nim-mode to the list of
@@ -75,7 +135,3 @@ nim-mode refers to `comment-style` variable which comment style user
 preferred (whether single line or multi line comment) when user invokes
 `comment-region` or `comment-dwim`. See also `comment-styles` variable
 for available options.
-
-## Other convenience packages
-- [indent-guide](https://github.com/zk-phi/indent-guide)
-- [quickrun](https://github.com/syohex/emacs-quickrun)
