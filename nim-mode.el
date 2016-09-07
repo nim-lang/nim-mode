@@ -54,7 +54,6 @@
 (require 'paren) ; for ‘show-paren-data-function’
 (require 'nim-fill)
 (require 'nim-compile)
-(require 'nim-suggest)
 (require 'commenter)
 
 (put 'nim-mode 'font-lock-defaults '(nim-font-lock-keywords nil t))
