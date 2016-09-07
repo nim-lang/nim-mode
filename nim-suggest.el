@@ -216,9 +216,12 @@ Note that this directory is removed when you exit from Emacs.")
         (when (or (bound-and-true-p eldoc-mode)
                   (bound-and-true-p global-eldoc-mode))
           (add-function :before-until (local 'eldoc-documentation-function)
-                        'nim-eldoc-function)))
+                        'nim-eldoc-function))
+        ;; flycheck
+        (flycheck-nimsuggest-setup))
     ;; Turn off
     ;; FIXME: find proper way to turn off flycheck
     (remove-function (local 'eldoc-documentation-function) 'nim-eldoc-function)))
+
 (provide 'nim-suggest)
 ;;; nim-suggest.el ends here
