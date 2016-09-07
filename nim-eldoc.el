@@ -39,6 +39,7 @@
                  symbol-end (0+ " "))
           (group line-start (0+ " ")))))
 
+;;;###autoload
 (defun nim-eldoc-function ()
   "Return a doc string appropriate for the current context, or nil."
   (interactive)

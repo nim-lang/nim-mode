@@ -29,7 +29,9 @@
 
 (require 'flycheck)
 (require 'cl-lib)
-(require 'nim-suggest)
+
+(autoload 'nim-call-epc "nim-suggest")
+(autoload 'nim-suggest-available-p "nim-suggest")
 
 (defvar flycheck-nimsuggest-patterns
   (mapcar (lambda (p)
@@ -66,6 +68,13 @@ CALLBACK is the status callback passed by Flycheck."
          (error (funcall callback 'errored err)))))))
 
 ;;;###autoload
+(defun flycheck-nimsuggest-setup ()
+  "Setup flycheck configuration for nimsuggest."
+  (when (and (bound-and-true-p nim-use-flycheck-nimsuggest)
+             (not flycheck-checker))
+    (flycheck-select-checker 'nim-nimsuggest)))
+
+;;;###autoload
 (eval-after-load "flycheck"
   '(progn
      (flycheck-define-generic-checker 'nim-nimsuggest
@@ -74,8 +83,9 @@ CALLBACK is the status callback passed by Flycheck."
 See URL `https://github.com/nim-lang/nimsuggest'."
        :start 'flycheck-nim-nimsuggest-start
        :modes '(nim-mode nimscript-mode)
-       :predicate (lambda () (and (nim-suggest-available-p)
-                             nim-use-flycheck-nimsuggest)))
+       :predicate (lambda () (and
+                         (bound-and-true-p nim-use-flycheck-nimsuggest)
+                         (nim-suggest-available-p))))
 
      (add-to-list 'flycheck-checkers 'nim-nimsuggest)))
 
