@@ -198,6 +198,9 @@ Note that this directory is removed when you exit from Emacs.")
        (forward-line (1- (nim-epc-line def)))))))
 (define-obsolete-function-alias 'nim-goto-sym 'nimsuggest-find-definition "2017/9/02")
 
+;; To avoid warning
+(autoload 'flycheck-nimsuggest-setup "flycheck-nimsuggest")
+
 (defvar nimsuggest-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "M-.") #'nimsuggest-find-definition)
