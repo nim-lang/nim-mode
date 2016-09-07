@@ -162,7 +162,6 @@ specific directory or buffer.  See also ‘dir-locals-file’.")
 
 (defvar nim-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "M-.") 'nim-goto-sym)
     (define-key map (kbd "C-c h") 'nim-explain-sym)
     (define-key map (kbd "C-c C-c") 'nim-compile)
     (define-key map "\C-c<" 'nim-indent-shift-left)
