@@ -201,6 +201,9 @@ PREFIX is passed to async callback."
           (append nimscript-builtins
                   nimscript-variables)))
 
+(defvar nim-capf--pragma-words
+  (cl-loop for (_ . kwds) in nim-pragmas append kwds))
+
 (defun nim-capf--static-completion (words)
   "Return list of completion-at-point’s elements.
 List of WORDS are used as completion candidates."
@@ -216,7 +219,10 @@ List of WORDS are used as completion candidates."
 ;;;###autoload
 (defun nim-builtin-completion-at-point ()
   "Complete the symbol at point for .nim files."
-  (nim-capf--static-completion nim-capf-builtin-words))
+  (nim-capf--static-completion
+   (if (nim-inside-pragma-p)
+       nim-capf--pragma-words
+     nim-capf-builtin-words)))
 
 ;;;###autoload
 (defun nimscript-builtin-completion-at-point ()
