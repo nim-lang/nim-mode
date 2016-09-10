@@ -133,7 +133,7 @@ If SKIP is non-nil, skip length check ."
     (cons path line)))
 
 ;;;###autoload
-(defun nim-suggest-completion-at-point ()
+(defun nim-capf-nimsuggest-completion-at-point ()
   "Complete the symbol at point using nimsuggest."
   (when nimsuggest-mode
     (unless (nth 3 (syntax-ppss)) ;; not in string
@@ -144,7 +144,7 @@ If SKIP is non-nil, skip length check ."
              ;; avoid length check if previous char is "."
              (skip-len-check (and (not (bobp)) (eq ?. (char-before (point))))))
         (list beg end
-              (completion-table-with-cache 'nim-suggest-complete)
+              (completion-table-with-cache 'nim-capf--nimsuggest-complete)
               :annotation-function #'nim-capf--annotation
               :company-prefix-length (nim-capf--prefix-p beg end skip-len-check)
               :company-docsig #'nim-capf--docsig
@@ -165,7 +165,7 @@ If SKIP is non-nil, skip length check ."
                                     t))
                               t)))))))
 
-(defun nim-suggest-complete (prefix)
+(defun nim-capf--nimsuggest-complete (prefix)
   "Completion symbol of PREFIX at point using nimsuggest."
   (unless (or (nim-inside-pragma-p)
               (nim-syntax-comment-or-string-p))
@@ -230,8 +230,10 @@ See also `completion-extra-properties' to check possible STATUS."
           (append nimscript-builtins
                   nimscript-variables)))
 
-(defvar nim-capf--pragma-words
-  (cl-loop for (_ . kwds) in nim-pragmas append kwds))
+;; use defvar here in case if users want to add theirs
+(defvar nim-capf-pragmas
+  (cl-loop for (_ . kwds) in nim-pragmas append kwds)
+  "List of pragmas for `complietion-at-point-functions'.")
 
 (defun nim-capf--static-completion (words)
   "Return list of completion-at-point’s elements.
@@ -250,7 +252,7 @@ List of WORDS are used as completion candidates."
   "Complete the symbol at point for .nim files."
   (nim-capf--static-completion
    (if (nim-inside-pragma-p)
-       nim-capf--pragma-words
+       nim-capf-pragmas
      nim-capf-builtin-words)))
 
 ;;;###autoload
@@ -268,8 +270,8 @@ List of WORDS are used as completion candidates."
     ;; Don’t change order here
     (unless (memq capf completion-at-point-functions)
       (add-hook 'completion-at-point-functions capf))
-    (unless (memq 'nim-suggest-completion-at-point completion-at-point-functions)
-      (add-hook 'completion-at-point-functions 'nim-suggest-completion-at-point))))
+    (unless (memq 'nim-capf-nimsuggest-completion-at-point completion-at-point-functions)
+      (add-hook 'completion-at-point-functions 'nim-capf-nimsuggest-completion-at-point))))
 
 (provide 'nim-capf)
 
