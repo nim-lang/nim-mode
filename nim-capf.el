@@ -140,6 +140,7 @@ If SKIP is non-nil, skip length check ."
       (let* ((bounds (bounds-of-thing-at-point 'symbol))
              (beg (or (car bounds) (point)))
              (end (or (cdr bounds) (point)))
+             (c-beg (char-after beg))
              ;; avoid length check if previous char is "."
              (skip-len-check (and (not (bobp)) (eq ?. (char-before (point))))))
         (list beg end
@@ -152,7 +153,17 @@ If SKIP is non-nil, skip length check ."
               ;; replacement of company's :post-completion
               :exit-function #'nim-capf--exit-function
               ;; default property of ‘completion-at-point-functions’
-              :exclusive 'no)))))
+              :exclusive 'no
+              :predicate `(lambda (candidate)
+                            (if ,(< 65 c-beg 90) ; whether A-Z
+                                (let ((thing (thing-at-point 'symbol)))
+                                  (if thing
+                                      ;; If user inputs capitalized string,
+                                      ;; check only the first char.
+                                      (eq ,c-beg (string-to-char candidate))
+                                    ;; let default predicate function
+                                    t))
+                              t)))))))
 
 (defun nim-suggest-complete (prefix)
   "Completion symbol of PREFIX at point using nimsuggest."
