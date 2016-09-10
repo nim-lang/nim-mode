@@ -122,7 +122,7 @@ other tokens like ’:’ or ’=’."
   ;; What character should be default? („…“, “…”, ‘…’, or etc.?)
   (cons ?“ ?”)
   "Change triple double quotes to another quote form.
-This configuration is enabled only in ‘prettify-symbols-mode’."
+This configuration is enabled only in `prettify-symbols-mode`."
   :type 'cons
   :group 'nim)
 

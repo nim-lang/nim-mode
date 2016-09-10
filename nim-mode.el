@@ -277,7 +277,8 @@ the line will be re-indented automatically if needed."
       (indent-line-to next))))
 
 (defun nim-electric-backspace (&rest args)
-  "Delete preceding char or levels of indentation."
+  "Delete preceding char or levels of indentation.
+The ARGS are passed to original ‘delete-backward-char’ function."
   (interactive "p\nP")
   (let (back)
     (if (and electric-indent-mode
