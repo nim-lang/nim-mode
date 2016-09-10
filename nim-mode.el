@@ -134,8 +134,7 @@
   (setq-local electric-indent-inhibit t)
   (setq-local electric-indent-chars '(?: ?\s))
   (when electric-indent-mode
-    (add-function :around
-                  (local 'delete-backward-char) 'nim-electric-backspace)))
+    (define-key nim-mode-map [remap delete-backward-char] 'nim-electric-backspace)))
 
 ;; add ‘nim-indent-function’ to electric-indent’s
 ;; blocklist. ‘electric-indent-inhibit’ isn’t enough for old emacs.
@@ -284,7 +283,6 @@ The ARGS are passed to original ‘delete-backward-char’ function."
   (let (back)
     (if (and electric-indent-mode
              (eq (current-indentation) (current-column))
-             (memq last-command-event '(? ?)) ; C-h and backspace
              (called-interactively-p 'interactive)
              (not (nim-syntax-comment-or-string-p))
              (not (bolp))
