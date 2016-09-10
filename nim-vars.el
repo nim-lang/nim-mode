@@ -120,7 +120,7 @@ other tokens like ’:’ or ’=’."
 
 (defcustom nim-pretty-triple-double-quotes
   ;; What character should be default? („…“, “…”, ‘…’, or etc.?)
-  (cons ?“ ?”)
+  (cons ?„ ?”)
   "Change triple double quotes to another quote form.
 This configuration is enabled only in `prettify-symbols-mode`."
   :type 'cons
