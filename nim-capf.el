@@ -149,8 +149,8 @@ If SKIP is non-nil, skip length check ."
               :company-docsig #'nim-capf--docsig
               :company-doc-buffer #'nim-capf--doc-buffer
               :company-location #'nim-capf--location
-              ;; not sure what is the best option
-              ;; :company-require-match company-require-match
+              ;; replacement of company's :post-completion
+              :exit-function #'nim-capf--exit-function
               ;; default property of ‘completion-at-point-functions’
               :exclusive 'no)))))
 
@@ -180,6 +180,24 @@ PREFIX is passed to async callback."
         (sleep-for 0.03)))
     (unless (eq 'trash res)
       res)))
+
+(defun nim-capf--exit-function (str status)
+  "Insert necessary things for STR, when completion is done.
+See also `completion-extra-properties' to check possible STATUS."
+  ;; seems like company-mode doesn't return the 'exact' as status...
+  (cl-case status
+    ((finished exact)
+     (let* ((adjusted 'did))
+       (cl-case (intern (get-text-property 0 :nim-sig str))
+         ((f T)
+          (insert "()")
+          (backward-char 1))
+         (t (setq adjusted nil)))
+       (unless adjusted ; to start idle completion again
+         (setq this-command 'self-insert-command))))
+    (t ; or sole
+     ;; let other completion backends
+     (setq this-command 'self-insert-command))))
 
 ;; completion at point
 (defun nim-capf-builtin-completion ()
