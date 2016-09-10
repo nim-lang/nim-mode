@@ -77,6 +77,7 @@
                 t))
 
   ;; Comment
+  (setq-local comment-style 'indent)
   (setq-local comment-use-syntax t)
   ;; Those start and end comment variables are for initial value.
   (setq-local comment-start "#")
