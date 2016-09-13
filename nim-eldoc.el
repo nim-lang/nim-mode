@@ -20,7 +20,7 @@
 
 ;;; Commentary:
 
-;; Eldoc supports for Nim. This package automatically turns on
+;; Eldoc supports for Nim.  This package automatically turns on
 ;; if you set ‘nim-nimsuggest-path’ and the nimsuggest is working.
 
 ;;; Code:
@@ -44,6 +44,7 @@
   "Return a doc string appropriate for the current context, or nil."
   (interactive)
   (when (and (or (bound-and-true-p eldoc-mode)
+                 ;; This mode was added at Emacs 25
                  (bound-and-true-p global-eldoc-mode))
              (not (eq ?\  (char-after (point)))))
     (unless (nim-eldoc-same-try-p)
