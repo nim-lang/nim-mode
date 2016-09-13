@@ -91,7 +91,8 @@ The PREFIX is passed to the CALLBACK."
   "Return t if completion should be triggered for prefix between BEG and END.
 If SKIP is non-nil, skip length check ."
   (and
-   (if (or skip (eq this-command 'company-idle-begin))
+   (if (or skip (eq this-command 'company-idle-begin)
+           (eq ?. (char-before beg)))
        t
      (let ((diff (- end beg))
            (len (bound-and-true-p company-minimum-prefix-length)))
