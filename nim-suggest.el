@@ -9,6 +9,8 @@
 (require 'epc)
 (require 'cl-lib)
 (require 'nim-compile)
+(require 'etags)
+(require 'xref nil t)
 
 ;;; If you change the order here, make sure to change it over in
 ;;; nimsuggest.nim too.
@@ -179,16 +181,50 @@ Note that this directory is removed when you exit from Emacs.")
                  collect (cons file manager)
                  else do (epc:stop-epc manager))))
 
-(defun nim-goto-sym ()
+(defun nimsuggest-find-definition ()
   "Go to the definition of the symbol currently under the cursor."
   (interactive)
-  (nim-call-epc 'def
-                (lambda (defs)
-                  (let ((def (cl-first defs)))
-                    (when (not def) (error "Definition not found"))
-                    (find-file (nim-epc-filePath def))
-                    (goto-char (point-min))
-                    (forward-line (1- (nim-epc-line def)))))))
+  (nim-call-epc
+   'def
+   (lambda (defs)
+     (let ((def (cl-first defs)))
+       (when (not def) (error "Definition not found"))
+       (if (fboundp 'xref-push-marker-stack)
+           (xref-push-marker-stack)
+         (with-no-warnings
+           (ring-insert find-tag-marker-ring (point-marker))))
+       (find-file (nim-epc-filePath def))
+       (goto-char (point-min))
+       (forward-line (1- (nim-epc-line def)))))))
+(define-obsolete-function-alias 'nim-goto-sym 'nimsuggest-find-definition "2017/9/02")
+
+;; To avoid warning
+(autoload 'flycheck-nimsuggest-setup "flycheck-nimsuggest")
+
+(defvar nimsuggest-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "M-.") #'nimsuggest-find-definition)
+    (define-key map (kbd "M-,") #'pop-tag-mark)
+    map))
+
+;;;###autoload
+(define-minor-mode nimsuggest-mode
+  "Minor mode for nimsuggest."
+  :lighter " nimsuggest"
+  :keymap nimsuggest-mode-map
+  (if nimsuggest-mode
+      ;; Turn on
+      (when (and (derived-mode-p 'nim-mode) (nim-suggest-available-p))
+        ;; EL-DOC
+        (when (or (bound-and-true-p eldoc-mode)
+                  (bound-and-true-p global-eldoc-mode))
+          (add-function :before-until (local 'eldoc-documentation-function)
+                        'nim-eldoc-function))
+        ;; flycheck
+        (flycheck-nimsuggest-setup))
+    ;; Turn off
+    ;; FIXME: find proper way to turn off flycheck
+    (remove-function (local 'eldoc-documentation-function) 'nim-eldoc-function)))
 
 (provide 'nim-suggest)
 ;;; nim-suggest.el ends here

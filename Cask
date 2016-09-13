@@ -9,7 +9,6 @@
 (development
  (depends-on "buttercup")
  (depends-on "epc")
- (depends-on "company")
  (depends-on "commenter")
  (depends-on "flycheck")
  (depends-on "let-alist")

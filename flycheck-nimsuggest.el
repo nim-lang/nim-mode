@@ -1,6 +1,6 @@
 ;;; flycheck-nimsuggest.el --- Yet another flycheck plugin for Nim language -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2016-2017 by Yuta Yamada
+;; Copyright (C) 2016 by Yuta Yamada
 
 ;; Author: Yuta Yamada <cokesboy"at"gmail.com>
 
@@ -22,13 +22,6 @@
 
 ;; On the fly syntax check support using Nimsuggest and flycheck.el.
 
-;; This plugin needs this nimsuggest:
-;;   https://github.com/nim-lang/nimsuggest/pull/22
-
-;; TODO: add README how to use
-;; so far I implemented this package automatically turned on if user
-;; satisfied ‘nim-suggest-available-p’, but it may need users’ feedback.
-
 ;; memo:
 ;; https://github.com/lunaryorn/blog/blob/master/posts/generic-syntax-checkers-in-flycheck.md
 
@@ -36,7 +29,9 @@
 
 (require 'flycheck)
 (require 'cl-lib)
-(require 'nim-suggest)
+
+(autoload 'nim-call-epc "nim-suggest")
+(autoload 'nim-suggest-available-p "nim-suggest")
 
 (defvar flycheck-nimsuggest-patterns
   (mapcar (lambda (p)
@@ -73,16 +68,24 @@ CALLBACK is the status callback passed by Flycheck."
          (error (funcall callback 'errored err)))))))
 
 ;;;###autoload
+(defun flycheck-nimsuggest-setup ()
+  "Setup flycheck configuration for nimsuggest."
+  (when (and (bound-and-true-p nim-use-flycheck-nimsuggest)
+             (not flycheck-checker))
+    (flycheck-select-checker 'nim-nimsuggest)))
+
+;;;###autoload
 (eval-after-load "flycheck"
   '(progn
      (flycheck-define-generic-checker 'nim-nimsuggest
        "A syntax checker for Nim lang using nimsuggest.
 
-See URL `'."
+See URL `https://github.com/nim-lang/nimsuggest'."
        :start 'flycheck-nim-nimsuggest-start
        :modes '(nim-mode nimscript-mode)
-       :predicate (lambda () (and (nim-suggest-available-p)
-                             nim-use-flycheck-nimsuggest)))
+       :predicate (lambda () (and
+                         (bound-and-true-p nim-use-flycheck-nimsuggest)
+                         (nim-suggest-available-p))))
 
      (add-to-list 'flycheck-checkers 'nim-nimsuggest)))
 

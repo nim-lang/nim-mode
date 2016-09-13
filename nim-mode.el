@@ -7,7 +7,7 @@
 ;; Version: 0.2.0
 ;; Keywords: nim languages
 ;; Compatibility: GNU Emacs 24.4
-;; Package-Requires: ((emacs "24.4") (epc "0.1.1") (let-alist "1.0.1") (commenter "0.5.1") (flycheck "28") (company "0.8.12"))
+;; Package-Requires: ((emacs "24.4") (epc "0.1.1") (let-alist "1.0.1") (commenter "0.5.1") (flycheck "28"))
 ;;
 ;; Taken over from James H. Fisher <jameshfisher@gmail.com>
 ;;
@@ -54,7 +54,6 @@
 (require 'paren) ; for ‘show-paren-data-function’
 (require 'nim-fill)
 (require 'nim-compile)
-(require 'nim-suggest)
 (require 'commenter)
 
 (put 'nim-mode 'font-lock-defaults '(nim-font-lock-keywords nil t))
@@ -78,6 +77,7 @@
                 t))
 
   ;; Comment
+  (setq-local comment-style 'indent)
   (setq-local comment-use-syntax t)
   ;; Those start and end comment variables are for initial value.
   (setq-local comment-start "#")
@@ -134,8 +134,7 @@
   (setq-local electric-indent-inhibit t)
   (setq-local electric-indent-chars '(?: ?\s))
   (when electric-indent-mode
-    (add-function :around
-                  (local 'delete-backward-char) 'nim-electric-backspace)))
+    (define-key nim-mode-map [remap delete-backward-char] 'nim-electric-backspace)))
 
 ;; add ‘nim-indent-function’ to electric-indent’s
 ;; blocklist. ‘electric-indent-inhibit’ isn’t enough for old emacs.
@@ -278,12 +277,12 @@ the line will be re-indented automatically if needed."
       (indent-line-to next))))
 
 (defun nim-electric-backspace (&rest args)
-  "Delete preceding char or levels of indentation."
+  "Delete preceding char or levels of indentation.
+The ARGS are passed to original ‘delete-backward-char’ function."
   (interactive "p\nP")
   (let (back)
     (if (and electric-indent-mode
              (eq (current-indentation) (current-column))
-             (memq last-command-event '(? ?)) ; C-h and backspace
              (called-interactively-p 'interactive)
              (not (nim-syntax-comment-or-string-p))
              (not (bolp))
@@ -311,6 +310,11 @@ Argument ARG is ignored."
    "#"
    nim-hideshow-forward-sexp-function
    nil))
+
+;; capf
+(autoload 'nim-capf-setup "nim-capf")
+(add-hook 'nim-mode-hook 'nim-capf-setup)
+(add-hook 'nimscript-mode-hook 'nim-capf-setup)
 
 (provide 'nim-mode)
 

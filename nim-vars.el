@@ -120,9 +120,9 @@ other tokens like ’:’ or ’=’."
 
 (defcustom nim-pretty-triple-double-quotes
   ;; What character should be default? („…“, “…”, ‘…’, or etc.?)
-  (cons ?“ ?”)
+  (cons ?„ ?”)
   "Change triple double quotes to another quote form.
-This configuration is enabled only in ‘prettify-symbols-mode’."
+This configuration is enabled only in `prettify-symbols-mode`."
   :type 'cons
   :group 'nim)
 
@@ -162,7 +162,6 @@ specific directory or buffer.  See also ‘dir-locals-file’.")
 
 (defvar nim-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "M-.") 'nim-goto-sym)
     (define-key map (kbd "C-c h") 'nim-explain-sym)
     (define-key map (kbd "C-c C-c") 'nim-compile)
     (define-key map "\C-c<" 'nim-indent-shift-left)
@@ -358,6 +357,36 @@ But all those functions can not use in NimScript.")
 (defconst nim-operators
   '( "`" "{." ".}" "[" "]" "{" "}" "(" ")" )
   "Nim standard operators.")
+
+(defvar nim-pragmas
+  '(("pragmas.txt"
+     . ("deprecated" "noSideEffect" "destructor" "override"
+        "procvar" "compileTime" "noReturn" "acyclic" "final" "shallow" "pure"
+        "asmNoStackFrame" "error" "fatal" "warning" "hint" "line"
+        "linearScanEnd" "computedGoto" "unroll" "immediate"
+        "register" "global" "deadCodeElim" "noforward" "pragma" "experimental"
+        ;; http://nim-lang.org/docs/manual.html#pragmas-push-and-pop-pragmas
+        "push" "pop"
+        ;; implementation-specific-pragmas section
+        "bitsize" "volatile" "noDecl" "header" "incompleteStruct" "compile" "link"
+        "passL" "emit" "importcpp" "importObjC" "codegenDecl" "injectStmt"
+        "intdefine" "strdefine"
+        ;; compilation option pragmas
+        "checks" "boundChecks" "overflowChecks" "nilChecks" "assertions"
+        "warnings" "hints" "optimization" "patterns" "callconv"))
+    ("procs.txt"
+     ;; iterators-and-the-for-statement-first-class-iterators section
+     . ("inline" "closure"))
+    ("ffi.txt"
+     . ("importc" "exportc" "extern" "bycopy" "byref" "varargs" "union" "packed"
+        "unchecked" "dynlib"))
+    ("threads.txt"
+     . ("thread" "threadvar"))
+    ("locking.txt"
+     . ("guard" "locks"))
+    ("effects.txt"
+     . ("raises" "tags" "effects")))
+  "Predefined pragmas.")
 
 ;; Nimscript
 (defvar nim-nimble-ini-format-regex (rx line-start "[Package]"))
