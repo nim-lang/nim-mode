@@ -150,13 +150,9 @@ If SKIP is non-nil, skip length check ."
              (skip-len-check (and (not (bobp)) (eq ?. (char-before (point))))))
         (list beg end
               (completion-table-with-cache 'nim-capf--nimsuggest-complete)
-              :annotation-function #'nim-capf--annotation
-              :company-prefix-length (nim-capf--prefix-p beg end skip-len-check)
-              :company-docsig #'nim-capf--docsig
-              :company-doc-buffer #'nim-capf--doc-buffer
-              :company-location #'nim-capf--location
-              ;; replacement of company's :post-completion
-              :exit-function #'nim-capf--exit-function
+              ;; See `completion-extra-properties' for details
+              :exit-function #'nim-capf--exit-function    ; replacement of company's :post-completion
+              :annotation-function #'nim-capf--annotation ; show annotation right after completion
               ;; default property of ‘completion-at-point-functions’
               :exclusive 'no
               :predicate `(lambda (candidate)
@@ -168,7 +164,16 @@ If SKIP is non-nil, skip length check ."
                                       (eq ,c-beg (string-to-char candidate))
                                     ;; let default predicate function
                                     t))
-                              t)))))))
+                              t))
+              ;; Company-mode integration
+              ;; predicate by length
+              :company-prefix-length (nim-capf--prefix-p beg end skip-len-check)
+              ;; show something on minibuffer
+              :company-docsig #'nim-capf--docsig
+              ;; you can activate via F1 key, but currently no documentation available.
+              :company-doc-buffer #'nim-capf--doc-buffer
+              ;; C-w key to open the source location
+              :company-location #'nim-capf--location)))))
 
 (defun nim-capf--nimsuggest-complete (prefix)
   "Completion symbol of PREFIX at point using nimsuggest."
