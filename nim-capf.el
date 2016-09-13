@@ -155,7 +155,7 @@ If SKIP is non-nil, skip length check ."
               ;; default property of ‘completion-at-point-functions’
               :exclusive 'no
               :predicate `(lambda (candidate)
-                            (if ,(< 65 c-beg 90) ; whether A-Z
+                            (if ,(and c-beg (< 65 c-beg 90)) ; whether A-Z
                                 (let ((thing (thing-at-point 'symbol)))
                                   (if thing
                                       ;; If user inputs capitalized string,
