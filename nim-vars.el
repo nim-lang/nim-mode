@@ -242,6 +242,14 @@ It makes underscores and dots word constituent chars.")
         (comment-multi-line . t)
         (comment-use-syntax . nil)))))
 
+;;;;;;;;;;;;;;;;;;;;
+;; Nim keywords
+
+;; Those keywords are used to syntax highlight as well as
+;; auto-completion. If you want to change those keywords,
+;; please consider about auto-completion; it inserts what
+;; you registered. (snark or camel)
+
 (defconst nim-keywords
   '("addr" "and" "as" "asm" "atomic" "bind" "block" "break" "case"
     "cast" "concept" "const" "continue" "converter" "defer" "discard" "distinct"
@@ -358,36 +366,6 @@ But all those functions can not use in NimScript.")
   '( "`" "{." ".}" "[" "]" "{" "}" "(" ")" )
   "Nim standard operators.")
 
-(defvar nim-pragmas
-  '(("pragmas.txt"
-     . ("deprecated" "noSideEffect" "destructor" "override"
-        "procvar" "compileTime" "noReturn" "acyclic" "final" "shallow" "pure"
-        "asmNoStackFrame" "error" "fatal" "warning" "hint" "line"
-        "linearScanEnd" "computedGoto" "unroll" "immediate"
-        "register" "global" "deadCodeElim" "noforward" "pragma" "experimental"
-        ;; http://nim-lang.org/docs/manual.html#pragmas-push-and-pop-pragmas
-        "push" "pop"
-        ;; implementation-specific-pragmas section
-        "bitsize" "volatile" "noDecl" "header" "incompleteStruct" "compile" "link"
-        "passL" "emit" "importcpp" "importObjC" "codegenDecl" "injectStmt"
-        "intdefine" "strdefine"
-        ;; compilation option pragmas
-        "checks" "boundChecks" "overflowChecks" "nilChecks" "assertions"
-        "warnings" "hints" "optimization" "patterns" "callconv"))
-    ("procs.txt"
-     ;; iterators-and-the-for-statement-first-class-iterators section
-     . ("inline" "closure"))
-    ("ffi.txt"
-     . ("importc" "exportc" "extern" "bycopy" "byref" "varargs" "union" "packed"
-        "unchecked" "dynlib"))
-    ("threads.txt"
-     . ("thread" "threadvar"))
-    ("locking.txt"
-     . ("guard" "locks"))
-    ("effects.txt"
-     . ("raises" "tags" "effects")))
-  "Predefined pragmas.")
-
 ;; Nimscript
 (defvar nim-nimble-ini-format-regex (rx line-start "[Package]"))
 
@@ -408,6 +386,188 @@ But all those functions can not use in NimScript.")
 
 (defvar nimsuggest-check-vervosity "--verbosity:1"
   "Verbosity for chk option.  Current no meaning though.")
+
+(defconst nim-pragmas
+  ;; alist of (PRAGMA_NAME . DESCRIPTION)
+  ;; the DESCRIPTION can be either a string or list of string.
+  ;; Use list of string when you want to describe a pragma, but there
+  ;; are more than two ways to use. I.e, pure pragma
+  ;; (though I don't implemented displaying list of string yet)
+  '(("deprecated" .
+     ("deprecate a symbol"
+      "[OLD: NEW, ...] -- deprecate symbols"))
+    ("noSideEffect" .
+     "used to mark a proc/iterator to have no side effects")
+    ("procvar" .
+     "used to mark a proc that it can be passed to a procedural variable.")
+    ("destructor" .
+     "used to mark a proc to act as a type destructor. [duplicated]")
+    ("compileTime" .
+     "used to mark a proc or variable to be used at compile time only")
+    ("noReturn" .
+     "The ``noreturn`` pragma is used to mark a proc that never returns")
+    ("acyclic" .
+     "can be used for object types to mark them as acyclic")
+    ("final" .
+     "can be used for an object type to specify that it cannot be inherited from.")
+    ("pure" .
+     ("object type can be marked to its type field, which is used for runtime type identification is omitted"
+      "enum type can be marked to access of its fields always requires full qualification"))
+    ("shallow" .
+     "affects the semantics of a type: The compiler is allowed to make a shallow copy.")
+    ("asmNoStackFrame" .
+     "A proc can be marked with this pragma to tell the compiler it should not generate a stack frame for the proc.")
+    ("error" .
+     ("used to make the compiler output an error message with the given content."
+      "can be used to annotate a symbol (like an iterator or proc)"))
+    ("fatal" .
+     "In contrast to the error pragma, compilation is guaranteed to be aborted by this pragma.")
+    ("warning" .
+     "is used to make the compiler output a warning message with the given content. Compilation continues after the warning.")
+    ("hint" .
+     "is used to make/disable the compiler output a hint message with the given content.")
+    ("line" .
+     "can be used to affect line information of the annotated statement as seen in stack backtraces")
+    ("linearScanEnd" .
+     "can be used to tell the compiler how to compile a Nim `case`:idx: statement. Syntactically it has to be used as a statement")
+    ("computedGoto".
+     "can be used to tell the compiler how to compile a Nim `case`:idx: in a ``while true`` statement.")
+    ("unroll" .
+     "can be used to tell the compiler that it should unroll a `for`:idx: or `while`:idx: loop for runtime efficiency")
+    ("register".
+     "declares variable as register, giving the compiler a hint that the variable should be placed in a hardware register for faster access.")
+    ("global" .
+     "can be applied to a variable within a proc to instruct the compiler to store it in a global location and initialize it once at program startup.")
+    ("deadCodeElim" .
+     "on -- tells the compiler to activate (or deactivate) dead code elimination for the module the pragma appears in.")
+    ("noForward" .
+     "on|off -- no forward declaration")
+    ("pragma" .
+     "can be used to declare user defined pragmas.")
+    ("experimental" .
+     "enables experimental language features.")
+    ("push" .
+     "are used to override the settings temporarily with pop")
+    ("pop" .
+     "are used to override the settings temporarily with push")
+    ;; implementation specific pragmas
+    ("bitsize" .
+     "is for object field members. It declares the field as a bitfield in C/C++.")
+    ("volatile" .
+     "is for variables only. It declares the variable as `volatile`, whatever that means in C/C++.")
+    ("noDecl" .
+     "tell Nim that it should not generate a declaration for the symbol in the C code.")
+    ("header" .
+     "can be applied to almost any symbol and specifies that it should not be declared and instead the generated code should contain an `#include`")
+    ("incompleteStruct" .
+     "tells the compiler to not use the underlying C ``struct`` in a ``sizeof`` expression")
+    ("compile" .
+     "STRING -- can be used to compile and link a C/C++ source file with the project")
+    ("link" .
+     "STRING -- can be used to link an additional file with the project")
+    ("passC" .
+     ("STRING -- can be used to pass additional parameters to the C compiler like commandline switch `--passC`"
+      "you can use `gorge` from the `system module` to embed parameters from an external command at compile time"))
+    ("passL" .
+     ("STRING -- can be used to pass additional parameters to the linker like commandline switch `--passL`"
+      "you can use `gorge` from the `system module` to embed parameters from an external command at compile time"))
+    ("emit" .
+     "STRING -- can be used to directly affect the output of the compiler's code generator.")
+    ("importcpp" . "")
+    ("importobjc" . "")
+    ("codegenDecl" .
+     "STRING -- can be used to directly influence Nim's code generator.")
+    ("injectStmt" .
+     "can be used to inject a statement before every other statement in the current module.")
+    ("intdefine" . "Reads in a build-time define as an integer")
+    ("strdefine" . "Reads in a build-time define as a string")
+    ;; Compilation option pragmas
+    ("checks" .
+     "on|off -- Turns the code generation for all runtime checks on or off.")
+    ("boundChecks" .
+     "on|off -- Turns the code generation for array bound checks on or off.")
+    ("overflowChecks" .
+     "on|off -- Turns the code generation for over- or underflow checks on or off.")
+    ("nilChecks" .
+     "on|off -- Turns the code generation for nil pointer checks on or off.")
+    ("assertions" .
+     "on|off -- Turns the code generation for assertions on or off.")
+    ("warnings" .
+     "on|off -- Turns the warning messages of the compiler on or off.")
+    ("hints" .
+     "on|off -- Turns the hint messages of the compiler on or off.")
+    ("optimization" .
+     "none|speed|size -- optimize the code for the options")
+    ("callconv" .
+     "cdecl|... -- Specifies the default calling convention for all procedures (and procedure types) that follow.")
+    ;; ffi.txt
+    ("importc" . "STRING")
+    ("exportc" . "STRING")
+    ("extern" . "STRING")
+    ("bycopy" . "can be applied to an object or tuple type and instructs the compiler to pass the type by value to procs")
+    ("byref" . "can be applied to an object or tuple type and instructs the compiler to pass the type by reference (hidden pointer) to procs.")
+    ("varargs" . "tells Nim that the proc can take a variable number of parameters after the last specified parameter.")
+    ("union" . "can be applied to any ``object`` type. It means all of the object's fields are overlaid in memory.")
+    ("packed" . "ensures that the fields of an object are packed back-to-back in memory.")
+    ("unchecked" . "can be used to mark a named array as `unchecked` meaning its bounds are not checked.")
+    ("dynlib" . "STRING -- dynamic library")
+    ;; threads.txt
+    ("thread" . "")
+    ("threadvar" . "")
+    ;; locking.txt
+    ("guard" . "")
+    ("locks" . "[X, ...]")
+    ;; effects.txt
+    ("raises" . "[EXCEPTION, ...] -- can be used to explicitly define which exceptions a proc/iterator/method/converter is allowed to raise.")
+    ("tags" . "[TYPE, ...]")
+    ("effects" . "")
+    ;; types.txt
+    ("nimcall" .
+     "default convention used for a Nim proc. It is the same as `fastcall`, but only for C compilers that support `fastcall`")
+    ("closure" .
+     "default calling convention for a procedural type that lacks any pragma annotations.")
+    ("stdcall" .
+     "convention as specified by Microsoft; the generated C procedure is declared with `__stdcall` keyword.")
+    ("cdecl" .
+     "The cdecl convention means that a procedure shall use the same convention as the C compiler.")
+    ("safecall" . "")
+    ("inline" . "")
+    ("fastcall" . "means different things to different C compilers. One gets whatever the C `__fastcall` means.")
+    ("syscall" . "syscall convention is the same as `__syscall` in C. It is used for interrupts.")
+    ("noconv" . "generated C code will not have any explicit calling convention and thus use the C compiler's default calling convention.")
+    ("inheritable" . "introduce new object roots apart from `system.RootObj`")
+    ;; http://forum.nim-lang.org/t/1100
+    ;; copied Araq's explanation
+    ("gensym" . "generate a fresh temporary variable here for every instantiation to resemble function call semantics")
+    ("dirty" . "everything is resolved in the instantiation context")
+    ("inject" . "the instantiation scope sees this symbol")
+    ("immediate" . "don't resolve types and expand this thing eagerly")
+    ;; http://nim-lang.org/docs/manual.html#statements-and-expressions-var-statement
+    ("noInit" . "avoid implicit initialization for `var`")
+    ("requiresInit" . "avoid implicit initialization for `var` and it does a control flow analysis to prove the variable has been initialized and does not rely on syntactic properties")
+    ;; http://nim-lang.org/docs/manual.html#types-pre-defined-floating-point-types
+    ("NanChecks" . "on|off")
+    ("InfChecks" . "on|off")
+    ("floatChecks" "on|off")
+    ;;; not sure where to look
+    ("noinline" . "")
+    ("benign" . "")
+    ("profiler" . "")
+    ("stackTrace" . "")
+    ("sideEffect" . "")
+    ("compilerRtl" . "")
+    ("merge" . "")
+    ("gcsafe" . "")
+    ("rtl" . "")
+    ;; from 14.0
+    ("this" . "self|ID -- automatic self insertion")
+    ;; seems related to this: http://nim-lang.org/docs/intern.html#how-the-rtl-is-compiled
+    ;; but not sure...
+    ("compilerProc" . "")
+    ("magic" . "")
+    )
+  "Alist of (pragma name . description).
+The description is unofficial; PRs are welcome.")
 
 ;; obsolete
 (defvar nimsuggest-vervosity "--verbosity:0"

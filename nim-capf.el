@@ -240,9 +240,8 @@ See also `completion-extra-properties' to check possible STATUS."
           (append nimscript-builtins
                   nimscript-variables)))
 
-;; use defvar here in case if users want to add theirs
-(defvar nim-capf-pragmas
-  (cl-loop for (_ . kwds) in nim-pragmas append kwds)
+(defvar nim-capf--pragma-words
+  (cl-loop for (kwd . _) in nim-pragmas collect kwd)
   "List of pragmas for `complietion-at-point-functions'.")
 
 (defun nim-capf--static-completion (words)
@@ -262,7 +261,7 @@ List of WORDS are used as completion candidates."
   "Complete the symbol at point for .nim files."
   (nim-capf--static-completion
    (if (nim-inside-pragma-p)
-       nim-capf-pragmas
+       nim-capf--pragma-words
      nim-capf-builtin-words)))
 
 ;;;###autoload

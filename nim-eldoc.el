@@ -25,6 +25,7 @@
 
 ;;; Code:
 
+(require 'nim-vars)
 (require 'nim-suggest)
 (require 'nim-helper)
 (require 'cl-lib)
@@ -46,16 +47,36 @@
   (when (and (or (bound-and-true-p eldoc-mode)
                  ;; This mode was added at Emacs 25
                  (bound-and-true-p global-eldoc-mode))
-             (not (eq ?\  (char-after (point)))))
-    (unless (nim-eldoc-same-try-p)
-      (save-excursion
-        (nim-eldoc--move)
-        (nim-call-epc
-         ;; version 2 protocol can use: ideDef, ideUse, ideDus
-         'dus 'nim-eldoc--update)))
-    (when (eq (line-number-at-pos)
-              (assoc-default :line nim-eldoc--data))
-      (assoc-default :str nim-eldoc--data))))
+             (not (eq ?\s (char-after (point)))))
+    (if (nim-inside-pragma-p)
+        (nim-eldoc--pragma-at-point)
+      (unless (nim-eldoc-same-try-p)
+        (nim-eldoc--call-nimsuggest))
+      (when (eq (line-number-at-pos)
+                (assoc-default :line nim-eldoc--data))
+        (assoc-default :str nim-eldoc--data)))))
+
+(defun nim-eldoc--get-pragma (pragma)
+  "Get the PRAGMA's doc string."
+  (let ((data (assoc-default pragma nim-pragmas)))
+    (cl-typecase data
+      (string data)
+      ;; FIXME: more better operation
+      (list (car data)))))
+
+(defun nim-eldoc--pragma-at-point ()
+  "Return string of pragma's description at point."
+  (let* ((thing (thing-at-point 'symbol))
+         (desc (nim-eldoc--get-pragma thing)))
+    (when (and desc (string< "" desc))
+      (format "%s: %s" thing (nim-eldoc--get-pragma thing)))))
+
+(defun nim-eldoc--call-nimsuggest ()
+  (save-excursion
+    (nim-eldoc--move)
+    (nim-call-epc
+     ;; version 2 protocol can use: ideDef, ideUse, ideDus
+     'dus 'nim-eldoc--update)))
 
 (defun nim-eldoc--move ()
   (let ((pos  (point))
