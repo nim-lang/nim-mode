@@ -5,6 +5,7 @@
 ;;; Code:
 
 (require 'nim-util)
+(require 'subr-x) ; `if-let` and `when-let`
 
 (defvar nim-nav-beginning-of-defun-regexp
   (nim-rx line-start (* space) defun (+ space)

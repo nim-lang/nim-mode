@@ -35,6 +35,7 @@
 (require 'let-alist)
 (require 'nim-syntax)
 (require 'nim-suggest)
+(require 'nim-helper)
 
 (defcustom nim-capf--type-abbrevs '(("skProc"         . "f")
                                     ("skIterator"     . "i")
@@ -208,14 +209,11 @@ See also `completion-extra-properties' to check possible STATUS."
   ;; seems like company-mode doesn't return the 'exact' as status...
   (cl-case status
     ((finished exact)
-     (let* ((adjusted 'did))
-       (cl-case (intern (get-text-property 0 :nim-sig str))
+     (when-let ((type-sig (get-text-property 0 :nim-sig str)))
+       (cl-case (intern type-sig)
          ((f T)
           (insert "()")
-          (backward-char 1))
-         (t (setq adjusted nil)))
-       (unless adjusted ; to start idle completion again
-         (setq this-command 'self-insert-command))))
+          (backward-char 1)))))
     (t ; or sole
      ;; let other completion backends
      (setq this-command 'self-insert-command))))
