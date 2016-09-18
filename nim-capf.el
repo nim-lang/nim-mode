@@ -20,15 +20,21 @@
 
 ;;; Commentary:
 
-;; This file provides Completion At Point Function future (capf in short).
-
+;; This file provides Completion At Point Function future (capf in
+;; short) and you can use it via C-M-i and M-TAB keys by Emacs'
+;; default key bindings.
+;;
 ;; Also capf allows you to work with company-mode without adding
 ;; backends.
 
-;; TODO: make sure with company-flx package (fuzzy match)
-;;   (https://github.com/PythonNut/company-flx)
-;; memo:
-;;   http://emacs.stackexchange.com/questions/15276/how-do-i-write-a-simple-completion-at-point-functions-function
+;; For company-mode users:
+;; You can configure minimum string length that company's auto-completion
+;; starts by `company-minimum-prefix-length'.  Also you can change the idle
+;; time by `company-idle-delay'.
+
+;; TODO:
+;;   - make sure with company-flx package (https://github.com/PythonNut/company-flx)
+;;     (currently somehow I couldn't use it)
 ;;
 ;;; Code:
 
