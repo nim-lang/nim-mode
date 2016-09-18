@@ -205,18 +205,22 @@ PREFIX is passed to async callback."
 
 (defun nim-capf--exit-function (str status)
   "Insert necessary things for STR, when completion is done.
-See also `completion-extra-properties' to check possible STATUS."
-  ;; seems like company-mode doesn't return the 'exact' as status...
-  (cl-case status
-    ((finished exact)
-     (when-let ((type-sig (get-text-property 0 :nim-sig str)))
-       (cl-case (intern type-sig)
-         ((f T)
-          (insert "()")
-          (backward-char 1)))))
-    (t ; or sole
-     ;; let other completion backends
-     (setq this-command 'self-insert-command))))
+You may see information about STATUS at `completion-extra-properties'.
+But, for some reason, currently this future is only supporting
+company-mode.  See also: https://github.com/company-mode/company-mode/issues/583"
+  (unless (eq 'completion-at-point this-command)
+    (cl-case status
+      ;; finished -- completion was finished and there is no other completion
+      ;; sole -- completion was finished and there is/are other completion(s)
+      ((finished sole)
+       (when-let ((type-sig (get-text-property 0 :nim-sig str)))
+         (cl-case (intern type-sig)
+           ((f T)
+            (insert "()")
+            (backward-char 1)))))
+      (t
+       ;; let other completion backends
+       (setq this-command 'self-insert-command)))))
 
 ;; completion at point
 (defun nim-capf-builtin-completion ()
