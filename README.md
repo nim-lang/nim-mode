@@ -7,7 +7,7 @@ A major mode for editing Nim source code
 company-mode's configuration (adding company-backends) is no longer
 required for auto-completion. capf (completion-at-point-function),
 which is Emacs's default feature was added and company-mode also
-support this feature for auto-completion.
+support this feature as backend for auto-completion.
 
 So, you can remove below configuration if you have:
 
@@ -39,9 +39,10 @@ editor integration like completion, jump-to-definition, or linting.
 
 Nimsuggest is an editor agnostic tool for Nim and nim-mode provides:
 
-1. Completion feature -- `M-/` key and auto-complete if you install
+1. Completion feature -- `C-M-i` and `M-TAB` keys and auto-complete feature if you install
    [company-mode](https://github.com/company-mode/company-mode)
-2. Asynchronous linting -- (1)
+2. Asynchronous linting -- nimsuggest take care .nims files as
+   configuration file, so it's smarter than `nim check` command (1)
 3. Showing info under the cursor in minibuffer -- (1)
 4. Jump to definition feature -- `M-.` for go to def and `M-,` for
    back to before the go to def position
@@ -52,7 +53,7 @@ Nimsuggest is an editor agnostic tool for Nim and nim-mode provides:
 
 Normally it would be enough to install nimsuggest with `nimble install
 nimsuggest`, but due to Nim's rapid development process currently
-nim-mode only support specific install ways.
+nim-mode only supports specific install ways.
 
 
 1. Use stable version (Nim 0.14.02 + nimsuggest at 9c8db4b):
@@ -110,7 +111,7 @@ your emacs configuration file (e.g, ~/.emacs.d/init.el):
 
 Note that above `nim-nimsuggest-path` variable is automatically set
 the result of `(executable-find "nimsuggest")`, so if you can get
-value from the `executable-find`, you may not need this
+value from the `executable-find`, you may not need that
 configuration unless you want to set specific version of nimsuggest.
 
 ## Other convenience packages for editing Nim source code
@@ -119,7 +120,7 @@ Those packages are convenience packages and can be installed same way
 as nim-mode (M-x list-packages ...)
 
 - [indent-guide](https://github.com/zk-phi/indent-guide): show visible indent levels
-- [quickrun](https://github.com/syohex/emacs-quickrun):
+- [quickrun](https://github.com/syohex/emacs-quickrun): emacs port of vim's quickrun
 - [company-mode](https://github.com/company-mode/company-mode): auto-complete feature
 - [ob-nim](https://github.com/Lompik/ob-nim): org-mode integration focused on Nim
 
@@ -129,9 +130,3 @@ If you use `auto-indent-mode`, you need to add nim-mode to the list of
 ```el
 (add-to-list 'auto-indent-multiple-indent-modes 'nim-mode)
 ```
-
-## Commenting
-nim-mode refers to `comment-style` variable which comment style user
-preferred (whether single line or multi line comment) when user invokes
-`comment-region` or `comment-dwim`. See also `comment-styles` variable
-for available options.
