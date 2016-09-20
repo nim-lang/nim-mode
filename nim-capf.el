@@ -223,7 +223,8 @@ company-mode.  See also: https://github.com/company-mode/company-mode/issues/583
          (cl-case (intern type-sig)
            ((f T)
             (insert "()")
-            (backward-char 1)))))
+            (backward-char 1)
+            (run-hook-with-args 'nim-capf-after-exit-function-hook str)))))
       (t
        ;; let other completion backends
        (setq this-command 'self-insert-command)))))

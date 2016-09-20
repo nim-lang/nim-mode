@@ -98,13 +98,16 @@
            (eq (assoc-default :line nim-eldoc--data)
                (line-number-at-pos)))
       (and (nim-eldoc-inside-paren-p)
-           (save-excursion
-             (nim-eldoc--move)
-             (or
-              ;; for template
-              (eq (point) (assoc-default :pos nim-eldoc--data))
-              ;; for proc
-              (eq (1- (point)) (assoc-default :pos nim-eldoc--data)))))))
+           (or
+            (eq (nth 1 (syntax-ppss))
+                (assoc-default :after-exit-func-pos nim-eldoc--data))
+            (save-excursion
+              (nim-eldoc--move)
+              (or
+               ;; for template
+               (eq (point) (assoc-default :pos nim-eldoc--data))
+               ;; for proc
+               (eq (1- (point)) (assoc-default :pos nim-eldoc--data))))))))
 
 (defun nim-eldoc--update (defs)
   (if defs
@@ -115,16 +118,22 @@
         (backward-char)
         (nim-call-epc 'dus 'nim-eldoc--update-1)))))
 
-(defun nim-eldoc--update-1 (defs)
+(defun nim-eldoc--update-1 (defs &optional con)
   (when defs
-    (setq nim-eldoc--data
-          (list
-           (cons :str  (nim-eldoc-format-string defs))
-           (cons :line (line-number-at-pos))
-           (cons :name (nim-current-symbol))
-           (cons :pos  (point))))
-    (setq eldoc-last-message (assoc-default :str nim-eldoc--data))
-    (message eldoc-last-message)))
+    (nim-eldoc--set-data (nim-eldoc-format-string defs) con)))
+
+(defun nim-eldoc--set-data (str &optional con)
+  (setq nim-eldoc--data
+        (append
+         (list
+          (cons :str  str)
+          (cons :line (line-number-at-pos))
+          (cons :name (nim-current-symbol))
+          (cons :pos  (point)))
+         (when con
+           (cons :after-exit-func-pos (1- (point))))))
+  (setq eldoc-last-message str)
+  (message eldoc-last-message))
 
 (defun nim-eldoc-format-string (defs)
   "Format data inside DEFS for eldoc.
