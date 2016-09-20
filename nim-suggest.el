@@ -9,6 +9,7 @@
 (require 'epc)
 (require 'cl-lib)
 (require 'nim-compile)
+(require 'nim-helper)
 (require 'etags)
 (require 'xref nil t)
 
@@ -225,6 +226,18 @@ Note that this directory is removed when you exit from Emacs.")
     ;; Turn off
     ;; FIXME: find proper way to turn off flycheck
     (remove-function (local 'eldoc-documentation-function) 'nim-eldoc-function)))
+
+(autoload 'nim-eldoc--set-data "nim-eldoc")
+(defun nimsuggest-after-exit-function (str)
+  "Default function that is called after :exit-function is called.
+The STR is string that has several property you can utilize."
+  (when-let ((type (and str (get-text-property 0 :nim-type str))))
+    (nim-eldoc--set-data type t)
+    ;; This is still experimental feature, but will be
+    ;; very convenient!
+    ;; https://github.com/yuutayamada/suggestion-box-el
+    (when (fboundp 'suggestion-box)
+      (suggestion-box type))))
 
 (provide 'nim-suggest)
 ;;; nim-suggest.el ends here
