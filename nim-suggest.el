@@ -232,7 +232,12 @@ Note that this directory is removed when you exit from Emacs.")
   "Default function that is called after :exit-function is called.
 The STR is string that has several property you can utilize."
   (when-let ((type (and str (get-text-property 0 :nim-type str))))
-    (nim-eldoc--set-data type t)))
+    (nim-eldoc--set-data type t)
+    ;; This is still experimental feature, but will be
+    ;; very convenient!
+    ;; https://github.com/yuutayamada/suggestion-box-el
+    (when (fboundp 'suggestion-box)
+      (suggestion-box type))))
 
 (provide 'nim-suggest)
 ;;; nim-suggest.el ends here
