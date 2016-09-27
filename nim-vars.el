@@ -118,6 +118,12 @@ other tokens like ’:’ or ’=’."
   :type 'hook
   :group 'nim)
 
+(defcustom nim-capf-after-exit-function-hook nil
+  "A hook that is called with an argument.
+The argument is string that has some properties."
+  :type 'hook
+  :group 'nim)
+
 (defcustom nim-pretty-triple-double-quotes
   ;; What character should be default? („…“, “…”, ‘…’, or etc.?)
   (cons ?„ ?”)
