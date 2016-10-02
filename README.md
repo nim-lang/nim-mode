@@ -39,8 +39,8 @@ editor integration like completion, jump-to-definition, or linting.
 
 Nimsuggest is an editor agnostic tool for Nim and nim-mode provides:
 
-1. Completion feature -- `C-M-i` and `M-TAB` keys and auto-complete feature if you install
-   [company-mode](https://github.com/company-mode/company-mode)
+1. Completion feature -- `C-M-i` and `M-TAB` keys and auto-complete feature if
+   you install [company-mode](https://github.com/company-mode/company-mode)
 2. Asynchronous linting -- nimsuggest take care .nims files as
    configuration file, so it's smarter than `nim check` command (1)
 3. Showing info under the cursor in minibuffer -- (1)
@@ -51,38 +51,9 @@ Nimsuggest is an editor agnostic tool for Nim and nim-mode provides:
 
 ### install nimsuggest
 
-Normally it would be enough to install nimsuggest with `nimble install
-nimsuggest`, but due to Nim's rapid development process currently
-nim-mode only supports specific install ways.
-
-
-1. Use stable version (Nim 0.14.02 + nimsuggest at 9c8db4b):
-
-   * Install nim either by the
-     [official download](http://nim-lang.org/download.html) or your
-     systems package manager if available.
-
-    Or using git
-
-   ```sh
-   git clone https://github.com/nim-lang/Nim.git
-   cd /path/to/nim_repository
-   git checkout tags/0.14.02
-   git clone --depth 1 https://github.com/nim-lang/csources
-   cd csources && sh build.sh
-   cd ..
-   bin/nim c koch && ./koch boot -d:release
-   ```
-
-   and then install & build nimsuggest
-
-   ```sh
-   git clone https://github.com/nim-lang/nimsuggest.git
-   cd /path/to/nimsuggest_repository
-   git checkout 9c8db4b
-   nim e compile_without_nimble.nims
-
-   ```
+1. Use stable version:
+   See [official download instruction](http://nim-lang.org/download.html) at
+   "Installation based on generated C code" section.
 
 2. Use latest version:
    This way may or may not work (depending on Nim or nimsuggest's
