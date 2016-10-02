@@ -134,10 +134,19 @@ The CALLBACK is called with a list of ‘nim-epc’ structs."
   "Directory name, which nimsuggest uses temporarily.
 Note that this directory is removed when you exit from Emacs.")
 
+(defun nimsuggest--get-dirty-dir ()
+  "Return temp directory.
+The directory name consists of `nim-dirty-directory' and current
+frame number.  The frame number is required to prevent Emacs
+crash when some emacsclients open the same file."
+  (let* ((frame-num (nth 2 (split-string (format "%s" (selected-frame)) " ")))
+         (frame-num-str (substring frame-num 0 (1- (length frame-num)))))
+    (file-name-as-directory (concat nim-dirty-directory frame-num-str))))
+
 (defun nim-suggest-get-temp-file-name ()
   "Get temp file name."
   (mapconcat 'directory-file-name
-             `(,nim-dirty-directory
+             `(,(nimsuggest--get-dirty-dir)
                ,(cl-case system-type
                   ((ms-dos windows-nt cygwin)
                    ;; For bug #119, convert ":" to "꞉" (U+A789)
