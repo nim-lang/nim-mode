@@ -16,7 +16,8 @@ Functions (hooks) take one argument as file file string and
 return build command liek ‘nim c -r FILE.nim’")
 
 (defvar nim-compile-default-command
-  '("c" "-r" "--verbosity:0" "--hint[Processing]:off"))
+  '("compile" "-r" "--verbosity:0" "--hint[Processing]:off" "--colors:off" "--excessiveStackTrace:on" "--debugger:native")
+  "Default list of arguments passed to nim when invoking nim-compile.")
 
 ;; MEMO:
 ;; Implemented based on compiler document:
