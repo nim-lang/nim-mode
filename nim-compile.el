@@ -9,12 +9,6 @@
 (require 'rx)
 (require 'nim-vars)
 
-(defvar nim-compile-command-checker-functions
-  '(nim-compile--project)
-  "Checker functions to decide build command.
-Functions (hooks) take one argument as file file string and
-return build command liek ‘nim c -r FILE.nim’")
-
 (defvar nim-compile-default-command
   '("compile" "-r" "--verbosity:0" "--hint[Processing]:off" "--colors:off" "--excessiveStackTrace:on" "--debugger:native")
   "Default list of arguments passed to nim when invoking nim-compile.")
@@ -74,13 +68,6 @@ The config file would one of those: config.nims, PROJECT.nim.cfg, or nim.cfg."
 ;; Compile command support
 (require 'compile)
 
-(defun nim-compile--project (file)
-  "Return ‘nim build FILE’ if there is PROJECT.nims."
-  (let ((proj (nim-get-project-file '(".nims" ".nim.cfg"))))
-    (when (and proj (nim-nims-file-p proj)
-               (eq major-mode 'nim-mode))
-      (nim--fmt '("build") file))))
-
 (defun nim-nims-file-p (file)
   "Test if FILE is a nim script file."
   (equal "nims" (file-name-extension file)))
@@ -91,33 +78,25 @@ The config file would one of those: config.nims, PROJECT.nim.cfg, or nim.cfg."
 
 (defun nim-compile--set-compile-command ()
   "Set ‘compile-command’ for Nim language."
-  (let ((file (when buffer-file-name
-                (shell-quote-argument buffer-file-name)))
-        cmd)
-    (when file
-      (setq cmd
-            (cond
-             ((eq 'nimscript-mode major-mode)
-              (let ((pfile (nim-get-project-file '(".nims" ".nimble"))))
-                (cond
-                 ;; as build tool
-                 ((nim-nimble-file-p file)
-                  (let ((nim-compile-command "nimble"))
-                    (nim--fmt '("build") "")))
-                 ((and (nim-nims-file-p pfile)
-                       (equal pfile buffer-file-name))
-                  (nim--fmt '("build") pfile))
-                 (t
-                  ;; as script file
-                  (nim--fmt '("e") file)))))
-             (t
-              (let ((cmd (run-hook-with-args-until-success
-                          'nim-compile-command-checker-functions file)))
-                (or cmd (nim--fmt nim-compile-default-command file))))))
+  ;; TODO set compile command for root project file
+  (when buffer-file-name
+    (let ((file (shell-quote-argument buffer-file-name)))
       (setq-local compile-command
-                  (if (or compilation-read-command current-prefix-arg)
-                      (compilation-read-command cmd)
-                    cmd)))))
+            (if
+                (eq 'nimscript-mode major-mode)
+                (let ((pfile (nim-get-project-file '(".nims" ".nimble"))))
+                   (cond
+                    ;; as build tool
+                    ((nim-nimble-file-p file)
+                     (let ((nim-compile-command "nimble"))
+                       (nim--fmt '("build") "")))
+                    ((and (nim-nims-file-p pfile)
+                          (equal pfile buffer-file-name))
+                     (nim--fmt '("build") pfile))
+                    (t
+                     ;; as script file
+                     (nim--fmt '("e") file))))
+              (nim--fmt nim-compile-default-command file))))))
 
 (defun nim--fmt (args file)
   "Format ARGS and FILE for the nim command into a shell compatible string."
@@ -126,28 +105,26 @@ The config file would one of those: config.nims, PROJECT.nim.cfg, or nim.cfg."
    (delq nil `(,nim-compile-command ,@args ,@nim-compile-user-args ,file))
    " "))
 
-(define-derived-mode nim-compile-mode compilation-mode "nim-compile"
-  "major-mode for nim compilation buffer.")
-
 ;;;###autoload
 (defun nim-compile ()
   "Compile and execute the current buffer as a nim file.  All output is writton into the *compilation* buffer."
   (interactive)
   (when (derived-mode-p 'nim-mode)
-    (add-hook 'compilation-filter-hook 'nim--colorize-compilation-buffer)
-    (add-hook 'compilation-finish-functions 'nim--remove-colorize-hook)
-    (nim-compile--set-compile-command)
-    (funcall 'compile compile-command 'nim-compile-mode)))
+    ;; (add-hook 'compilation-filter-hook 'nim--colorize-compilation-buffer)
+    ;; (add-hook 'compilation-finish-functions 'nim--remove-colorize-hook)
+    ;; (nim-compile--set-compile-command)
+    ;; (funcall 'compile compile-command 'nim-compile-mode)))
+    (call-interactively 'compile)))
 
 (require 'ansi-color)
 (defun nim--colorize-compilation-buffer ()
-  "Colorize compilation buffer."
+  "Colorize compilation buffer.  Add to `compilation-filter-hook', when you want to interpret terminal colors in output buffer."
   (let ((inhibit-read-only t))
     (ansi-color-apply-on-region compilation-filter-start (point-max))))
 
 (defun nim--remove-colorize-hook (_buf _process-state)
-  "Remove ‘nim--colorize-compilation-buffer’."
-  (when (get-buffer "*nim-compile*")
+  "Remove ‘nim--colorize-compilation-buffer’.  Currently unused."
+  (when (get-buffer "*compilation*")
     (remove-hook 'compilation-filter-hook 'nim--colorize-compilation-buffer)
     (remove-hook 'compilation-finish-functions 'nim--remove-colorize-hook)))
 

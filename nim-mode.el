@@ -118,6 +118,9 @@
   ;; add-log
   (setq-local add-log-current-defun-function #'nim-info-current-defun)
 
+  ;; compiling
+  (nim-compile--set-compile-command)
+
   ;; Hooks
   ;; Add """ ... """ pairing to electric-pair-mode.
   (add-hook 'post-self-insert-hook
