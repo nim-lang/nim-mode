@@ -110,10 +110,6 @@ The config file would one of those: config.nims, PROJECT.nim.cfg, or nim.cfg."
   "Compile and execute the current buffer as a nim file.  All output is writton into the *compilation* buffer."
   (interactive)
   (when (derived-mode-p 'nim-mode)
-    ;; (add-hook 'compilation-filter-hook 'nim--colorize-compilation-buffer)
-    ;; (add-hook 'compilation-finish-functions 'nim--remove-colorize-hook)
-    ;; (nim-compile--set-compile-command)
-    ;; (funcall 'compile compile-command 'nim-compile-mode)))
     (call-interactively 'compile)))
 
 (require 'ansi-color)
