@@ -82,21 +82,20 @@ The config file would one of those: config.nims, PROJECT.nim.cfg, or nim.cfg."
   (when buffer-file-name
     (let ((file (shell-quote-argument buffer-file-name)))
       (setq-local compile-command
-            (if
-                (eq 'nimscript-mode major-mode)
-                (let ((pfile (nim-get-project-file '(".nims" ".nimble"))))
-                   (cond
-                    ;; as build tool
-                    ((nim-nimble-file-p file)
-                     (let ((nim-compile-command "nimble"))
-                       (nim--fmt '("build") "")))
-                    ((and (nim-nims-file-p pfile)
-                          (equal pfile buffer-file-name))
-                     (nim--fmt '("build") pfile))
-                    (t
-                     ;; as script file
-                     (nim--fmt '("e") file))))
-              (nim--fmt nim-compile-default-command file))))))
+                  (if (eq 'nimscript-mode major-mode)
+                      (let ((pfile (nim-get-project-file '(".nims" ".nimble"))))
+                        (cond
+                         ;; as build tool
+                         ((nim-nimble-file-p file)
+                          (let ((nim-compile-command "nimble"))
+                            (nim--fmt '("build") "")))
+                         ((and (nim-nims-file-p pfile)
+                               (equal pfile buffer-file-name))
+                          (nim--fmt '("build") pfile))
+                         (t
+                          ;; as script file
+                          (nim--fmt '("e") file))))
+                    (nim--fmt nim-compile-default-command file))))))
 
 (defun nim--fmt (args file)
   "Format ARGS and FILE for the nim command into a shell compatible string."
