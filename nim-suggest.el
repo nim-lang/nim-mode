@@ -15,10 +15,10 @@
 ;;; If you change the order here, make sure to change it over in
 ;;; nimsuggest.nim too.
 (defconst nim-epc-order
-  '(:section :symkind :qualifiedPath :filePath :forth :line :column :doc))
+  '(:section :symkind :qualifiedPath :filePath :forth :line :column :doc :quality))
 
 (cl-defstruct nim-epc
-  section symkind qualifiedPath filePath forth line column doc)
+  section symkind qualifiedPath filePath forth line column doc quality)
 
 (defun nim-parse-epc (obj method)
   "Parse OBJ according to METHOD."

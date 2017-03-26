@@ -33,6 +33,8 @@
 (autoload 'nim-call-epc "nim-suggest")
 (autoload 'nim-suggest-available-p "nim-suggest")
 
+(defvar flycheck-nimsuggest-error-parser 'flycheck-nimsuggest-old-error-parser)
+
 (defvar flycheck-nimsuggest-patterns
   (mapcar (lambda (p)
             (cons (flycheck-rx-to-string `(and ,@(cdr p)) 'no-group)
@@ -62,10 +64,31 @@ CALLBACK is the status callback passed by Flycheck."
      'chk
      (lambda (errors)
        (condition-case err
-           (let ((res (flycheck-parse-with-patterns errors checker buffer)))
+           (let ((res
+                  (funcall flycheck-nimsuggest-error-parser errors checker buffer)))
              (funcall callback 'finished (delq nil res)))
          ;; TODO: add proper error handler
          (error (funcall callback 'errored err)))))))
+
+;; TODO: move this function to nimsuggest side
+(defun flycheck-nimsuggest-error-parser (errors checker buffer)
+  "Return list of `flycheck-error` struct from ERRORS.
+CHECKER and BUFFER are passed to flycheck's function."
+  (cl-loop for e in errors
+           for file   = (nth 3 e)
+           for line   = (1+ (nth 5 e))
+           for column = (nth 6 e)
+           for msg    = (nth 7 e)
+           for level  = (if (equal "Error" (nth 4 e))
+                            'error
+                          'warning)
+           collect (flycheck-error-new-at
+                    line column level msg
+                    :checker checker :buffer buffer :filename file)))
+
+(defun flycheck-nimsuggest-old-error-parser (errors checker buffer)
+  "This function may be removed on the future due to nimsuggest's error format change."
+  (flycheck-parse-with-patterns errors checker buffer))
 
 ;;;###autoload
 (defun flycheck-nimsuggest-setup ()
