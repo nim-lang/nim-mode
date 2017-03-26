@@ -49,27 +49,19 @@ PROJECT-PATH is added as the last option."
                 (list (with-no-warnings nimsuggest-vervosity)
                       "--epc" project-path))))
 
-(defun nim-find-project-path ()
-  "Return project-path."
-  ;; project-path is something like default directory, which nimsuggest treats.
-  (or (and (eq 'nimscript-mode major-mode)
-           buffer-file-name)
-      (nim-find-config-file)
-      buffer-file-name))
-
 (defun nim-find-or-create-epc ()
   "Get the epc responsible for the current buffer."
-  (let ((ppath (nim-find-project-path)))
-    (or (let ((epc-process (cdr (assoc ppath nim-epc-processes-alist))))
+  (let ((file buffer-file-name))
+    (or (let ((epc-process (cdr (assoc file nim-epc-processes-alist))))
           (if (eq 'run (epc:manager-status-server-process epc-process))
               epc-process
             (prog1 ()
-              (nim-suggest-kill-zombie-processes ppath))))
+              (nim-suggest-kill-zombie-processes file))))
         (let ((epc-process
                (epc:start-epc
                 nim-nimsuggest-path
-                (nimsuggest-get-options ppath))))
-          (push (cons ppath epc-process) nim-epc-processes-alist)
+                (nimsuggest-get-options file))))
+          (push (cons file epc-process) nim-epc-processes-alist)
           epc-process))))
 
 ;;;###autoload
