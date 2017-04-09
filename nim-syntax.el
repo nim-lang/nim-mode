@@ -219,6 +219,7 @@ is used to limit the scan."
                                 'syntax-table (string-to-syntax "|")))))))
 
 (defun nim-syntax-commentify ()
+  "Put comment syntax property for Nim's single and multi line comment."
   (let* ((hash (or (match-string-no-properties 2)
                    (match-string-no-properties 3)
                    (match-string-no-properties 4)))
@@ -232,10 +233,12 @@ is used to limit the scan."
     (cond
      ;; single line comment
      ((and (eq nil (nth 4 ppss)) (eq 1 (length hash)))
+      ;; comment start
       (put-text-property start-pos (1+ start-pos)
                          'syntax-table (string-to-syntax "<"))
-      ;; the 1+ is needed to work with ‘comment-indent-new-line’ (C-M-j key)
-      (put-text-property (point-at-eol) (1+ (point-at-eol))
+      ;; comment end
+      ;; #112, make sure ‘comment-indent-new-line’ (C-M-j key)
+      (put-text-property (point-at-eol) (point-at-eol)
                          'syntax-table (string-to-syntax ">")))
      ;; ignore
      ((or (eq t (nth 4 ppss)) ; t means single line comment
