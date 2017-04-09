@@ -33,7 +33,10 @@
 (autoload 'nim-call-epc "nim-suggest")
 (autoload 'nim-suggest-available-p "nim-suggest")
 
-(defvar flycheck-nimsuggest-error-parser 'flycheck-nimsuggest-old-error-parser)
+(defvar flycheck-nimsuggest-error-parser 'flycheck-parse-with-patterns
+  "Error parser that parse nimsuggest's erorrs.
+You may use `flycheck-nimsuggest-error-parser` symbol if you use Nim's
+development version.")
 
 (defvar flycheck-nimsuggest-patterns
   (mapcar (lambda (p)
@@ -86,9 +89,6 @@ CHECKER and BUFFER are passed to flycheck's function."
                     line column level msg
                     :checker checker :buffer buffer :filename file)))
 
-(defun flycheck-nimsuggest-old-error-parser (errors checker buffer)
-  "This function may be removed on the future due to nimsuggest's error format change."
-  (flycheck-parse-with-patterns errors checker buffer))
 
 ;;;###autoload
 (defun flycheck-nimsuggest-setup ()
