@@ -123,15 +123,17 @@ hierarchy, starting from CURRENT-DIR"
    (delq nil `(,nim-compile-command ,@args ,@nim-compile-user-args ,file))
    " "))
 
-(define-derived-mode nim-compile-mode compilation-mode "nim-compile"
-  "major-mode for nim compilation buffer.")
+(define-compilation-mode nim-compile-mode "nim-compile"
+  "major-mode for nim compilation buffer."
+  ;; keep `nim--colorize-compilation-buffer' for `recompile' function (g key)
+  (if (eq major-mode 'nim-compile-mode)
+      (add-hook 'compilation-filter-hook  'nim--colorize-compilation-buffer t)
+    (remove-hook 'compilation-filter-hook 'nim--colorize-compilation-buffer t)))
 
 ;;;###autoload
 (defun nim-compile ()
   (interactive)
   (when (derived-mode-p 'nim-mode)
-    (add-hook 'compilation-filter-hook 'nim--colorize-compilation-buffer)
-    (add-hook 'compilation-finish-functions 'nim--remove-colorize-hook)
     (nim-compile--set-compile-command)
     (funcall 'compile compile-command 'nim-compile-mode)))
 
@@ -141,11 +143,6 @@ hierarchy, starting from CURRENT-DIR"
   (let ((inhibit-read-only t))
     (ansi-color-apply-on-region compilation-filter-start (point-max))))
 
-(defun nim--remove-colorize-hook (_buf _process-state)
-  "Remove ‘nim--colorize-compilation-buffer’."
-  (when (get-buffer "*nim-compile*")
-    (remove-hook 'compilation-filter-hook 'nim--colorize-compilation-buffer)
-    (remove-hook 'compilation-finish-functions 'nim--remove-colorize-hook)))
 
 (provide 'nim-compile)
 ;;; nim-compile.el ends here
