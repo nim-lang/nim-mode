@@ -13,10 +13,10 @@
   '(nim-compile--project)
   "Checker functions to decide build command.
 Functions (hooks) take one argument as file file string and
-return build command liek ‘nim c -r FILE.nim’")
+return build command like ‘nim c -r FILE.nim’")
 
 (defvar nim-compile-default-command
-  '("c" "-r" "--verbosity:0" "--hint[Processing]:off"))
+  '("c" "-r" "--verbosity:0" "--hint[Processing]:off" "--excessiveStackTrace:on"))
 
 ;; MEMO:
 ;; Implemented based on compiler document:
