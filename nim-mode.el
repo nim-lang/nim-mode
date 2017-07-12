@@ -326,9 +326,7 @@ Argument ARG is ignored."
 
 (add-to-list
  'compilation-error-regexp-alist-alist
- '(nim "^\\([[:alnum:]\\/_.-]*\\.nims?\\)(\\([[:digit:]]*\\)\\(?:, ?\\([[:digit:]]*\\)\\)?) \\(\\(?:Warning\\)\\|\\(?:Hint\\):\\)?\\(template/generic instantiation from here\\)?\\(?:Error\\)?" 1 2 3 (4 . 5)))
-
-
+ '(nim "^\\([[:alnum:]\\/_.-]*\\.nims?\\)(\\([[:digit:]]*\\)\\(?:, ?\\([[:digit:]]*\\)\\)?)\\( \\(?:Warning\\)\\|\\(?:Hint\\):\\)?\\(template/generic instantiation from here\\)?\\(?: Error\\)?" 1 2 3 (4 . 5)))
 ;; capf
 (autoload 'nim-capf-setup "nim-capf")
 
