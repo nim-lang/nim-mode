@@ -311,6 +311,8 @@ Argument ARG is ignored."
    nim-hideshow-forward-sexp-function
    nil))
 
+
+;; enable the regular for nim error messages in compilation buffers
 (add-to-list 'compilation-error-regexp-alist 'nim)
 
 ;; \\( \\) groups sub expression
@@ -324,6 +326,7 @@ Argument ARG is ignored."
 ;; when none of them match, it is an error
 ;; when you want to develop a regular expression, do it with re-builder (very helpful)
 
+;; add the regular expression to the list of available regular expressions with the symbol nim
 (add-to-list
  'compilation-error-regexp-alist-alist
  '(nim "^\\([[:alnum:]\\/_.-]*\\.nims?\\)(\\([[:digit:]]*\\)\\(?:, ?\\([[:digit:]]*\\)\\)?)\\( \\(?:Warning\\)\\|\\(?:Hint\\):\\)?\\(template/generic instantiation from here\\)?\\(?: Error\\)?" 1 2 3 (4 . 5)))
