@@ -311,8 +311,28 @@ Argument ARG is ignored."
    nim-hideshow-forward-sexp-function
    nil))
 
+
+;; enable the regular for nim error messages in compilation buffers
+(add-to-list 'compilation-error-regexp-alist 'nim)
+
+;; \\( \\) groups sub expression
+;; \\(?: \\) group with no backreference (required to apply ? or \\| on more than a single char)
+;; 1 index of subexpression for file
+;; 2 index of subexpression for line number
+;; 3 index of subexpression for column number
+;; (4 . 5) weird emacs magic to detect type of message
+;; when optional subgroup 4 matches, it is a warning
+;; when optional subgroup 5 matches, it is just a message
+;; when none of them match, it is an error
+;; when you want to develop a regular expression, do it with re-builder (very helpful)
+
+;; add the regular expression to the list of available regular expressions with the symbol nim
+(add-to-list
+ 'compilation-error-regexp-alist-alist
+ '(nim "^\\([[:alnum:]\\/_.-]*\\.nims?\\)(\\([[:digit:]]*\\)\\(?:, ?\\([[:digit:]]*\\)\\)?)\\( \\(?:Warning\\)\\|\\(?:Hint\\):\\)?\\(template/generic instantiation from here\\)?\\(?: Error\\)?" 1 2 3 (4 . 5)))
 ;; capf
 (autoload 'nim-capf-setup "nim-capf")
+
 (add-hook 'nim-mode-hook 'nim-capf-setup)
 (add-hook 'nimscript-mode-hook 'nim-capf-setup)
 

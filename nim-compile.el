@@ -13,10 +13,10 @@
   '(nim-compile--project)
   "Checker functions to decide build command.
 Functions (hooks) take one argument as file file string and
-return build command liek ‘nim c -r FILE.nim’")
+return build command like ‘nim c -r FILE.nim’")
 
 (defvar nim-compile-default-command
-  '("c" "-r" "--verbosity:0" "--hint[Processing]:off"))
+  '("c" "-r" "--verbosity:0" "--hint[Processing]:off" "--excessiveStackTrace:on"))
 
 ;; MEMO:
 ;; Implemented based on compiler document:
@@ -49,8 +49,7 @@ The config file would one of those: config.nims, PROJECT.nim.cfg, or nim.cfg."
    nim-config-regex))
 
 (defun nim-find-file-in-heirarchy (current-dir pattern)
-  "Search for a file matching PATTERN upwards through the directory
-hierarchy, starting from CURRENT-DIR"
+  "Search starting from CURRENT-DIR for a file matching PATTERN upwards through the directory hierarchy."
   (catch 'found
     (locate-dominating-file
      current-dir
@@ -82,9 +81,11 @@ hierarchy, starting from CURRENT-DIR"
       (nim--fmt '("build") file))))
 
 (defun nim-nims-file-p (file)
+  "Test if FILE is a nim script file."
   (equal "nims" (file-name-extension file)))
 
 (defun nim-nimble-file-p (file)
+  "Test if FILE is a nimble file."
   (equal "nimble" (file-name-extension file)))
 
 (defun nim-compile--set-compile-command ()
@@ -118,6 +119,7 @@ hierarchy, starting from CURRENT-DIR"
                     cmd)))))
 
 (defun nim--fmt (args file)
+  "Format ARGS and FILE for the nim command into a shell compatible string."
   (mapconcat
    'shell-quote-argument
    (delq nil `(,nim-compile-command ,@args ,@nim-compile-user-args ,file))
@@ -132,6 +134,7 @@ hierarchy, starting from CURRENT-DIR"
 
 ;;;###autoload
 (defun nim-compile ()
+  "Compile and execute the current buffer as a nim file.  All output is writton into the *compilation* buffer."
   (interactive)
   (when (derived-mode-p 'nim-mode)
     (nim-compile--set-compile-command)
