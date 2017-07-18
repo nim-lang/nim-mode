@@ -134,7 +134,11 @@
   (setq-local electric-indent-inhibit t)
   (setq-local electric-indent-chars '(?: ?\s))
   (when electric-indent-mode
-    (define-key nim-mode-map [remap delete-backward-char] 'nim-electric-backspace)))
+    (define-key nim-mode-map [remap delete-backward-char] 'nim-electric-backspace))
+
+
+  ;; Set `compile-command' to the correct initial value
+  (nim-compile--set-compile-command))
 
 ;; add ‘nim-indent-function’ to electric-indent’s
 ;; blocklist. ‘electric-indent-inhibit’ isn’t enough for old emacs.
