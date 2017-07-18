@@ -94,7 +94,7 @@ The config file would one of those: config.nims, PROJECT.nim.cfg, or nim.cfg."
                 (shell-quote-argument buffer-file-name)))
         cmd)
     (when file
-      (setq cmd
+      (setq-local compile-command
             (cond
              ((eq 'nimscript-mode major-mode)
               (let ((pfile (nim-get-project-file '(".nims" ".nimble"))))
@@ -112,11 +112,7 @@ The config file would one of those: config.nims, PROJECT.nim.cfg, or nim.cfg."
              (t
               (let ((cmd (run-hook-with-args-until-success
                           'nim-compile-command-checker-functions file)))
-                (or cmd (nim--fmt nim-compile-default-command file))))))
-      (setq-local compile-command
-                  (if (or compilation-read-command current-prefix-arg)
-                      (compilation-read-command cmd)
-                    cmd)))))
+                (or cmd (nim--fmt nim-compile-default-command file)))))))))
 
 (defun nim--fmt (args file)
   "Format ARGS and FILE for the nim command into a shell compatible string."
@@ -133,19 +129,22 @@ The config file would one of those: config.nims, PROJECT.nim.cfg, or nim.cfg."
     (remove-hook 'compilation-filter-hook 'nim--colorize-compilation-buffer t)))
 
 ;;;###autoload
-(defun nim-compile ()
-  "Compile and execute the current buffer as a nim file.  All output is writton into the *compilation* buffer."
-  (interactive)
+(defun nim-compile (command)
+  "Compile and execute the current buffer as a nim file.  All output is writton into the *compilation* buffer.  COMMAND will be used as the compiler command."
+  (interactive
+   (list
+    (let ((command (eval compile-command)))
+      (if (or compilation-read-command current-prefix-arg)
+          (compilation-read-command command)
+        command))))
   (when (derived-mode-p 'nim-mode)
-    (nim-compile--set-compile-command)
-    (funcall 'compile compile-command 'nim-compile-mode)))
+    (funcall 'compile command 'nim-compile-mode)))
 
 (require 'ansi-color)
 (defun nim--colorize-compilation-buffer ()
   "Colorize compilation buffer."
   (let ((inhibit-read-only t))
     (ansi-color-apply-on-region compilation-filter-start (point-max))))
-
 
 (provide 'nim-compile)
 ;;; nim-compile.el ends here
