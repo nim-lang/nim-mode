@@ -24,7 +24,7 @@
 (require 'nim-syntax)
 (require 'nim-mode)
 
-(defvar nimscirpt-mode-syntax-table
+(defvar nimscript-mode-syntax-table
   (copy-syntax-table nim-mode-syntax-table))
 
 ;;;###autoload
