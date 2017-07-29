@@ -33,10 +33,9 @@
 (autoload 'nim-call-epc "nim-suggest")
 (autoload 'nim-suggest-available-p "nim-suggest")
 
-(defvar flycheck-nimsuggest-error-parser 'flycheck-parse-with-patterns
+(defvar flycheck-nimsuggest-error-parser 'flycheck-nimsuggest-error-parser
   "Error parser that parse nimsuggest's erorrs.
-You may use `flycheck-nimsuggest-error-parser` symbol if you use Nim's
-development version.")
+You may use `flycheck-parse-with-patterns' symbol if you use old nimsuggest.")
 
 (defvar flycheck-nimsuggest-patterns
   (mapcar (lambda (p)
