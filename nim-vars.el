@@ -219,7 +219,7 @@ See also ‘nim-syntax-disable-keywords-list’."
   "Syntax table for Nim files.")
 
 (defvar nim-dotty-syntax-table
-  (let ((table (make-syntax-table nim-mode-syntax-table)))
+  (let ((table (copy-syntax-table nim-mode-syntax-table)))
     (modify-syntax-entry ?. "w" table)
     (modify-syntax-entry ?_ "w" table)
     table)
