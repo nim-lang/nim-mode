@@ -18,6 +18,8 @@ return build command like ‘nim c -r FILE.nim’")
 (defvar nim-compile-default-command
   '("c" "-r" "--verbosity:0" "--hint[Processing]:off" "--excessiveStackTrace:on"))
 
+(defvar-local nim-compile--current-command nil)
+
 ;; MEMO:
 ;; Implemented based on compiler document:
 ;;   http://nim-lang.org/docs/nimc.html#compiler-usage-configuration-files
@@ -88,35 +90,34 @@ The config file would one of those: config.nims, PROJECT.nim.cfg, or nim.cfg."
   "Test if FILE is a nimble file."
   (equal "nimble" (file-name-extension file)))
 
-(defun nim-compile--set-compile-command ()
-  "Set ‘compile-command’ for Nim language."
-  (let ((file (when buffer-file-name
-                (shell-quote-argument buffer-file-name)))
-        cmd)
-    (when file
-      (setq cmd
-            (cond
-             ((eq 'nimscript-mode major-mode)
-              (let ((pfile (nim-get-project-file '(".nims" ".nimble"))))
-                (cond
-                 ;; as build tool
-                 ((nim-nimble-file-p file)
-                  (let ((nim-compile-command "nimble"))
-                    (nim--fmt '("build") "")))
-                 ((and (nim-nims-file-p pfile)
-                       (equal pfile buffer-file-name))
-                  (nim--fmt '("build") pfile))
-                 (t
-                  ;; as script file
-                  (nim--fmt '("e") file)))))
-             (t
-              (let ((cmd (run-hook-with-args-until-success
-                          'nim-compile-command-checker-functions file)))
-                (or cmd (nim--fmt nim-compile-default-command file))))))
-      (setq-local compile-command
-                  (if (or compilation-read-command current-prefix-arg)
-                      (compilation-read-command cmd)
-                    cmd)))))
+(defun nim-compile--get-compile-command ()
+  "Return Nim's compile command or use previous command if it exists."
+  (if nim-compile--current-command
+      nim-compile--current-command
+    (setq nim-compile--current-command
+          (let ((file (when buffer-file-name
+                        (shell-quote-argument buffer-file-name)))
+                cmd)
+            (when file
+              (cond
+               ;; WIP
+               ((eq 'nimscript-mode major-mode)
+                (let ((pfile (nim-get-project-file '(".nims" ".nimble"))))
+                  (cond
+                   ;; as build tool
+                   ((nim-nimble-file-p file)
+                    (let ((nim-compile-command "nimble"))
+                      (nim--fmt '("build") "")))
+                   ((and (nim-nims-file-p pfile)
+                         (equal pfile buffer-file-name))
+                    (nim--fmt '("build") pfile))
+                   (t
+                    ;; as script file
+                    (nim--fmt '("e") file)))))
+               (t
+                (let ((cmd (run-hook-with-args-until-success
+                            'nim-compile-command-checker-functions file)))
+                  (or cmd (nim--fmt nim-compile-default-command file))))))))))
 
 (defun nim--fmt (args file)
   "Format ARGS and FILE for the nim command into a shell compatible string."
@@ -132,13 +133,26 @@ The config file would one of those: config.nims, PROJECT.nim.cfg, or nim.cfg."
       (add-hook 'compilation-filter-hook  'nim--colorize-compilation-buffer t)
     (remove-hook 'compilation-filter-hook 'nim--colorize-compilation-buffer t)))
 
+(defun nim-compile--assert (command)
+  "Copied from `compile-command's document."
+  (and (stringp command)
+       (or (not (boundp (quote compilation-read-command))) compilation-read-command)))
+
 ;;;###autoload
-(defun nim-compile ()
+(defun nim-compile (&optional command)
   "Compile and execute the current buffer as a nim file.  All output is writton into the *compilation* buffer."
   (interactive)
   (when (derived-mode-p 'nim-mode)
-    (nim-compile--set-compile-command)
-    (funcall 'compile compile-command 'nim-compile-mode)))
+    (setq-local compile-command
+                (or command
+                    (if (or compilation-read-command current-prefix-arg)
+                        (compilation-read-command (nim-compile--get-compile-command))
+                      (nim-compile--get-compile-command))))
+    ;; keep users' previous command if they changed
+    (setq-local nim-compile--current-command compile-command)
+    (if (nim-compile--assert compile-command)
+        (funcall 'compile compile-command 'nim-compile-mode)
+      (error "something goes wrong"))))
 
 (require 'ansi-color)
 (defun nim--colorize-compilation-buffer ()
