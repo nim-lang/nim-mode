@@ -139,7 +139,8 @@ The config file would one of those: config.nims, PROJECT.nim.cfg, or nim.cfg."
 
 ;;;###autoload
 (defun nim-compile (&optional command)
-  "Compile and execute the current buffer as a nim file.  All output is writton into the *compilation* buffer."
+  "Compile and execute the current buffer as a nim file.
+All output is written into the *nim-compile* buffer."
   (interactive)
   (when (derived-mode-p 'nim-mode)
     (setq-local compile-command
@@ -151,7 +152,7 @@ The config file would one of those: config.nims, PROJECT.nim.cfg, or nim.cfg."
     (setq-local nim-compile--current-command compile-command)
     (if (nim-compile--assert compile-command)
         (funcall 'compile compile-command 'nim-compile-mode)
-      (error "something goes wrong"))))
+      (error "Something goes wrong"))))
 
 
 ;; enable the regular for nim error messages in compilation buffers
