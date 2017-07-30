@@ -139,7 +139,8 @@ The config file would one of those: config.nims, PROJECT.nim.cfg, or nim.cfg."
 
 ;;;###autoload
 (defun nim-compile (&optional command)
-  "Compile and execute the current buffer as a nim file.  All output is writton into the *compilation* buffer."
+  "Compile and execute the current buffer as a nim file.
+All output is written into the *nim-compile* buffer."
   (interactive)
   (when (derived-mode-p 'nim-mode)
     (setq-local compile-command
@@ -151,14 +152,37 @@ The config file would one of those: config.nims, PROJECT.nim.cfg, or nim.cfg."
     (setq-local nim-compile--current-command compile-command)
     (if (nim-compile--assert compile-command)
         (funcall 'compile compile-command 'nim-compile-mode)
-      (error "something goes wrong"))))
+      (error "Something goes wrong"))))
+
+
+;; enable the regular for nim error messages in compilation buffers
+(add-to-list 'compilation-error-regexp-alist 'nim)
+
+(require 'rx)
+(add-to-list
+ 'compilation-error-regexp-alist-alist
+ `(nim ,(rx line-start
+            (or
+             ;; Info
+             (group-n 5 (or "Hint: " "template/generic instantiation from here"))
+             ;; Warning or Error
+             (group-n 7
+              ;; File name
+              (group-n 1 (1+ (in alnum "\\" "/" "_" "." "-") "") ".nim" (? "s"))
+              ;; line and column
+              "(" (group-n 2 (1+ digit)) ", " (group-n 3 (1+ digit)) ")"
+              ;; Type
+              " " (group-n 4 (or "Warning" "Error") ": ")))
+            ;; Capture rest of message
+            (0+ any) line-end)
+       ;; See `compilation-error-regexp-alist's document for the detail
+       1 2 3 (4 . 5)))
 
 (require 'ansi-color)
 (defun nim--colorize-compilation-buffer ()
   "Colorize compilation buffer."
   (let ((inhibit-read-only t))
     (ansi-color-apply-on-region compilation-filter-start (point-max))))
-
 
 (provide 'nim-compile)
 ;;; nim-compile.el ends here
