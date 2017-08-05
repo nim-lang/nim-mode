@@ -131,7 +131,9 @@
 
   ;; Because indentation is not redundant, we cannot safely reindent code.
   (setq-local electric-indent-inhibit t)
-  (setq-local electric-indent-chars '(?: ?\s))
+  ;; ?\C-m ?\C-j: needed for `electric-indent-mode' to activate `newline-and-indent'
+  ;; by Return/Enter key.
+  (setq-local electric-indent-chars '(?: ?\s ?\C-m ?\C-j))
   (when electric-indent-mode
     (define-key nim-mode-map [remap delete-backward-char] 'nim-electric-backspace)))
 
