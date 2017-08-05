@@ -131,9 +131,14 @@
 
   ;; Because indentation is not redundant, we cannot safely reindent code.
   (setq-local electric-indent-inhibit t)
-  ;; ?\C-m ?\C-j: needed for `electric-indent-mode' to activate `newline-and-indent'
-  ;; by Return/Enter key.
-  (setq-local electric-indent-chars '(?: ?\s ?\C-m ?\C-j))
+
+  ;; Use user configuration of `electric-indent-chars' mainly to use C-m/Return
+  ;; key as `newline-and-indent'. If you prefer Emacs' old behavior regarding
+  ;; C-m and C-j, you can configure like this:
+  ;;
+  ;;   (setq electric-indent-chars '())
+  ;;   (global-set-key (kbd "C-j") #'newline-and-indent)
+  (setq-local electric-indent-chars (append electric-indent-chars '(?: ?\s)))
   (when electric-indent-mode
     (define-key nim-mode-map [remap delete-backward-char] 'nim-electric-backspace)))
 
