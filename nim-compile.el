@@ -129,8 +129,8 @@ The config file would one of those: config.nims, PROJECT.nim.cfg, or nim.cfg."
   "major-mode for nim compilation buffer."
   ;; keep `nim--colorize-compilation-buffer' for `recompile' function (g key)
   (if (eq major-mode 'nim-compile-mode)
-      (add-hook 'compilation-filter-hook  'nim--colorize-compilation-buffer t)
-    (remove-hook 'compilation-filter-hook 'nim--colorize-compilation-buffer t)))
+      (add-hook 'compilation-filter-hook  #'nim--colorize-compilation-buffer t)
+    (remove-hook 'compilation-filter-hook #'nim--colorize-compilation-buffer t)))
 
 (defun nim-compile--assert (command)
   "Copied from `compile-command's document."
