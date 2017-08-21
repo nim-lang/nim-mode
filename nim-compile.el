@@ -2,7 +2,8 @@
 
 ;;; Commentary:
 
-;;
+;; TODO: compilation command is way too long.  Maybe we should shorten
+;; or hide some default options like excessiveStackTrace etc.
 
 ;;; Code:
 (require 'cl-lib)
@@ -126,14 +127,15 @@ The config file would one of those: config.nims, PROJECT.nim.cfg, or nim.cfg."
    " "))
 
 (define-compilation-mode nim-compile-mode "nim-compile"
-  "major-mode for nim compilation buffer."
+  "major-mode for *nim-compile* buffer."
   ;; keep `nim--colorize-compilation-buffer' for `recompile' function (g key)
   (if (eq major-mode 'nim-compile-mode)
       (add-hook 'compilation-filter-hook  #'nim--colorize-compilation-buffer t)
     (remove-hook 'compilation-filter-hook #'nim--colorize-compilation-buffer t)))
 
 (defun nim-compile--assert (command)
-  "Copied from `compile-command's document."
+  "Check COMMAND.
+Basically copied from `compile-command's document."
   (and (stringp command)
        (or (not (boundp (quote compilation-read-command))) compilation-read-command)))
 
