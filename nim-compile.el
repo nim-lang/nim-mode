@@ -158,7 +158,6 @@ All output is written into the *nim-compile* buffer."
 ;; enable the regular for nim error messages in compilation buffers
 (add-to-list 'compilation-error-regexp-alist 'nim)
 
-(require 'rx)
 ;; Define a regex to parse Nim's compilation message to jump over
 ;; error or warning points.
 (add-to-list
