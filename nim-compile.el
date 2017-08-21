@@ -159,6 +159,8 @@ All output is written into the *nim-compile* buffer."
 (add-to-list 'compilation-error-regexp-alist 'nim)
 
 (require 'rx)
+;; Define a regex to parse Nim's compilation message to jump over
+;; error or warning points.
 (add-to-list
  'compilation-error-regexp-alist-alist
  `(nim ,(rx line-start
@@ -169,10 +171,16 @@ All output is written into the *nim-compile* buffer."
              (group-n 7
               ;; File name
               (group-n 1 (1+ (in alnum "\\" "/" "_" "." "-") "") ".nim" (? "s"))
-              ;; line and column
-              "(" (group-n 2 (1+ digit)) ", " (group-n 3 (1+ digit)) ")"
-              ;; Type
-              " " (group-n 4 (or "Warning" "Error") ": ")))
+              "("
+              ;; Line
+              (group-n 2 (1+ digit))
+              ;; Column -- this parameter is optional when it
+              ;; comes from stacktrace (see #171)
+              (? ", " (group-n 3 (1+ digit)))
+              ")"
+              ;; Type -- also this parameter doesn't show up when it
+              ;; come from stacktrace
+              " " (? (group-n 4 (or "Warning" "Error") ": "))))
             ;; Capture rest of message
             (0+ any) line-end)
        ;; See `compilation-error-regexp-alist's document for the detail
