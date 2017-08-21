@@ -19,7 +19,13 @@
 
 ;;; Commentary:
 
-;;
+;; Sorry, this implementation is pretty much black magic ish...
+;; Maybe understanding Emacs' Syntax Class Table would help.
+
+;; my memo: seems like posix_other_consts.nim is good example to test
+;; fortify limitation; adding new face would cause unfinished
+;; fortification.  From user's side, they could solve by
+;; `revert-buffer', but I'm not sure this is good approach...
 
 ;;; Code:
 (eval-and-compile (require 'nim-rx))
@@ -50,9 +56,9 @@
     ;; Number literal
     (nim-number-matcher
      (0 'nim-font-lock-number-face))
-    ;; Highlight ``identifier``
+    ;; Highlight identifier enclosed by "`"
     (nim-backtick-matcher
-     (1 font-lock-constant-face prepend))
+     (10 font-lock-constant-face prepend))
     ;; Highlight $# and $[0-9]+ inside string
     (nim-format-$-matcher . (1 font-lock-preprocessor-face prepend))
     ;; Highlight word after ‘is’ and ‘distinct’
@@ -320,6 +326,7 @@ character address of the specified TYPE."
   (when (nth 3 (save-excursion (syntax-ppss)))
     (re-search-forward "\\s|" nil t)))
 
+(defconst nim--backticks-regex (nim-rx backticks))
 (defun nim-backtick-matcher (&optional _start-pos)
   "Highlight matcher for ``symbol`` in comment."
   (nim-matcher-func
@@ -327,9 +334,12 @@ character address of the specified TYPE."
      (unless (nth 4 (save-excursion (syntax-ppss)))
        (re-search-forward "\\s<" nil t)))
    (lambda ()
-     (not (re-search-forward (nim-rx backticks) nil t)))
+     (not (re-search-forward nim--backticks-regex nil t)))
    (lambda (ppss) (not (nth 4 ppss)))))
 
+(defconst nim--string-interpolation-regex
+  ;; I think two digit is enough...
+  (rx (group "$" (or "#" (and (in "1-9") (? num))))))
 (defun nim-format-$-matcher (&rest _args)
   "Highlight matcher for $# and $[1-9][0-9]? in string."
   (nim-matcher-func
@@ -345,8 +355,7 @@ character address of the specified TYPE."
                     nil)))
        (goto-char start)
        (not (re-search-forward
-             ;; I think two digit is enough...
-             (rx (group "$" (or "#" (and (in "1-9") (? num))))) limit t))))
+             nim--string-interpolation-regex limit t))))
    (lambda (ppss)
      (not (and (nth 3 ppss)
                (or (not (eq ?$ (char-after (- (point) 3))))
@@ -385,7 +394,7 @@ character address of the specified TYPE."
      (nim-skip-comment-and-string)
      (unless (nim-inside-pragma-p)
        (while (and (not (nim-inside-pragma-p))
-                   (re-search-forward (rx "{.") nil t))
+                   (re-search-forward "{\\." nil t))
          (when (nim-syntax-comment-or-string-p)
            (nim-skip-comment-and-string))))
      (unless (nim-inside-pragma-p)
@@ -412,24 +421,27 @@ character address of the specified TYPE."
        nil)
       (t t)))))
 
+(defconst nim--colon-type-regex (nim-rx colon-type))
 (defun nim-type-matcher (&optional _start-pos)
   (nim-matcher-func
    'nim-skip-comment-and-string
-   (lambda () (not (re-search-forward (nim-rx colon-type) nil t)))
+   (lambda () (not (re-search-forward nim--colon-type-regex nil t)))
    (lambda (ppss)
      (or (eq (nth 0 ppss) 0)
          (not (eq ?\( (char-after (nth 1 ppss))))))))
 
+(defconst nim--colon-numbers-regex (nim-rx nim-numbers))
 (defun nim-number-matcher (&optional _start-pos)
   (nim-matcher-func
    'nim-skip-comment-and-string
-   (lambda () (not (re-search-forward (nim-rx nim-numbers) nil t)))
+   (lambda () (not (re-search-forward nim--colon-numbers-regex nil t)))
    (lambda (ppss) (or (nth 3 ppss) (nth 4 ppss)))))
 
+(defconst nim--font-lock-defun-regex (nim-rx font-lock-defun))
 (defun nim-proc-matcher (&optional _start-pos)
   (nim-matcher-func
    'nim-skip-comment-and-string
-   (lambda () (not (re-search-forward (nim-rx font-lock-defun) nil t)))
+   (lambda () (not (re-search-forward nim--font-lock-defun-regex nil t)))
    (lambda (ppss) (or (nth 3 ppss) (nth 4 ppss)))))
 
 (defun nim-syntax-disable-maybe ()
