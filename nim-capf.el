@@ -278,6 +278,24 @@ List of WORDS are used as completion candidates."
   "Complete the symbol at point for nimscript files."
   (nim-capf--static-completion nim-capf-builtin-words-nimscript))
 
+;;; Company-mode
+(eval-after-load "company"
+  '(defun company-nimsuggest (command &optional arg &rest _args)
+     "A function used to be as company-backend for `nim-mode`."
+     (interactive (list 'interactive))
+     (cl-case command
+       (interactive (company-begin-backend 'company-nimsuggest))
+       (candidates (cons :async (lambda (cb) (nim-capf--nimsuggest-async arg cb))))
+       (prefix (and
+                (memq major-mode '(nim-mode nimscript-mode))
+                (not (or (nim-inside-pragma-p)
+                         (nim-syntax-comment-or-string-p)))
+                (company-grab-symbol-cons "\\." 2)))
+       (dog-buffer (nim-capf--doc-buffer arg))
+       (annotation (nim-capf--annotation arg))
+       (location   (nim-capf--location arg))
+       (sorted t))))
+
 ;;;###autoload
 (defun nim-capf-setup ()
   "Setup."
@@ -289,7 +307,10 @@ List of WORDS are used as completion candidates."
     (unless (memq capf completion-at-point-functions)
       (add-hook 'completion-at-point-functions capf))
     (unless (memq 'nim-capf-nimsuggest-completion-at-point completion-at-point-functions)
-      (add-hook 'completion-at-point-functions 'nim-capf-nimsuggest-completion-at-point))))
+      (add-hook 'completion-at-point-functions 'nim-capf-nimsuggest-completion-at-point))
+    ;; add asynchronous backend
+    (when (bound-and-true-p company-backends)
+      (add-to-list 'company-backends 'company-nimsuggest))))
 
 (provide 'nim-capf)
 
