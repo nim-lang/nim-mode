@@ -121,28 +121,19 @@ If SKIP is non-nil, skip length check ."
           (car (get-text-property 0 :nim-qpath cand))
           (get-text-property 0 :nim-type cand)))
 
-(defun nim-capf--doc-buffer (cand)
-  "Get doc-buffer info for CAND."
-  (let ((doc (get-text-property 0 :nim-doc cand)))
-    (unless (equal doc "")
-      (nim-capf--doc-buffer-core cand))))
-
-(defun nim-capf--doc-buffer-core (element)
-  "Displays documentation buffer with ELEMENT contents."
-  (let ((buf (get-buffer-create "*nim-doc*")))
-    (with-current-buffer buf
-      (view-mode -1)
-      (erase-buffer)
-      (insert (get-text-property 0 :nim-doc element))
-      (goto-char (point-min))
-      (view-mode 1)
-      buf)))
 
 (defun nim-capf--location (cand)
   "Get location info for CAND."
   (let ((line (get-text-property 0 :nim-line cand))
         (path (get-text-property 0 :nim-file cand)))
     (cons path line)))
+
+(defun nim-company--doc-buffer (candidate)
+  "Get doc-buffer info for CANDIDATE."
+  (when (fboundp 'company-doc-buffer)
+    (let ((doc (get-text-property 0 :nim-doc candidate)))
+      (unless (equal doc "")
+        (funcall 'company-doc-buffer doc)))))
 
 ;;;###autoload
 (defun nim-capf-nimsuggest-completion-at-point ()
@@ -178,7 +169,7 @@ If SKIP is non-nil, skip length check ."
               ;; show something on minibuffer
               :company-docsig #'nim-capf--docsig
               ;; you can activate via F1 key, but currently no documentation available.
-              :company-doc-buffer #'nim-capf--doc-buffer
+              :company-doc-buffer #'nim-company--doc-buffer
               ;; C-w key to open the source location
               :company-location #'nim-capf--location)))))
 
@@ -295,9 +286,9 @@ List of WORDS are used as completion candidates."
                 (not (or (nim-inside-pragma-p)
                          (nim-syntax-comment-or-string-p)))
                 (company-grab-symbol-cons "\\." 2)))
-       (dog-buffer (nim-capf--doc-buffer arg))
        (annotation (nim-capf--annotation arg))
        (location   (nim-capf--location arg))
+       (doc-buffer (nim-company--doc-buffer arg))
        (post-completion (nim-capf--post-completion arg))
        (sorted t))))
 
