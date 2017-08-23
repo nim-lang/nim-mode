@@ -209,6 +209,15 @@ PREFIX is passed to async callback."
     (unless (eq 'trash res)
       res)))
 
+(defun nim-capf--post-completion (candidate)
+  "Post complete function based on CANDIDATE."
+  (when-let ((type-sig (get-text-property 0 :nim-sig candidate)))
+    (cl-case (intern type-sig)
+      ((f T)
+       (insert "()")
+       (backward-char 1)
+       (run-hook-with-args 'nim-capf-after-exit-function-hook candidate)))))
+
 (defun nim-capf--exit-function (str status)
   "Insert necessary things for STR, when completion is done.
 You may see information about STATUS at `completion-extra-properties'.
@@ -219,12 +228,7 @@ company-mode.  See also: https://github.com/company-mode/company-mode/issues/583
       ;; finished -- completion was finished and there is no other completion
       ;; sole -- completion was finished and there is/are other completion(s)
       ((finished sole)
-       (when-let ((type-sig (get-text-property 0 :nim-sig str)))
-         (cl-case (intern type-sig)
-           ((f T)
-            (insert "()")
-            (backward-char 1)
-            (run-hook-with-args 'nim-capf-after-exit-function-hook str)))))
+       (nim-capf--post-completion str))
       (t
        ;; let other completion backends
        (setq this-command 'self-insert-command)))))
@@ -294,6 +298,7 @@ List of WORDS are used as completion candidates."
        (dog-buffer (nim-capf--doc-buffer arg))
        (annotation (nim-capf--annotation arg))
        (location   (nim-capf--location arg))
+       (post-completion (nim-capf--post-completion arg))
        (sorted t))))
 
 ;;;###autoload
