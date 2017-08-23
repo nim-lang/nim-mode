@@ -300,12 +300,15 @@ List of WORDS are used as completion candidates."
                 (nim-mode       'nim-builtin-completion-at-point)
                 (nimscript-mode 'nimscript-builtin-completion-at-point)
                 (t (error "Unexpected major mode")))))
-    ;; Don’t change order here
-    (unless (memq capf completion-at-point-functions)
-      (add-hook 'completion-at-point-functions capf))
-    (unless (memq 'nim-capf-nimsuggest-completion-at-point completion-at-point-functions)
-      (add-hook 'completion-at-point-functions 'nim-capf-nimsuggest-completion-at-point))
-    ;; add asynchronous backend
+
+    ;; if company-mode is disabled, just add capf function.
+    (unless (or (bound-and-true-p company-mode)
+                (bound-and-true-p global-company-mode))
+      ;; Don’t change order here
+      (unless (memq capf completion-at-point-functions)
+        (add-hook 'completion-at-point-functions capf))
+      (unless (memq 'nim-capf-nimsuggest-completion-at-point completion-at-point-functions)
+        (add-hook 'completion-at-point-functions 'nim-capf-nimsuggest-completion-at-point)))
 
     ;; Add an asynchronous backend for company-mode
     (when (bound-and-true-p company-backends)
