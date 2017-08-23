@@ -115,12 +115,12 @@ If SKIP is non-nil, skip length check ."
         (symbol (get-text-property 0 :nim-sig cand)))
     (format " %s [%s]" (substring ann 0 (cl-search "{" ann)) symbol)))
 
-(defun nim-capf--docsig (cand)
-  "Get docsig info for CAND."
-  (format "%s %s"
-          (car (get-text-property 0 :nim-qpath cand))
-          (get-text-property 0 :nim-type cand)))
-
+(defun nim-capf--docsig (candidate)
+  "Return meta/docsig information for company-mode of CANDIDATE."
+  (format "%s: %s"
+          (let ((res (get-text-property 0 :nim-qpath candidate)))
+            (mapconcat 'identity res "/"))
+          (get-text-property 0 :nim-doc candidate)))
 
 (defun nim-capf--location (cand)
   "Get location info for CAND."
