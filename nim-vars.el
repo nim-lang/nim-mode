@@ -169,9 +169,15 @@ specific directory or buffer.  See also ‘dir-locals-file’.")
 (defvar nim-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c h") 'nim-explain-sym)
+    ;; Allowed keys: C-c with control-letter, or {,}, <, >, :, ;
+    ;; See also: http://www.gnu.org/software/emacs/manual/html_node/elisp/Key-Binding-Conventions.html
     (define-key map (kbd "C-c C-c") 'nim-compile)
     (define-key map "\C-c<" 'nim-indent-shift-left)
     (define-key map "\C-c>" 'nim-indent-shift-right)
+    ;; TODO:
+    ;; C-c C-j - imemu
+    ;; implement mark-defun
+    ;;
     map))
 
 ;; Turn off syntax highlight for big files

@@ -20,6 +20,9 @@ Also `nimsuggest-mode` was newly added. So if you were already using
 nim-mode, please take a look nimsuggest's installing section to
 activate `nimsuggest-mode`.
 
+## Prerequisite
+- This package requires Emacs 24.4 or higher version.
+
 ## Installation
 
 * Install `nim-mode.el` via [MELPA](https://melpa.org/#/getting-started).
@@ -49,7 +52,7 @@ Nimsuggest is an editor agnostic tool for Nim and nim-mode provides:
 
 (1): those are automatically turned on if you turned on `nimsuggest-mode`
 
-### install nimsuggest
+### Install nimsuggest
 
 1. Use stable version:
    See [official download instruction](http://nim-lang.org/download.html) at
@@ -60,22 +63,25 @@ Nimsuggest is an editor agnostic tool for Nim and nim-mode provides:
    state and we can't support all the way), so use above way
    if you prefer stable.
    ```sh
-   git clone https://github.com/nim-lang/nimsuggest.git
-   cd /path/to/nimsuggest_repository
-   nim e compile_without_nimble.nims
+   #  assuming you already installed Nim
+   cd /path/to/Nim_repository
+   ./koch tools
    ```
 
 After you installed nimsuggest, you may need following configuration in
-your emacs configuration file (e.g, ~/.emacs.d/init.el):
+your Emacs configuration file (e.g, ~/.emacs.d/init.el):
 
 ```el
+;; can be optional.  See below note
 (setq nim-nimsuggest-path "path/to/nimsuggest")
+
 ;; Currently nimsuggest doesn't support nimscript files, so only nim-mode...
 (add-hook 'nim-mode-hook 'nimsuggest-mode)
+
 ;; if you installed company-mode (optional)
 (add-hook 'nim-mode-hook 'company-mode)
 (add-hook 'nimscript-mode-hook 'company-mode)
-;; or use below instead if you want to activate `company-mode` all programming
+;; or use below instead if you want to activate `company-mode` on all programming
 ;; related modes.
 ;; (add-hook 'prog-mode-hook 'company-mode)
 ```
@@ -85,7 +91,19 @@ the result of `(executable-find "nimsuggest")`, so if you can get
 value from the `executable-find`, you may not need that
 configuration unless you want to set specific version of nimsuggest.
 
-## Other convenience packages for editing Nim source code
+## Features
+- Syntax highlight for .nim, .nims, nimble, nim.cfg
+- Auto-indent
+- File outline (`hs-hide-all`, `hs-show-all` etc.)
+
+Not by default, but with nimsuggest and/or other Emacs plugins:
+
+- auto-complete (nimsuggest + company-mode)
+- linting on the fly (nimsuggest + flycheck)
+- jump-to-definition (nimsuggest)
+- refactor (wgrep)
+
+### Other convenience packages for editing Nim source code
 
 Those packages are convenience packages and can be installed same way
 as nim-mode (M-x list-packages ...)
@@ -94,10 +112,16 @@ as nim-mode (M-x list-packages ...)
 - [quickrun](https://github.com/syohex/emacs-quickrun): emacs port of vim's quickrun
 - [company-mode](https://github.com/company-mode/company-mode): auto-complete feature
 - [ob-nim](https://github.com/Lompik/ob-nim): org-mode integration focused on Nim
+- [wgrep](https://github.com/mhayashi1120/Emacs-wgrep): Writable grep buffer and apply the changes to files (maybe convenient for refactor stuff)
+- [suggestion-box-el](https://github.com/yuutayamada/suggestion-box-el): show argument info on the cursor
 
 ## auto-indent mode
-If you use `auto-indent-mode`, you need to add nim-mode to the list of
+If you use `auto-indent-mode, you need to add nim-mode to the list of
 `auto-indent-multiple-indent-modes`:
 ```el
 (add-to-list 'auto-indent-multiple-indent-modes 'nim-mode)
 ```
+
+## Other editors/IDEs
+
+You can also find other editor/IDE plugins for Nim language [here](https://github.com/nim-lang/Nim/wiki/editor-support)

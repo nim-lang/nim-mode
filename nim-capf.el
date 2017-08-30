@@ -273,6 +273,7 @@ List of WORDS are used as completion candidates."
   "Complete the symbol at point for nimscript files."
   (nim-capf--static-completion nim-capf-builtin-words-nimscript))
 
+
 ;;; Company-mode integration
 (eval-after-load "company"
   '(defun company-nimsuggest (command &optional arg &rest _args)
@@ -293,6 +294,8 @@ List of WORDS are used as completion candidates."
        (post-completion (nim-capf--post-completion arg))
        (sorted t))))
 
+
+;; Setup function
 ;;;###autoload
 (defun nim-capf-setup ()
   "Setup."

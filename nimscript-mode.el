@@ -17,7 +17,12 @@
 ;;
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 ;;; Commentary:
+
+;; what is nimscript:
+;;   -- https://nim-lang.org/docs/nims.html
+;;   -- https://github.com/nim-lang/Nim/wiki/Using-nimscript-for-configuration
 
 ;;; Code:
 (require 'nim-vars)
