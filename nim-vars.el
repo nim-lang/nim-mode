@@ -168,7 +168,6 @@ specific directory or buffer.  See also ‘dir-locals-file’.")
 
 (defvar nim-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-c h") 'nim-explain-sym)
     ;; Allowed keys: C-c with control-letter, or {,}, <, >, :, ;
     ;; See also: http://www.gnu.org/software/emacs/manual/html_node/elisp/Key-Binding-Conventions.html
     (define-key map (kbd "C-c C-c") 'nim-compile)
