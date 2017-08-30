@@ -314,6 +314,12 @@ List of WORDS are used as completion candidates."
     (when (bound-and-true-p company-backends)
       (add-to-list 'company-backends 'company-nimsuggest))))
 
+
+;; Suggestion-box-el
+;; https://github.com/yuutayamada/suggestion-box-el
+(eval-after-load "suggestion-box"
+  '(add-to-list 'nim-capf-after-exit-function-hook 'suggestion-box-nim-by-type))
+
 (provide 'nim-capf)
 
 ;; Local Variables:
