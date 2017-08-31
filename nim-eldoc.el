@@ -130,7 +130,12 @@
   "Format data inside DEFS for eldoc.
 DEFS is group of definitions from nimsuggest."
   ;; TODO: switch if there are multiple defs
-  (nimsuggest-format (cl-first defs)))
+  (let* ((data    (cl-first defs))
+         (forth   (nim-epc-forth         data))
+         (symKind (nim-epc-symkind       data))
+         (qpath   (nim-epc-qualifiedPath data))
+         (doc     (nim-epc-doc           data)))
+    (nimsuggest-format forth symKind qpath doc)))
 
 ;; backward compatibility
 (defalias 'nim-eldoc-setup 'ignore)

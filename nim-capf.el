@@ -117,10 +117,11 @@ If SKIP is non-nil, skip length check ."
 
 (defun nim-capf--docsig (candidate)
   "Return meta/docsig information for company-mode of CANDIDATE."
-  (format "%s: %s"
-          (let ((res (get-text-property 0 :nim-qpath candidate)))
-            (mapconcat 'identity res "/"))
-          (get-text-property 0 :nim-doc candidate)))
+  (let ((forth   (get-text-property 0 :nim-type  candidate))
+        (symkind (get-text-property 0 :nim-sk    candidate))
+        (qpath   (get-text-property 0 :nim-qpath candidate))
+        (doc     (get-text-property 0 :nim-doc   candidate)))
+    (nimsuggest-format forth symkind qpath doc)))
 
 (defun nim-capf--location (cand)
   "Get location info for CAND."
