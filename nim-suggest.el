@@ -227,5 +227,84 @@ crash when some emacsclients open the same file."
     ;; FIXME: find proper way to turn off flycheck
     (remove-function (local 'eldoc-documentation-function) 'nim-eldoc-function)))
 
+
+;; Utilities
+
+(defun nimsuggest-put-face (text face)
+  (when (and text (string< "" text))
+    (add-text-properties
+     0 (length text)
+     `(face ,face)
+     text)))
+
+(defun nimsuggest-parse (forth)
+  (when (string-match
+         (rx (group (1+ word)) (0+ " ")
+             (group (1+ nonl)))
+         forth)
+    (let ((first (match-string 1 forth))
+          (other (match-string 2 forth)))
+      (cons first other))))
+
+(defun nimsuggest-trim (str)
+  "Adjust STR for mini buffer."
+  (let ((max-width (- (frame-width) 4))) ; <- just for buffer, probably
+    (if (< (length str) max-width)       ; it depends on terminal or GUI Emacs
+        str
+      (let* ((short-str (substring str 0 (- (frame-width) 4)))
+             (minus-offset
+              (cl-loop with num = 0
+                       for s in (delq "" (split-string (reverse short-str) ""))
+                       if (equal s ".") do (cl-return num)
+                       else do (cl-incf num)
+                       finally return 0)))
+        (substring short-str 0 (- (length short-str) minus-offset))))))
+
+(defun nimsuggest-format (res)
+  "Format res of returned result of nimsuggest."
+  (let* ((data    res)
+         (forth   (nim-epc-forth data))
+         (symKind (nim-epc-symkind data))
+         (qpath   (nim-epc-qualifiedPath data))
+         (doc (mapconcat 'identity
+                         (split-string (nim-epc-doc data) "\n")
+                         ""))
+         (name
+          (if (eq (length (cdr qpath)) 1)
+              (cadr qpath)
+            (mapconcat 'identity (cdr qpath) "."))))
+    (nimsuggest-put-face doc font-lock-doc-face)
+    (pcase (list symKind)
+      (`(,(or "skProc" "skField" "skTemplate" "skMacro"))
+       (when (string< "" forth)
+         (cl-destructuring-bind (ptype . typeinfo) (nimsuggest-parse forth)
+           (when (equal "proc" ptype)
+             (nimsuggest-put-face name font-lock-function-name-face)
+             (let* ((func  (format "%s %s" name typeinfo)))
+               (nimsuggest-trim
+                (if (string= "" doc)
+                    (format "%s" func)
+                  (format "%s %s" func doc))))))))
+      (`(,(or "skVar" "skLet" "skConst" "skResult" "skParam"))
+       (let ((sym (downcase (substring symKind 2 (length symKind)))))
+         (nimsuggest-put-face sym font-lock-keyword-face)
+         (nimsuggest-put-face name
+                             (cond ((member symKind '("skVar" "skResult"))
+                                    '(face font-lock-variable-name-face))
+                                   ((member symKind '("skLet" "skConst"))
+                                    '(face font-lock-constant-face))
+                                   (t '(face font-lock-keyword-face))))
+         (nimsuggest-trim
+          (format "%s %s : %s" sym name
+                  (cond
+                   ((string< "" forth) forth)
+                   (t "no doc"))))))
+      (`("skType")
+       (nimsuggest-put-face name font-lock-type-face)
+       (nimsuggest-trim
+        (if (not (string< "" doc))
+            (format "%s: no doc" name)
+          (format "%s: %s" name doc)))))))
+
 (provide 'nim-suggest)
 ;;; nim-suggest.el ends here
