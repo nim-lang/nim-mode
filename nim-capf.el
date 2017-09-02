@@ -121,7 +121,7 @@ If SKIP is non-nil, skip length check ."
         (symkind (get-text-property 0 :nim-sk    candidate))
         (qpath   (get-text-property 0 :nim-qpath candidate))
         (doc     (get-text-property 0 :nim-doc   candidate)))
-    (nimsuggest-format forth symkind qpath doc)))
+    (nimsuggest--format forth symkind qpath doc)))
 
 (defun nim-capf--location (cand)
   "Get location info for CAND."

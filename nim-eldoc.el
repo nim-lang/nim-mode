@@ -135,7 +135,7 @@ DEFS is group of definitions from nimsuggest."
          (symKind (nim-epc-symkind       data))
          (qpath   (nim-epc-qualifiedPath data))
          (doc     (nim-epc-doc           data)))
-    (nimsuggest-format forth symKind qpath doc)))
+    (nimsuggest--format forth symKind qpath doc)))
 
 ;; backward compatibility
 (defalias 'nim-eldoc-setup 'ignore)

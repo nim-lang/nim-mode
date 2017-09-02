@@ -260,8 +260,8 @@ crash when some emacsclients open the same file."
                        finally return 0)))
         (substring short-str 0 (- (length short-str) minus-offset))))))
 
-(defun nimsuggest-format (forth symKind qpath doc)
-  "Format res of returned result of nimsuggest."
+(defun nimsuggest--format (forth symKind qpath doc)
+  "Highlight returned result from nimsuggest."
   (let* ((doc (mapconcat 'identity (split-string doc "\n") ""))
          (name
           (if (eq (length (cdr qpath)) 1)
