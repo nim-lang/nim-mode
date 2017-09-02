@@ -206,6 +206,7 @@ crash when some emacsclients open the same file."
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "M-.") #'nimsuggest-find-definition)
     (define-key map (kbd "M-,") #'pop-tag-mark)
+    (define-key map (kbd "C-c C-d") #'nimsuggest-show-doc)
     map))
 
 ;;;###autoload
@@ -299,6 +300,96 @@ crash when some emacsclients open the same file."
         (if (not (string< "" doc))
             (format "%s: no doc" name)
           (format "%s: %s" name doc)))))))
+
+
+;;; misc
+
+;; work in progress
+
+(defvar nimsuggest-doc-mode-map
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map (make-composed-keymap special-mode-map))
+    (define-key map (kbd ">") 'nimsuggest-doc-next)
+    (define-key map (kbd "<") 'nimsuggest-doc-previous)
+    map)
+  "Nimsuggest doc mode keymap.")
+
+(defcustom nimsuggest-doc-directive
+  'def
+  "Directive passed by nimsuggest for `nimsuggest-show-doc'."
+  :type '(choice
+          (const :tag "suggest" 'sug)
+          (const :tag "definition" 'def))
+  :group 'nim)
+
+(defvar nimsuggest--doc-args nil
+  "Internal variable to store document data.")
+
+(defun nimsuggest-show-doc ()
+  "Show document dedicated *nim-doc* buffer."
+  (interactive)
+  (nim-call-epc
+   nimsuggest-doc-directive
+   (lambda (args)
+     (if (and (not args) (not (eq 'sug nimsuggest-doc-directive)))
+         ;; Fallback if there is no result from nimsuggest by 'sug
+         (let ((nimsuggest-doc-directive 'sug))
+           (nimsuggest-show-doc))
+       ;; TODO: should I filter returned result by current position's identifier?
+       (setq nimsuggest--doc-args (cl-loop for i from 0 to (1- (length args))
+                                           collect (cons (1+ i) (nth i args))))
+       (nimsuggest--show-doc)))))
+
+(defun nimsuggest--show-doc ()
+  (let ((def (cdar nimsuggest--doc-args)))
+    (get-buffer-create "*nim-doc*")
+    (unless (equal (current-buffer) (get-buffer "*nim-doc*"))
+      (switch-to-buffer-other-window "*nim-doc*"))
+    (setq buffer-read-only nil)
+    (erase-buffer)
+    (cl-loop for str in (list
+                         ;; (format "debug %s\n" nimsuggest--doc-args)
+                         (let ((nominator (caar nimsuggest--doc-args))
+                               (denominator (length nimsuggest--doc-args)))
+                           (format "%s %s\n"
+                                   (mapconcat 'identity (nim-epc-qualifiedPath def) " ")
+                                   (if (eq 1 denominator)
+                                       ""
+                                     (format "%s/%s %s" nominator denominator
+                                             "-- < next, > previous"))))
+                         (format "Signature\n#########\n%s\n"
+                                 (format "%s %s"
+                                         (nim-epc-symkind def) (nim-epc-forth def)))
+                         (format "Document\n########\n%s\n"
+                                 (nim-epc-doc def))
+                         (format "Location\n########\n%s\n"
+                                 (nim-epc-filePath def)))
+             do (insert (concat str "\n")))
+    ;; For highlight stuff
+    (when (fboundp 'rst-mode) (rst-mode))
+    (goto-char (point-min))
+    (use-local-map nimsuggest-doc-mode-map)
+    (setq buffer-read-only t)))
+
+(defun nimsuggest-doc-next ()
+  "Move to next page."
+  (interactive)
+  (if (not (< 0 (length nimsuggest--doc-args)))
+      (minibuffer-message "there is no next")
+    (let ((popped (pop nimsuggest--doc-args)))
+      (setq nimsuggest--doc-args (append nimsuggest--doc-args (list popped)))
+      (nimsuggest--show-doc))))
+
+(defun nimsuggest-doc-previous ()
+  "Move to previous page."
+  (interactive)
+  (if (not (< 0 (length nimsuggest--doc-args)))
+      (minibuffer-message "there is no previous")
+    (let* ((rargs (reverse nimsuggest--doc-args))
+           (popped (pop rargs)))
+      (setq rargs (append rargs (list popped))
+            nimsuggest--doc-args (reverse rargs))
+      (nimsuggest--show-doc))))
 
 (provide 'nim-suggest)
 ;;; nim-suggest.el ends here
