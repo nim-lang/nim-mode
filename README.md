@@ -1,27 +1,12 @@
-nim-mode [![Travis CI](https://travis-ci.org/nim-lang/nim-mode.svg?branch=master)](https://travis-ci.org/nim-lang/nim-mode)
-===========
+`nim-mode` A major mode for editing Nim source code[![Travis CI](https://travis-ci.org/nim-lang/nim-mode.svg?branch=master)](https://travis-ci.org/nim-lang/nim-mode)
+===================================================
 
-A major mode for editing Nim source code
+This package provides (requires Emacs 24.4 or higher version):
 
-## Note (9/5/2016)
-company-mode's configuration (adding company-backends) is no longer
-required for auto-completion. capf (completion-at-point-function),
-which is Emacs's default feature was added and company-mode also
-support this feature as backend for auto-completion.
-
-So, you can remove below configuration if you have:
-
-```lisp
-(add-to-list 'company-backends
-               '(company-nim :with company-nim-builtin))
-```
-
-Also `nimsuggest-mode` was newly added. So if you were already using
-nim-mode, please take a look nimsuggest's installing section to
-activate `nimsuggest-mode`.
-
-## Prerequisite
-- This package requires Emacs 24.4 or higher version.
+- Syntax highlight for .nim, .nims, nimble, nim.cfg
+- Auto-indent
+- Outline by procedures (`hs-hide-all`, `hs-show-all` etc.)
+- more features with Nimsuggest (see below)
 
 ## Installation
 
@@ -35,20 +20,21 @@ activate `nimsuggest-mode`.
   * `y`                  to confirm question
 
 Please take a look next `Nimsuggest` section if you interested in
-editor integration like completion, jump-to-definition, or linting.
+editor integration like code-completion, jump-to-definition, or linting.
 
 ## Nimsuggest
 (if you are impatient, skip until `install nimsuggest` to install it)
 
 Nimsuggest is an editor agnostic tool for Nim and nim-mode provides:
 
-1. Completion feature -- `C-M-i` and `M-TAB` keys and auto-complete feature if
+1. Completion feature -- *C-M-i* and *M-TAB* keys and auto-complete feature if
    you install [company-mode](https://github.com/company-mode/company-mode)
 2. Asynchronous linting -- nimsuggest take care .nims files as
-   configuration file, so it's smarter than `nim check` command (1)
+   configuration file, so it's smarter than *nim check* command (1)
 3. Showing info under the cursor in minibuffer -- (1)
-4. Jump to definition feature -- `M-.` for go to def and `M-,` for
+4. Jump to definition feature -- *M-.* for go to def and *M-,* for
    back to before the go to def position
+5. Show document of current position's identifier -- *C-c C-d*
 
 (1): those are automatically turned on if you turned on `nimsuggest-mode`
 
@@ -71,7 +57,7 @@ Nimsuggest is an editor agnostic tool for Nim and nim-mode provides:
 After you installed nimsuggest, you may need following configuration in
 your Emacs configuration file (e.g, ~/.emacs.d/init.el):
 
-```el
+```elisp
 ;; can be optional.  See below note
 (setq nim-nimsuggest-path "path/to/nimsuggest")
 
@@ -91,19 +77,7 @@ the result of `(executable-find "nimsuggest")`, so if you can get
 value from the `executable-find`, you may not need that
 configuration unless you want to set specific version of nimsuggest.
 
-## Features
-- Syntax highlight for .nim, .nims, nimble, nim.cfg
-- Auto-indent
-- File outline (`hs-hide-all`, `hs-show-all` etc.)
-
-Not by default, but with nimsuggest and/or other Emacs plugins:
-
-- auto-complete (nimsuggest + company-mode)
-- linting on the fly (nimsuggest + flycheck)
-- jump-to-definition (nimsuggest)
-- refactor (wgrep)
-
-### Other convenience packages for editing Nim source code
+## Other convenience packages for editing Nim source code
 
 Those packages are convenience packages and can be installed same way
 as nim-mode (M-x list-packages ...)
@@ -115,13 +89,7 @@ as nim-mode (M-x list-packages ...)
 - [wgrep](https://github.com/mhayashi1120/Emacs-wgrep): Writable grep buffer and apply the changes to files (maybe convenient for refactor stuff)
 - [suggestion-box-el](https://github.com/yuutayamada/suggestion-box-el): show argument info on the cursor
 
-## auto-indent mode
-If you use `auto-indent-mode, you need to add nim-mode to the list of
-`auto-indent-multiple-indent-modes`:
-```el
-(add-to-list 'auto-indent-multiple-indent-modes 'nim-mode)
-```
-
 ## Other editors/IDEs
 
-You can also find other editor/IDE plugins for Nim language [here](https://github.com/nim-lang/Nim/wiki/editor-support)
+You can also find other editor/IDE plugins for
+Nim language [here](https://github.com/nim-lang/Nim/wiki/editor-support)

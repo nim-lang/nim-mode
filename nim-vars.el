@@ -575,7 +575,7 @@ But all those functions can not use in NimScript.")
     ;; seems related to this: http://nim-lang.org/docs/intern.html#how-the-rtl-is-compiled
     ;; but not sure...
     ("compilerProc" . "")
-    ("magic" . "")
+    ("magic" . "compiler intrinsics")
     )
   "Alist of (pragma name . description).
 The description is unofficial; PRs are welcome.")
