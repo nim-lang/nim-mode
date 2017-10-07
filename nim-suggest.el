@@ -92,7 +92,8 @@ dus: def + use
 
 The CALLBACK is called with a list of ‘nim-epc’ structs."
   (when (nim-suggest-available-p)
-    (let ((tempfile (nim-save-buffer-temporarly))
+    ;; See also compiler/modulegraphs.nim for dirty file
+    (let ((temp-dirty-file (nim-save-buffer-temporarly))
           (buf (current-buffer)))
       (deferred:$
         (epc:call-deferred
@@ -102,18 +103,18 @@ The CALLBACK is called with a list of ‘nim-epc’ structs."
            (chk
             (list (buffer-file-name)
                   -1 -1
-                  tempfile))
+                  temp-dirty-file))
            (t
             (list (buffer-file-name)
                   (line-number-at-pos)
                   (current-column)
-                  tempfile))))
+                  temp-dirty-file))))
         (deferred:nextc it
           (lambda (x) (funcall callback (nim-parse-epc x method))))
         (deferred:watch it
           (lambda (_)
             (unless (get-buffer buf)
-              (delete-file tempfile))))
+              (delete-file temp-dirty-file))))
         (deferred:error it
           (lambda (err)
             (message "%s" (error-message-string err))))))))
