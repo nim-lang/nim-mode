@@ -1,7 +1,11 @@
 ;;; nim-suggest.el --- a plugin to use nimsuggest from Emacs -*- lexical-binding: t -*-
+
 ;;; Commentary:
 
-;;
+;; TODO: implement xref find reference function
+
+;; memo
+;; https://irclogs.nim-lang.org/12-07-2017.html
 
 ;;; Code:
 
@@ -327,7 +331,7 @@ crash when some emacsclients open the same file."
   "Internal variable to store document data.")
 
 (defun nimsuggest-show-doc ()
-  "Show document dedicated *nim-doc* buffer."
+  "Show document in dedicated *nim-doc* buffer."
   (interactive)
   (nim-call-epc
    nimsuggest-doc-directive
