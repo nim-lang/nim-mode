@@ -305,16 +305,20 @@ List of WORDS are used as completion candidates."
                 (nimscript-mode 'nimscript-builtin-completion-at-point)
                 (t (error "Unexpected major mode")))))
 
-    ;; if company-mode is disabled, just add capf function.
+    ;; Add builtin capf function (pragma and some keywords)
+    (unless (memq capf completion-at-point-functions)
+      (add-hook 'completion-at-point-functions capf))
+
+    ;; if company-mode is disabled, just add nimsuggest's capf function.
     (unless (or (bound-and-true-p company-mode)
                 (bound-and-true-p global-company-mode))
-      ;; Don’t change order here
-      (unless (memq capf completion-at-point-functions)
-        (add-hook 'completion-at-point-functions capf))
       (unless (memq 'nim-capf-nimsuggest-completion-at-point completion-at-point-functions)
         (add-hook 'completion-at-point-functions 'nim-capf-nimsuggest-completion-at-point)))
 
-    ;; Add an asynchronous backend for company-mode
+    ;; Add an asynchronous backend for company-mode.
+    ;; The big difference between `company-nimsuggest' and
+    ;; `nim-capf-nimsuggest-completion-at-point' is that company
+    ;; version works with :async keyword.
     (when (bound-and-true-p company-backends)
       (add-to-list 'company-backends 'company-nimsuggest))))
 
