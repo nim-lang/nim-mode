@@ -580,6 +580,10 @@ But all those functions can not use in NimScript.")
   "Alist of (pragma name . description).
 The description is unofficial; PRs are welcome.")
 
+(defconst nim-environment-variables
+  '(; from unittest.nim
+    "NIMTEST_OUTPUT_LVL" "NIMTEST_NO_COLOR" "NIMTEST_ABORT_ON_ERROR"))
+
 ;; obsolete
 (defvar nimsuggest-vervosity "--verbosity:0"
   "This variable will not be needed for latest nimsuggest.

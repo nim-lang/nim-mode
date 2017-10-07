@@ -252,14 +252,13 @@ company-mode.  See also: https://github.com/company-mode/company-mode/issues/583
 (defun nim-capf--static-completion (words)
   "Return list of completion-at-point’s elements.
 List of WORDS are used as completion candidates."
-  (unless (nth 3 (syntax-ppss)) ;; not in string
-    (when (or this-command (thing-at-point 'symbol))
-      (let* ((bounds (bounds-of-thing-at-point 'symbol))
+  (when (or this-command (thing-at-point 'symbol))
+    (let* ((bounds (bounds-of-thing-at-point 'symbol))
            (beg (or (car bounds) (point)))
            (end (or (cdr bounds) (point))))
       (list beg end words
             :company-prefix-length (nim-capf--prefix-p beg end)
-            :exclusive 'no)))))
+            :exclusive 'no))))
 
 ;;;###autoload
 (defun nim-builtin-completion-at-point ()
@@ -267,7 +266,12 @@ List of WORDS are used as completion candidates."
   (nim-capf--static-completion
    (if (nim-inside-pragma-p)
        nim-capf--pragma-words
-     nim-capf-builtin-words)))
+     (append
+      nim-capf-builtin-words
+      ;; in string -- there are some env variable for unittest for nim
+      ;; and I can't remember all the time.
+      (when (nth 3 (syntax-ppss))
+        nim-environment-variables)))))
 
 ;;;###autoload
 (defun nimscript-builtin-completion-at-point ()
