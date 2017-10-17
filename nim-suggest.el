@@ -227,11 +227,19 @@ crash when some emacsclients open the same file."
                   (bound-and-true-p global-eldoc-mode))
           (add-function :before-until (local 'eldoc-documentation-function)
                         'nim-eldoc-function))
-        ;; flycheck
-        (flycheck-nimsuggest-setup))
+        ;; Flycheck
+        (flycheck-nimsuggest-setup)
+        ;; Flymake
+        ;; From Emacs 26, flymake was re-written by João Távora.
+        ;; It supports asynchronous backend, so enable it if users
+        ;; turned on the flymake-mode.
+        (when (and (bound-and-true-p flymake-mode)
+                   (version<= "26" (number-to-string emacs-major-version)))
+          (add-hook 'flymake-diagnostic-functions 'flymake-nimsuggest nil t)))
     ;; Turn off
     ;; FIXME: find proper way to turn off flycheck
-    (remove-function (local 'eldoc-documentation-function) 'nim-eldoc-function)))
+    (remove-function (local 'eldoc-documentation-function) 'nim-eldoc-function)
+    (remove-function (local 'flymake-diagnostic-functions) 'flymake-nimsuggest)))
 
 
 ;; Utilities
@@ -395,6 +403,36 @@ crash when some emacsclients open the same file."
       (setq rargs (append rargs (list popped))
             nimsuggest--doc-args (reverse rargs))
       (nimsuggest--show-doc))))
+
+
+;;; Flymake
+(defun nimsuggest--flymake-error-parser (errors buffer)
+  "Return list of result of `flymake-make-diagnostic' from ERRORS.
+The list can be nil.  ERRORS will be skipped if BUFFER and
+parsed file was different."
+  (cl-loop for (_ _ _ file typ line col text _) in errors
+           for type = (cl-case (string-to-char typ)
+                        (?E :error)
+                        (?W :warning)
+                        (t  :note))
+           ;; nimsuggest's column starts from 1, but Emacs is 0.
+           ;; Use funcall to circumvent emacs' not defined warning
+           for (beg . end) = (funcall 'flymake-diag-region buffer line (1+ col))
+           if (eq buffer (get-file-buffer file))
+           collect (funcall 'flymake-make-diagnostic buffer beg end type text)))
+
+(defun flymake-nimsuggest (report-fn &rest _args)
+  "A Flymake backend for Nim language using Nimsuggest.
+See `flymake-diagnostic-functions' for REPORT-FN and ARGS."
+  (let ((buffer (current-buffer)))
+    (condition-case err
+        (nim-call-epc
+         'chk
+         (lambda (errors)
+           (let ((report-action
+                  (nimsuggest--flymake-error-parser errors buffer)))
+             (funcall report-fn (delq nil report-action)))))
+      (error (funcall report-fn :panic :explanation err)))))
 
 (provide 'nim-suggest)
 ;;; nim-suggest.el ends here
