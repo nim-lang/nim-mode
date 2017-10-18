@@ -52,138 +52,107 @@
         "var unbalancedDoubleQuote3 = " "var unbalancedDoubleQuote4 = "
         "var rawString = r")))
 
- ;; ;; Character
- ;; (test-characters
- ;;  "should highlight characters correctly"
- ;;  (test-concat-dir "tests/syntax/char.nim"))
+ (it "should highlight numbers"
+     (assert-highlights-between
+      '(;; number part
+        (21   . 23) (43   . 43) (64   . 65)
+        (87   . 88) (110  . 111) (133  . 133) (158  . 158)
+        ;; type part
+        (24 . 25) (44 . 46) (66 . 69) (89 . 92)
+        (112 . 115) (137 . 140) (162 . 165))
+      :on "number.nim" :match 'nim-font-lock-number-face))
 
-;;  ;; Number
-;;  (test-faces-by-range
-;;   "should highlight numbers"
-;;   (test-concat-dir "tests/syntax/number.nim")
-;;   '(((21   . 23)   . nim-font-lock-number-face);uint
-;;     ((24   . 25)   . font-lock-type-face)      ;uint type
-;;     ((43   . 43)   . nim-font-lock-number-face);i8
-;;     ((44   . 46)   . font-lock-type-face)      ;i8 type
-;;     ((64   . 65)   . nim-font-lock-number-face);i16
-;;     ((66   . 69)   . font-lock-type-face)      ;i16 type
-;;     ((87   . 88)   . nim-font-lock-number-face);i32
-;;     ((89   . 92)   . font-lock-type-face)      ;i32 type
-;;     ((110  . 111)  . nim-font-lock-number-face);i64
-;;     ((112  . 115)  . font-lock-type-face)      ;i64 type
-;;     ((133  . 133)  . nim-font-lock-number-face);f32
-;;     ((137  . 140)  . font-lock-type-face)      ;f32 type
-;;     ((158  . 158)  . nim-font-lock-number-face);f64
-;;     ((162  . 165)  . font-lock-type-face)))    ;f64 type
+ (it "should highlight pragmas"
+     (assert-highlights-between
+      '((31 . 40) (79 . 85))
+      :on "pragma.nim" :match 'nim-font-lock-pragma-face))
 
-;;  ;; Pragma
-;;  (test-faces-by-range
-;;   "should highlight pragmas"
-;;   (test-concat-dir "tests/syntax/pragma.nim")
-;;   '(((31 . 40)  . nim-font-lock-pragma-face)
-;;     ((79 . 85)  . nim-font-lock-pragma-face)))
+ (it "should highlight docstring"
+     (assert-highlights-between
+      '((56 . 99) (128 . 175))
+      :on "docstring.nim" :match font-lock-doc-face))
 
-;;  ;; docstring
-;;  (test-faces-by-range
-;;   "should highlight docstring"
-;;   (test-concat-dir "tests/syntax/docstring.nim")
-;;   '(((56 . 99)  . font-lock-doc-face)
-;;     ((128 . 175) . font-lock-doc-face)))
+ (it "should highlight multi line comment and doc comment"
+     (prepare-file "multiline_comment.nim")
+     (assert-highlights-between
+      '((1 . 5) (77 . 78) (80 . 185) (564 . 566) (567 . 576) (615 . 619)
+        (630 . 634) (646 . 650) (662 . 666) (683 . 700))
+      :match font-lock-comment-face)
+     (assert-highlights-between
+      '((48 . 75) (192 . 235) (545 . 553) (611 . 614) (626 . 629)
+        (641 . 645) (657 . 661) (673 . 682))
+      :match font-lock-string-face)
+     (assert-highlights-between
+      '((237 . 453) (482 . 536))
+      :match font-lock-doc-face)
+     ;; might be added eventually
+     ;; (assert-highlights-between
+     ;;  '()
+     ;;  :match font-lock-comment-delimiter-face)
+     )
 
-;;  ;; multi line comment or doc comment
-;;  (test-faces-by-range
-;;   "should highlight multi line comment and doc string"
-;;   (test-concat-dir "tests/syntax/multiline_comment.nim")
-;;   '(((1 . 5) . font-lock-comment-face)
-;;     ((48 . 75)  . font-lock-string-face)
-;;     ((77 . 78) . font-lock-comment-delimiter-face)
-;;     ((80 . 185)  . font-lock-comment-face)
-;;     ((192 . 235)  . font-lock-string-face)
-;;     ((237 . 453)  . font-lock-doc-face)
-;;     ((482 . 536)  . font-lock-doc-face)
-;;     ((545 . 553)  . font-lock-string-face)
-;;     ((564 . 566)  . font-lock-comment-face)
-;;     ((567 . 576)  . font-lock-comment-face) ;
-;;     ((611 . 614)  . font-lock-string-face)
-;;     ((615 . 619)  . font-lock-comment-face)
-;;     ((626 . 629)  . font-lock-string-face)
-;;     ((630 . 634)  . font-lock-comment-face)
-;;     ((641 . 645)  . font-lock-string-face)
-;;     ((646 . 650)  . font-lock-comment-face)
-;;     ((657 . 661)  . font-lock-string-face)
-;;     ((662 . 666)  . font-lock-comment-face)
-;;     ((673 . 682)  . font-lock-string-face)
-;;     ((683 . 700)  . font-lock-comment-face)))
+ (it "should highlight varargs inside proc’s args correctly"
+     (assert-highlight-between 55 61 :on "varargs.nim"
+                               :match font-lock-type-face))
 
-;;  ;; varargs inside proc
-;;  (test-faces-by-range
-;;   "should highlight varargs inside proc’s args correctly"
-;;   (test-concat-dir "tests/syntax/varargs.nim")
-;;   '(((55 . 61) . font-lock-type-face)))
+ (it "should highlight words inside backticks correctly"
+     (assert-highlights-between
+      '((100 . 115) (124 . 139) (148 . 163) (172 . 187)
+        (196 . 211) (220 . 235) (248 . 263) (272 . 287)
+        (322 . 337) (342 . 357))
+      :on "backtick.nim"
+      :match font-lock-constant-face))
 
+ ;; $# and $[1-9]
+ (it "should highlight $# and $[1-9] inside string correctly"
+  (assert-highlights-between
+   '((84 . 85) (89 . 90) (94 . 95))
+   :on "format.nim" :match font-lock-preprocessor-face))
 
-;;  ;; backticks in comment
-;;  (test-faces-by-range
-;;   "should highlight words inside backticks correctly"
-;;   (test-concat-dir "tests/syntax/backtick.nim")
-;;   '(((99 . 116) . font-lock-constant-face)
-;;     ((122 . 141) . font-lock-constant-face)
-;;     ((147 . 164) . font-lock-constant-face)
-;;     ((170 . 189) . font-lock-constant-face)
-;;     ((195 . 212) . font-lock-constant-face)
-;;     ((218 . 237) . font-lock-constant-face)
-;;     ((247 . 264) . font-lock-constant-face)
-;;     ((270 . 289) . font-lock-constant-face)
-;;     ((321 . 338) . font-lock-constant-face)
-;;     ((340 . 359) . font-lock-constant-face)))
+ ;; after ‘is’ operator and ‘distinct’
+ (it "should highlight after ‘is’ operator correctly"
+  (assert-highlights-between
+   '((132 . 142) (202 . 212) (282 . 293))
+   :on "test_is_and_distinct.nim" :match font-lock-type-face))
 
-;;  ;; $# and $[1-9]
-;;  (test-faces-by-range
-;;   "should highlight $# and $[1-9] inside string correctly"
-;;   (test-concat-dir "tests/syntax/format.nim")
-;;   '(((84 . 85) . font-lock-preprocessor-face)
-;;     ((89 . 90) . font-lock-preprocessor-face)
-;;     ((94 . 95) . font-lock-preprocessor-face)))
+ (it "should highlight single line comment correctly"
+  ;; Note this test was added because I got wrong highlight
+  ;; only nimscript file, so don’t change the extension name.
+  (prepare-file "single_comment.nims")
+  (assert-highlight-between 1 70  :match font-lock-comment-face)
+  (assert-highlight-between 73 76 :match font-lock-keyword-face))
 
-;;  ;; after ‘is’ operator and ‘distinct’
-;;  (test-faces-by-range
-;;   "should highlight after ‘is’ operator correctly"
-;;   (test-concat-dir "tests/syntax/test_is_and_distinct.nim")
-;;   '(((132 . 142) . font-lock-type-face)
-;;     ((202 . 212) . font-lock-type-face)
-;;     ((282 . 293) . font-lock-type-face)))
+ ;; Character
+ (it "should highlight characters correctly"
+     (let* ((chars (collect-char-points :on "char.nim"))
+            (char-pos   (car chars))
+            (after-char (cdr chars)))
+       (assert-highlights-between char-pos :match font-lock-string-face)
+       (assert-highlights-between after-char :notmatch font-lock-string-face)))
 
-;;  (test-faces-by-range
-;;   "should highlight single line comment correctly"
-;;   ;; Note this test was added because I got wrong highlight
-;;   ;; only nimscript file, so don’t change the extension name.
-;;   (test-concat-dir "tests/syntax/single_comment.nims")
-;;   '(((1 . 70) . font-lock-comment-face)
-;;     ((73 . 76) . font-lock-keyword-face)))
  ) ; end of describe function
 
-;; (require 'nimscript-mode)
-;; (describe
-;;  "Syntax nimscript-mode"
-;;  (before-each
-;;   (set-buffer (get-buffer-create "*Test*"))
-;;   (erase-buffer)
-;;   (nimscript-mode))
+(require 'nimscript-mode)
+(describe "Syntax nimscript-mode"
+ (before-each
+  (set-buffer (get-buffer-create "*Test*"))
+  (erase-buffer)
+  ;; may need to turn off this to adapt triple double quotes.
+  (prettify-symbols-mode 0)
+  (nimscript-mode))
 
-;;  (after-each
-;;   (kill-buffer (get-buffer-create "*Test*")))
+ (after-each
+  (kill-buffer (get-buffer-create "*Test*")))
 
-;;  (test-faces-by-range
-;;   "should highlight NimScript keywords correctly"
-;;   (test-concat-dir "tests/syntax/test_nimscript.nims")
-;;   '(((38  . 41)  . font-lock-variable-name-face) ; mode
-;;     ((45  . 54)  . font-lock-type-face)          ; ScriptMode
-;;     ((78  . 81)  . font-lock-keyword-face)       ; task
-;;     ((83  . 87)  . font-lock-builtin-face)       ; build
-;;     ((145 . 149) . font-lock-builtin-face)       ; tests
-;;     ((207 . 211) . font-lock-builtin-face)       ; bench
-;;     ((259 . 262) . font-lock-keyword-face)))     ; exec
-;;  )
+ (it "should highlight NimScript keywords correctly"
+     (prepare-file "test_nimscript.nims")
+     (assert-highlights-between
+      '((78 . 81) (83  . 87) (145 . 149) (207 . 211) (259 . 262))
+      :match font-lock-builtin-face)
+     (assert-highlight-between 38 41 :match font-lock-variable-name-face)
+     (assert-highlight-between 45 54 :match font-lock-type-face))
+
+ ) ; end of describe for nimscript
 
 ;; Local Variables:
 ;; no-byte-compile: t
