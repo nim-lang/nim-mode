@@ -21,9 +21,12 @@
 ;;; Commentary:
 
 ;; On the fly syntax check support using Nimsuggest and flycheck.el.
+;; You could find another flycheck backend for Nim at https://github.com/ALSchwalm/flycheck-nim
+;; which use `nim check` command.
 
-;; memo:
-;; https://github.com/lunaryorn/blog/blob/master/posts/generic-syntax-checkers-in-flycheck.md
+;; Because of introducing new flymake (https://lists.gnu.org/archive/html/emacs-devel/2017-09/msg00953.html)
+;; from Emacs 26, this package might be moved to other repository on the future.
+;; (for less dependencies)
 
 ;;; Code:
 
@@ -72,19 +75,16 @@ CALLBACK is the status callback passed by Flycheck."
          ;; TODO: add proper error handler
          (error (funcall callback 'errored err)))))))
 
-;; TODO: move this function to nimsuggest side
 (defun flycheck-nimsuggest-error-parser (errors checker buffer)
   "Return list of `flycheck-error` struct from ERRORS.
 CHECKER and BUFFER are passed to flycheck's function."
-  (cl-loop for e in errors
-           for file   = (nth 3 e)
-           for line   = (nth 5 e)
-           ;; column starts from 0 on nimsuggest, but emacs is not
-           for column = (1+ (nth 6 e))
-           for msg    = (nth 7 e)
-           for level  = (if (equal "Error" (nth 4 e))
-                            'error
-                          'warning)
+  (cl-loop for (_ _ _ file lvl line col msg _) in errors
+           ;; column starts from 1 on nimsuggest, but emacs is 0
+           for column = (1+ col)
+           for level  = (cl-case (string-to-char lvl)
+                          (?E 'error)
+                          (?w 'warning)
+                          (t  'info)) ; for Hint
            collect (flycheck-error-new-at
                     line column level msg
                     :checker checker :buffer buffer :filename file)))
