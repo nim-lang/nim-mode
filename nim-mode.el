@@ -83,7 +83,7 @@
 
 ;; ```el
 ;; ;; can be optional.  See below note
-;; (setq nim-nimsuggest-path "path/to/nimsuggest")
+;; (setq nimsuggest-path "path/to/nimsuggest")
 
 ;; ;; Currently nimsuggest doesn't support nimscript files, so only nim-mode...
 ;; (add-hook 'nim-mode-hook 'nimsuggest-mode)
@@ -96,7 +96,7 @@
 ;; ;; (add-hook 'prog-mode-hook 'company-mode)
 ;; ```
 
-;; Note that above `nim-nimsuggest-path` variable is automatically set
+;; Note that above `nimsuggest-path` variable is automatically set
 ;; the result of `(executable-find "nimsuggest")`, so if you can get
 ;; value from the `executable-find`, you may not need that
 ;; configuration unless you want to set specific version of nimsuggest.

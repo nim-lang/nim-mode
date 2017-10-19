@@ -25,16 +25,16 @@ Most of `nim-mode`s features depend on nimsuggest. If you think your issue is
 related to nimsuggest, as a first debug step, see if the problem disappears when
 you disable nimsuggest.
 
-You can turn off nimsuggest by setting `nim-nimsuggest-path` to `nil`:
+You can turn off nimsuggest by setting `nimsuggest-path` to `nil`:
 
 ```lisp
 ;; place this configuration in your .emacs or somewhere before emacs
 ;; load nim-mode and you may need to reboot your Emacs to check.
-(defconst nim-nimsuggest-path nil)
+(defconst nimsuggest-path nil)
 ```
 
 Generally, `nim-mode` uses nimsuggest via `company-mode`, `eldoc-mode`,
-`flycheck-mode`, `nim-thing-at-point`, and `nim-goto-sym` (goto definition).
+`flycheck-mode`, and `nimsuggest-find-definition` (goto definition).
 
 If you are completely new to Emacs, please check next section as well.
 

@@ -67,18 +67,18 @@
 
 (defun nim-capf--format-candidate (cand)
   "Put text property to CAND."
-  (let ((qpath (nim-epc-qualifiedPath cand)))
+  (let ((qpath (nimsuggest--epc-qualifiedPath cand)))
     (propertize
      (car (last qpath))
-     :nim-line   (nim-epc-line     cand)
-     :nim-column (nim-epc-column   cand)
-     :nim-type   (nim-epc-forth    cand)
-     :nim-doc    (nim-epc-doc      cand)
+     :nim-line   (nimsuggest--epc-line     cand)
+     :nim-column (nimsuggest--epc-column   cand)
+     :nim-type   (nimsuggest--epc-forth    cand)
+     :nim-doc    (nimsuggest--epc-doc      cand)
      :nim-qpath  qpath
-     :nim-file   (nim-epc-filePath cand)
-     :nim-sk     (nim-epc-symkind  cand)
+     :nim-file   (nimsuggest--epc-filePath cand)
+     :nim-sk     (nimsuggest--epc-symkind  cand)
      :nim-sig    (assoc-default
-                  (nim-epc-symkind cand) nim-capf--type-abbrevs))))
+                  (nimsuggest--epc-symkind cand) nim-capf--type-abbrevs))))
 
 (defun nim-capf--format-candidates (_arg candidates)
   "Put text attributes to CANDIDATES."
@@ -90,7 +90,7 @@
 The PREFIX is passed to the CALLBACK."
   ;; currently only support nim-mode (not nimscript-mode)
   (when (derived-mode-p 'nim-mode)
-    (nim-call-epc
+    (nimsuggest--call-epc
      'sug
      (lambda (x) (funcall callback (nim-capf--format-candidates prefix x))))))
 

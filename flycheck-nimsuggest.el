@@ -33,8 +33,8 @@
 (require 'flycheck)
 (require 'cl-lib)
 
-(autoload 'nim-call-epc "nim-suggest")
-(autoload 'nim-suggest-available-p "nim-suggest")
+(autoload 'nimsuggest--call-epc "nim-suggest")
+(autoload 'nimsuggest-available-p "nim-suggest")
 
 (defvar flycheck-nimsuggest-error-parser 'flycheck-nimsuggest-error-parser
   "Error parser that parse nimsuggest's erorrs.
@@ -65,7 +65,7 @@ CALLBACK is the status callback passed by Flycheck."
   ;; A callback function, which shall be used to report the results of a
   ;; syntax check back to Flycheck.
   (let ((buffer (current-buffer)))
-    (nim-call-epc
+    (nimsuggest--call-epc
      'chk
      (lambda (errors)
        (condition-case err
@@ -108,7 +108,7 @@ See URL `https://github.com/nim-lang/nimsuggest'."
        :modes '(nim-mode nimscript-mode)
        :predicate (lambda () (and
                          (bound-and-true-p nim-use-flycheck-nimsuggest)
-                         (nim-suggest-available-p))))
+                         (nimsuggest-available-p))))
 
      (add-to-list 'flycheck-checkers 'nim-nimsuggest)))
 

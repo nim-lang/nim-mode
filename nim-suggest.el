@@ -18,23 +18,24 @@
 
 ;;; If you change the order here, make sure to change it over in
 ;;; nimsuggest.nim too.
-(defconst nim-epc-order
+(defconst nimsuggest--epc-order
   '(:section :symkind :qualifiedPath :filePath :forth :line :column :doc :quality))
 
-(cl-defstruct nim-epc
+(cl-defstruct nimsuggest--epc
   section symkind qualifiedPath filePath forth line column doc quality)
 
-(defun nim-parse-epc (obj method)
+(defun nimsuggest--parse-epc (obj method)
   "Parse OBJ according to METHOD."
   (cl-case method
     (chk obj)
     ((sug con def use dus)
      (cl-mapcar
       (lambda (sublist)
-        (apply #'make-nim-epc (cl-mapcan #'list nim-epc-order sublist)))
+        (apply #'make-nimsuggest--epc
+               (cl-mapcan #'list nimsuggest--epc-order sublist)))
       obj))))
 
-(defvar nim-epc-processes-alist nil)
+(defvar nimsuggest--epc-processes-alist nil)
 
 (defvar nimsuggest-get-option-function nil
   "Function to get options for nimsuggest.")
@@ -53,25 +54,25 @@ PROJECT-PATH is added as the last option."
                 (list (with-no-warnings nimsuggest-vervosity)
                       "--epc" project-path))))
 
-(defun nim-find-or-create-epc ()
+(defun nimsuggest--find-or-create-epc ()
   "Get the epc responsible for the current buffer."
   (let ((file buffer-file-name))
-    (or (let ((epc-process (cdr (assoc file nim-epc-processes-alist))))
+    (or (let ((epc-process (cdr (assoc file nimsuggest--epc-processes-alist))))
           (if (eq 'run (epc:manager-status-server-process epc-process))
               epc-process
             (prog1 ()
-              (nim-suggest-kill-zombie-processes file))))
+              (nimsuggest--kill-zombie-processes file))))
         (let ((epc-process
                (epc:start-epc
-                nim-nimsuggest-path
+                nimsuggest-path
                 (nimsuggest-get-options file))))
-          (push (cons file epc-process) nim-epc-processes-alist)
+          (push (cons file epc-process) nimsuggest--epc-processes-alist)
           epc-process))))
 
 ;;;###autoload
-(defun nim-suggest-available-p ()
+(defun nimsuggest-available-p ()
   "Return non-nil if nimsuggest is available in current buffer."
-  (and nim-nimsuggest-path
+  (and nimsuggest-path
        (not nim-inside-compiler-dir-p)
        ;; Prevent turn on nimsuggest related feature on org-src block
        ;; or nimscript-mode (nimsuggest doesn't support yet).
@@ -80,8 +81,9 @@ PROJECT-PATH is added as the last option."
        (not (and (fboundp 'org-in-src-block-p)
                  (or (org-in-src-block-p)
                      (org-in-src-block-p t))))))
+(define-obsolete-function-alias 'nim-suggest-available-p 'nimsuggest-available-p "2017/9/02")
 
-(defun nim-call-epc (method callback)
+(defun nimsuggest--call-epc (method callback)
   "Call the nimsuggest process on point.
 
 Call the nimsuggest process responsible for the current buffer.
@@ -94,14 +96,14 @@ def: where the symbol is defined
 use: where the symbol is used
 dus: def + use
 
-The CALLBACK is called with a list of ‘nim-epc’ structs."
-  (when (nim-suggest-available-p)
+The CALLBACK is called with a list of ‘nimsuggest--epc’ structs."
+  (when (nimsuggest-available-p)
     ;; See also compiler/modulegraphs.nim for dirty file
-    (let ((temp-dirty-file (nim-save-buffer-temporarly))
+    (let ((temp-dirty-file (nimsuggest--save-buffer-temporarly))
           (buf (current-buffer)))
       (deferred:$
         (epc:call-deferred
-         (nim-find-or-create-epc)
+         (nimsuggest--find-or-create-epc)
          method
          (cl-case method
            (chk
@@ -114,7 +116,7 @@ The CALLBACK is called with a list of ‘nim-epc’ structs."
                   (current-column)
                   temp-dirty-file))))
         (deferred:nextc it
-          (lambda (x) (funcall callback (nim-parse-epc x method))))
+          (lambda (x) (funcall callback (nimsuggest--parse-epc x method))))
         (deferred:watch it
           (lambda (_)
             (unless (get-buffer buf)
@@ -133,14 +135,14 @@ Note that this directory is removed when you exit from Emacs.")
 
 (defun nimsuggest--get-dirty-dir ()
   "Return temp directory.
-The directory name consists of `nim-dirty-directory' and current
+The directory name consists of `nimsuggest-dirty-directory' and current
 frame number.  The frame number is required to prevent Emacs
 crash when some emacsclients open the same file."
   (let* ((frame-num (nth 2 (split-string (format "%s" (selected-frame)) " ")))
          (frame-num-str (substring frame-num 0 (1- (length frame-num)))))
-    (file-name-as-directory (concat nim-dirty-directory frame-num-str))))
+    (file-name-as-directory (concat nimsuggest-dirty-directory frame-num-str))))
 
-(defun nim-suggest-get-temp-file-name ()
+(defun nimsuggest--get-temp-file-name ()
   "Get temp file name."
   (mapconcat 'directory-file-name
              `(,(nimsuggest--get-dirty-dir)
@@ -155,32 +157,32 @@ crash when some emacsclients open the same file."
                    buffer-file-name)))
              ""))
 
-(defun nim-make-tempdir (tempfile)
+(defun nimsuggest--make-tempdir (tempfile)
   "Make temporary directory for TEMPFILE."
   (let* ((tempdir (file-name-directory tempfile)))
     (unless (file-exists-p tempdir)
       (make-directory tempdir t))))
 
-(defun nim-save-buffer-temporarly ()
+(defun nimsuggest--save-buffer-temporarly ()
   "Save the current buffer and return the location."
-  (let* ((temporary-file-directory nim-dirty-directory)
-         (filename (nim-suggest-get-temp-file-name)))
-    (nim-make-tempdir filename)
+  (let* ((temporary-file-directory nimsuggest-dirty-directory)
+         (filename (nimsuggest--get-temp-file-name)))
+    (nimsuggest--make-tempdir filename)
     (save-restriction
       (widen)
       (write-region (point-min) (point-max) filename nil 1))
     filename))
 
-(add-hook 'kill-emacs-hook 'nim-delete-nimsuggest-temp-directory)
-(defun nim-delete-nimsuggest-temp-directory ()
+(add-hook 'kill-emacs-hook 'nimsugget--delete-temp-directory)
+(defun nimsugget--delete-temp-directory ()
   "Delete temporary files directory for nimsuggest."
-  (when (file-exists-p nim-dirty-directory)
-    (delete-directory (file-name-directory nim-dirty-directory) t)))
+  (when (file-exists-p nimsuggest-dirty-directory)
+    (delete-directory (file-name-directory nimsuggest-dirty-directory) t)))
 
-(defun nim-suggest-kill-zombie-processes (&optional ppath)
+(defun nimsuggest--kill-zombie-processes (&optional ppath)
   "Kill needless zombie processes, which correspond to PPATH."
-  (setq nim-epc-processes-alist
-        (cl-loop for (file . manager) in nim-epc-processes-alist
+  (setq nimsuggest--epc-processes-alist
+        (cl-loop for (file . manager) in nimsuggest--epc-processes-alist
                  if (and (epc:live-p manager)
                          (or (and ppath (equal ppath file))
                              (not ppath)))
@@ -190,7 +192,7 @@ crash when some emacsclients open the same file."
 (defun nimsuggest-find-definition ()
   "Go to the definition of the symbol currently under the cursor."
   (interactive)
-  (nim-call-epc
+  (nimsuggest--call-epc
    'def
    (lambda (defs)
      (let ((def (cl-first defs)))
@@ -199,9 +201,9 @@ crash when some emacsclients open the same file."
            (xref-push-marker-stack)
          (with-no-warnings
            (ring-insert find-tag-marker-ring (point-marker))))
-       (find-file (nim-epc-filePath def))
+       (find-file (nimsuggest--epc-filePath def))
        (goto-char (point-min))
-       (forward-line (1- (nim-epc-line def)))))))
+       (forward-line (1- (nimsuggest--epc-line def)))))))
 (define-obsolete-function-alias 'nim-goto-sym 'nimsuggest-find-definition "2017/9/02")
 
 ;; To avoid warning
@@ -221,7 +223,7 @@ crash when some emacsclients open the same file."
   :keymap nimsuggest-mode-map
   (if nimsuggest-mode
       ;; Turn on
-      (when (and (derived-mode-p 'nim-mode) (nim-suggest-available-p))
+      (when (and (derived-mode-p 'nim-mode) (nimsuggest-available-p))
         ;; EL-DOC
         (when (or (bound-and-true-p eldoc-mode)
                   (bound-and-true-p global-eldoc-mode))
@@ -244,14 +246,14 @@ crash when some emacsclients open the same file."
 
 ;; Utilities
 
-(defun nimsuggest-put-face (text face)
+(defun nimsuggest--put-face (text face)
   (when (and text (string< "" text))
     (add-text-properties
      0 (length text)
      `(face ,face)
      text)))
 
-(defun nimsuggest-parse (forth)
+(defun nimsuggest--parse (forth)
   (when (string-match
          (rx (group (1+ word)) (0+ " ")
              (group (1+ nonl)))
@@ -260,7 +262,7 @@ crash when some emacsclients open the same file."
           (other (match-string 2 forth)))
       (cons first other))))
 
-(defun nimsuggest-trim (str)
+(defun nimsuggest--trim (str)
   "Adjust STR for mini buffer."
   (let ((max-width (- (frame-width) 4))) ; <- just for buffer, probably
     (if (< (length str) max-width)       ; it depends on terminal or GUI Emacs
@@ -281,35 +283,35 @@ crash when some emacsclients open the same file."
           (if (eq (length (cdr qpath)) 1)
               (cadr qpath)
             (mapconcat 'identity (cdr qpath) "."))))
-    (nimsuggest-put-face doc font-lock-doc-face)
+    (nimsuggest--put-face doc font-lock-doc-face)
     (pcase (list symKind)
       (`(,(or "skProc" "skField" "skTemplate" "skMacro"))
        (when (string< "" forth)
-         (cl-destructuring-bind (ptype . typeinfo) (nimsuggest-parse forth)
+         (cl-destructuring-bind (ptype . typeinfo) (nimsuggest--parse forth)
            (when (equal "proc" ptype)
-             (nimsuggest-put-face name font-lock-function-name-face)
+             (nimsuggest--put-face name font-lock-function-name-face)
              (let* ((func  (format "%s %s" name typeinfo)))
-               (nimsuggest-trim
+               (nimsuggest--trim
                 (if (string= "" doc)
                     (format "%s" func)
                   (format "%s %s" func doc))))))))
       (`(,(or "skVar" "skLet" "skConst" "skResult" "skParam"))
        (let ((sym (downcase (substring symKind 2 (length symKind)))))
-         (nimsuggest-put-face sym font-lock-keyword-face)
-         (nimsuggest-put-face name
+         (nimsuggest--put-face sym font-lock-keyword-face)
+         (nimsuggest--put-face name
                              (cond ((member symKind '("skVar" "skResult"))
                                     '(face font-lock-variable-name-face))
                                    ((member symKind '("skLet" "skConst"))
                                     '(face font-lock-constant-face))
                                    (t '(face font-lock-keyword-face))))
-         (nimsuggest-trim
+         (nimsuggest--trim
           (format "%s %s : %s" sym name
                   (cond
                    ((string< "" forth) forth)
                    (t "no doc"))))))
       (`("skType")
-       (nimsuggest-put-face name font-lock-type-face)
-       (nimsuggest-trim
+       (nimsuggest--put-face name font-lock-type-face)
+       (nimsuggest--trim
         (if (not (string< "" doc))
             (format "%s: no doc" name)
           (format "%s: %s" name doc)))))))
@@ -341,7 +343,7 @@ crash when some emacsclients open the same file."
 (defun nimsuggest-show-doc ()
   "Show document in dedicated *nim-doc* buffer."
   (interactive)
-  (nim-call-epc
+  (nimsuggest--call-epc
    nimsuggest-doc-directive
    (lambda (args)
      (if (and (not args) (not (eq 'sug nimsuggest-doc-directive)))
@@ -365,18 +367,19 @@ crash when some emacsclients open the same file."
                          (let ((nominator (caar nimsuggest--doc-args))
                                (denominator (length nimsuggest--doc-args)))
                            (format "%s %s\n"
-                                   (mapconcat 'identity (nim-epc-qualifiedPath def) " ")
+                                   (mapconcat 'identity (nimsuggest--epc-qualifiedPath def) " ")
                                    (if (eq 1 denominator)
                                        ""
                                      (format "%s/%s %s" nominator denominator
                                              "-- < next, > previous"))))
                          (format "Signature\n#########\n%s\n"
                                  (format "%s %s"
-                                         (nim-epc-symkind def) (nim-epc-forth def)))
+                                         (nimsuggest--epc-symkind def)
+                                         (nimsuggest--epc-forth def)))
                          (format "Document\n########\n%s\n"
-                                 (nim-epc-doc def))
+                                 (nimsuggest--epc-doc def))
                          (format "Location\n########\n%s\n"
-                                 (nim-epc-filePath def)))
+                                 (nimsuggest--epc-filePath def)))
              do (insert (concat str "\n")))
     ;; For highlight stuff
     (when (fboundp 'rst-mode) (rst-mode))
@@ -426,7 +429,7 @@ parsed file was different."
 See `flymake-diagnostic-functions' for REPORT-FN and ARGS."
   (let ((buffer (current-buffer)))
     (condition-case err
-        (nim-call-epc
+        (nimsuggest--call-epc
          'chk
          (lambda (errors)
            (let ((report-action

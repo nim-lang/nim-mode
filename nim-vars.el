@@ -143,11 +143,13 @@ You don't need to set this if the nim executable is inside your PATH."
   :type '(repeat string)
   :group 'nim)
 
-(defcustom nim-nimsuggest-path (executable-find "nimsuggest")
+(defcustom nimsuggest-path (executable-find "nimsuggest")
   "Path to the nimsuggest binary."
   :type '(choice (const :tag "Path of nimsuggest binary" string)
                  (const :tag "" nil))
   :group 'nim)
+;; Added Oct 17, 2017
+(define-obsolete-variable-alias 'nim-nimsuggest-path 'nimsuggest-path)
 
 (defcustom nim-suggest-options '("--v2")
   "Options for Nimsuggest.
@@ -156,6 +158,18 @@ epc function."
   :type '(choice (repeat :tag "List of options" string)
                  (const :tag "" nil))
   :group 'nim)
+
+(defcustom nimsuggest-dirty-directory
+  ;; Even users changed the temp directory name,
+  ;; ‘file-name-as-directory’ ensures suffix directory separator.
+  (mapconcat 'file-name-as-directory
+             `(,temporary-file-directory "emacs-nim-mode") "")
+  "Directory name, which nimsuggest uses temporarily.
+Note that this directory is removed when you exit from Emacs."
+  :type 'directory
+  :group 'nim)
+;; Added Oct 17, 2017
+(define-obsolete-variable-alias 'nim-dirty-directory 'nimsuggest-dirty-directory)
 
 (defvar nim-suggest-local-options '()
   "Options for Nimsuggest.

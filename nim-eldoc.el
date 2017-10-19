@@ -21,7 +21,7 @@
 ;;; Commentary:
 
 ;; Eldoc supports for Nim.  This package automatically turns on
-;; if you set ‘nim-nimsuggest-path’ and the nimsuggest is working.
+;; if you set ‘nimsuggest-path’ and the nimsuggest is working.
 
 ;;; Code:
 
@@ -74,7 +74,7 @@
 (defun nim-eldoc--call-nimsuggest ()
   (save-excursion
     (nim-eldoc--move)
-    (nim-call-epc
+    (nimsuggest--call-epc
      ;; version 2 protocol can use: ideDef, ideUse, ideDus
      'dus 'nim-eldoc--update)))
 
@@ -113,7 +113,7 @@
       (when (nim-eldoc-inside-paren-p)
         (nim-eldoc--move)
         (backward-char)
-        (nim-call-epc 'dus 'nim-eldoc--update-1)))))
+        (nimsuggest--call-epc 'dus 'nim-eldoc--update-1)))))
 
 (defun nim-eldoc--update-1 (defs)
   (when defs
@@ -131,10 +131,10 @@
 DEFS is group of definitions from nimsuggest."
   ;; TODO: switch if there are multiple defs
   (let* ((data    (cl-first defs))
-         (forth   (nim-epc-forth         data))
-         (symKind (nim-epc-symkind       data))
-         (qpath   (nim-epc-qualifiedPath data))
-         (doc     (nim-epc-doc           data)))
+         (forth   (nimsuggest--epc-forth         data))
+         (symKind (nimsuggest--epc-symkind       data))
+         (qpath   (nimsuggest--epc-qualifiedPath data))
+         (doc     (nimsuggest--epc-doc           data)))
     (nimsuggest--format forth symKind qpath doc)))
 
 ;; backward compatibility
