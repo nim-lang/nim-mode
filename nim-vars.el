@@ -616,10 +616,6 @@ which supports ‘chk’ option for EPC.")
 (make-obsolete-variable
  'nimsuggest-vervosity 'nimsuggest-check-vervosity "0.1.0")
 
-;; flycheck-nimsuggest
-(defvar nim-use-flycheck-nimsuggest t
-  "Set nil if you really don’t want to use flycheck-nimsuggest.
-Mainly this variable is debug purpose.")
 
 (provide 'nim-vars)
 ;;; nim-vars.el ends here

@@ -33,6 +33,10 @@
 (require 'flycheck)
 (require 'cl-lib)
 
+(defvar nim-use-flycheck-nimsuggest t
+  "Set nil if you really don’t want to use flycheck-nimsuggest.
+Mainly this variable is debug purpose.")
+
 (autoload 'nimsuggest--call-epc "nim-suggest")
 (autoload 'nimsuggest-available-p "nim-suggest")
 
