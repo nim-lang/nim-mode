@@ -23,15 +23,6 @@
   :link '(url-link "http://nim-lang.org/")
   :group 'languages)
 
-(defface nim-tab-face
-  '((((class color) (background dark))
-     (:background "grey22" :foreground "darkgray"))
-    (((class color) (background light))
-     (:background "beige"  :foreground "lightgray"))
-    (t (:inverse-video t)))
-  "Face used to visualize TAB."
-  :group 'nim)
-
 (defface nim-font-lock-export-face
   '((t :weight bold
        :slant italic
@@ -148,8 +139,6 @@ You don't need to set this if the nim executable is inside your PATH."
   :type '(choice (const :tag "Path of nimsuggest binary" string)
                  (const :tag "" nil))
   :group 'nim)
-;; Added Oct 17, 2017
-(define-obsolete-variable-alias 'nim-nimsuggest-path 'nimsuggest-path)
 
 (defcustom nim-suggest-options '("--v2")
   "Options for Nimsuggest.
@@ -168,8 +157,6 @@ epc function."
 Note that this directory is removed when you exit from Emacs."
   :type 'directory
   :group 'nim)
-;; Added Oct 17, 2017
-(define-obsolete-variable-alias 'nim-dirty-directory 'nimsuggest-dirty-directory)
 
 (defvar nim-suggest-local-options '()
   "Options for Nimsuggest.
@@ -607,6 +594,7 @@ The description is unofficial; PRs are welcome.")
   '(; from unittest.nim
     "NIMTEST_OUTPUT_LVL" "NIMTEST_NO_COLOR" "NIMTEST_ABORT_ON_ERROR"))
 
+
 ;; obsolete
 (defvar nimsuggest-vervosity "--verbosity:0"
   "This variable will not be needed for latest nimsuggest.
@@ -616,6 +604,14 @@ which supports ‘chk’ option for EPC.")
 (make-obsolete-variable
  'nimsuggest-vervosity 'nimsuggest-check-vervosity "0.1.0")
 
+(make-obsolete
+ 'nim-tab-face
+ "The nim-tab-face was obsoleted, use `white-space-mode' instead to highlight tabs."
+ "Oct/20/2017")
+
+;; Added Oct 17, 2017
+(define-obsolete-variable-alias 'nim-nimsuggest-path 'nimsuggest-path "Oct/20/2017")
+(define-obsolete-variable-alias 'nim-dirty-directory 'nimsuggest-dirty-directory "Oct/20/2017")
 
 (provide 'nim-vars)
 ;;; nim-vars.el ends here
