@@ -2,8 +2,6 @@
 
 ;;; Commentary:
 
-;; TODO: implement xref find reference function
-
 ;; memo
 ;; https://irclogs.nim-lang.org/12-07-2017.html
 
@@ -392,7 +390,8 @@ crash when some emacsclients open the same file."
       (nimsuggest--show-doc))))
 
 
-;;; Flymake
+;;; Flymake integration from Emacs 26
+
 (defun nimsuggest--flymake-error-parser (errors buffer)
   "Return list of result of `flymake-make-diagnostic' from ERRORS.
 The list can be nil.  ERRORS will be skipped if BUFFER and

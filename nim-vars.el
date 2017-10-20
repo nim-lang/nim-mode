@@ -167,6 +167,7 @@ specific directory or buffer.  See also ‘dir-locals-file’.")
   (rx (or "\\" "/") (in "nN") "im" (or "\\" "/") "compiler" (or "\\" "/")))
 (defvar nim-inside-compiler-dir-p nil)
 
+
 ;; Keymaps
 (defvar nim-mode-map
   (let ((map (make-sparse-keymap)))
@@ -189,6 +190,7 @@ specific directory or buffer.  See also ‘dir-locals-file’.")
     map)
   "Nimsuggest doc mode keymap.")
 
+;;; Syntax table
 ;; Turn off syntax highlight for big files
 ;; FIXME: what number should we set as default?
 (defcustom nim-syntax-disable-limit 400000
