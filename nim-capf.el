@@ -175,31 +175,15 @@ If SKIP is non-nil, skip length check ."
               :company-location #'nim-capf--location)))))
 
 (defun nim-capf--nimsuggest-complete (prefix)
+  ;; Note this function is not async function
   "Completion symbol of PREFIX at point using nimsuggest."
   (unless (or (nim-inside-pragma-p)
               (nim-syntax-comment-or-string-p))
     (cond
      ((or (string< "" prefix)
           (eq ?. (char-before (point))))
-      (nim-capf--update prefix)))))
-
-(defun nim-capf--update (prefix)
-  "Query completion to nimsuggest.
-PREFIX is passed to async callback."
-  (let* ((buf (current-buffer))
-         (start (time-to-seconds))
-         (res 'trash))
-    (nim-capf--nimsuggest-async
-     prefix
-     (lambda (candidates)
-       (when (eq (current-buffer) buf)
-         (setq res candidates))))
-    (while (and (eq 'trash res) (eq (current-buffer) buf))
-      (if (> (- (time-to-seconds) start) 2)
-          (error "Nimsuggest completion: timeout %d sec" 2)
-        (sleep-for 0.03)))
-    (unless (eq 'trash res)
-      res)))
+      (nimsuggest--call-sync
+       'sug (lambda (args) (nim-capf--format-candidates prefix args)))))))
 
 (defun nim-capf--post-completion (candidate)
   "Post complete function based on CANDIDATE."

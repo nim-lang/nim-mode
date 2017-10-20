@@ -190,6 +190,14 @@ specific directory or buffer.  See also ‘dir-locals-file’.")
     map)
   "Nimsuggest doc mode keymap.")
 
+;; xref supported key binds:
+;;   esc-map "." xref-find-definitions
+;;   esc-map "," xref-pop-marker-stack
+;;   esc-map "?" xref-find-references
+;;   ctl-x-4-map "." xref-find-definitions-other-window
+;;   ctl-x-5-map "." xref-find-definitions-other-frame
+;;   TODO: esc-map [?\C-.] xref-find-apropos
+
 ;;; Syntax table
 ;; Turn off syntax highlight for big files
 ;; FIXME: what number should we set as default?

@@ -12,7 +12,6 @@
 (require 'cl-lib)
 (require 'nim-compile)
 (require 'etags)
-(require 'xref nil t)
 
 ;;; If you change the order here, make sure to change it over in
 ;;; nimsuggest.nim too.
@@ -123,6 +122,22 @@ The CALLBACK is called with a list of ‘nimsuggest--epc’ structs."
           (lambda (err)
             (message "%s" (error-message-string err))))))))
 
+(defun nimsuggest--call-sync (method callback)
+  (let* ((buf (current-buffer))
+         (start (time-to-seconds))
+         (res 'trash))
+    (nimsuggest--call-epc
+     method
+     (lambda (candidates)
+       (when (eq (current-buffer) buf)
+         (setq res (funcall callback candidates)))))
+    (while (and (eq 'trash res) (eq (current-buffer) buf))
+      (if (> (- (time-to-seconds) start) 2)
+          (error "Nimsuggest(%s): timeout %d sec" method 2)
+        (sleep-for 0.03)))
+    (unless (eq 'trash res)
+      res)))
+
 (defun nimsuggest--get-dirty-dir ()
   "Return temp directory.
 The directory name consists of `nimsuggest-dirty-directory' and current
@@ -179,32 +194,19 @@ crash when some emacsclients open the same file."
                  collect (cons file manager)
                  else do (epc:stop-epc manager))))
 
-(defun nimsuggest-find-definition ()
-  "Go to the definition of the symbol currently under the cursor."
-  (interactive)
-  (nimsuggest--call-epc
-   'def
-   (lambda (defs)
-     (let ((def (cl-first defs)))
-       (when (not def) (error "Definition not found"))
-       (if (fboundp 'xref-push-marker-stack)
-           (xref-push-marker-stack)
-         (with-no-warnings
-           (ring-insert find-tag-marker-ring (point-marker))))
-       (find-file (nimsuggest--epc-filePath def))
-       (goto-char (point-min))
-       (forward-line (1- (nimsuggest--epc-line def)))))))
-(define-obsolete-function-alias 'nim-goto-sym 'nimsuggest-find-definition "2017/9/02")
 
 ;; To avoid warning
 (autoload 'flycheck-nimsuggest-setup "flycheck-nimsuggest")
 
 (defvar nimsuggest-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "M-.") #'nimsuggest-find-definition)
-    (define-key map (kbd "M-,") #'pop-tag-mark)
     (define-key map (kbd "C-c C-d") #'nimsuggest-show-doc)
     map))
+
+(defcustom nimsuggest-mode-hook nil
+  "Hook run when entering Nimsuggest mode."
+  :type 'hook
+  :group 'nim)
 
 ;;;###autoload
 (define-minor-mode nimsuggest-mode
@@ -419,6 +421,91 @@ See `flymake-diagnostic-functions' for REPORT-FN and ARGS."
                   (nimsuggest--flymake-error-parser errors buffer)))
              (funcall report-fn (delq nil report-action)))))
       (error (funcall report-fn :panic :explanation err)))))
+
+
+;;; xref integration
+;; This package likely be supported on Emacs 25.1 or later
+(eval-after-load "xref"
+  '(progn
+     (defun nimsuggest--xref-backend () 'nimsuggest)
+     (defun nimsuggest-xref (&optional on-or-off)
+       (if (or on-or-off nimsuggest-mode)
+           (add-hook 'xref-backend-functions #'nimsuggest--xref-backend nil t)
+         (remove-hook 'xref-backend-functions #'nimsuggest--xref-backend t)))
+
+     (add-hook 'nimsuggest-mode-hook 'nimsuggest-xref)
+
+     (cl-defmethod xref-backend-identifier-at-point ((_backend (eql nimsuggest)))
+       "Return string or nil for identifier at point."
+       ;; Well this function may not needed for current xref functions for
+       ;; nimsuggest backend.
+       (with-syntax-table nim-dotty-syntax-table
+         (let ((thing (thing-at-point 'symbol)))
+           (and thing (substring-no-properties thing)))))
+
+     (defun nimsuggest--xref-make-obj (id def)
+       (let ((summary id)
+             (location (xref-make-file-location
+                        (nimsuggest--epc-filePath def)
+                        (nimsuggest--epc-line def)
+                        (nimsuggest--epc-column def))))
+         (xref-make summary location)))
+
+     (defun nimsuggest--xref (query id)
+       (nimsuggest--call-sync
+        query
+        (lambda (results)
+          (cond
+           ((null results) nil)
+           ((listp results)
+            (cl-loop for result in results
+                     collect (nimsuggest--xref-make-obj id result)))))))
+
+     (cl-defmethod xref-backend-definitions ((_backend (eql nimsuggest)) id)
+       (nimsuggest--xref 'def id))
+
+     (cl-defmethod xref-backend-references ((_backend (eql nimsuggest)) id)
+       (nimsuggest--xref 'dus id))
+
+     ;; just define empty backend to use `xref-backend-references' for
+     ;; nimsuggest.
+     (cl-defmethod xref-backend-identifier-completion-table
+       ((_backend (eql nimsuggest))))
+
+     ;; Not implement yet, or not sure maybe, won't...
+     ;; (cl-defmethod xref-backend-apropos ((_backend (eql nimsuggest)) pattern))
+
+     )) ; end of eval-after-load xref
+
+;; Work around for old Emacsen
+(if (fboundp 'xref-find-definitions)
+    (defun nimsuggest-find-definition (id)
+      "Go to the definition of the symbol currently under the cursor.
+This uses `xref-find-definitions' as backend."
+      (interactive (list (xref--read-identifier "Find definitions of: ")))
+      (xref-find-definitions id))
+
+  ;; Note below configuration were removed on the future
+  (define-key nimsuggest-mode-map (kbd "M-.") #'nimsuggest-find-definition)
+  (define-key nimsuggest-mode-map (kbd "M-,") #'pop-tag-mark)
+  (defun nimsuggest-find-definition (id)
+    "Go to the definition of the symbol currently under the cursor."
+    (nimsuggest--call-epc
+     'def
+     (lambda (defs)
+       (let ((def (cl-first defs)))
+         (when (not def) (error "Definition not found"))
+         (if (fboundp 'xref-push-marker-stack)
+             (xref-push-marker-stack)
+           (with-no-warnings
+             (ring-insert find-tag-marker-ring (point-marker))))
+         (find-file (nimsuggest--epc-filePath def))
+         (goto-char (point-min))
+         (forward-line (1- (nimsuggest--epc-line def))))))))
+
+(define-obsolete-function-alias 'nim-goto-sym 'nimsuggest-find-definition
+  "2017/9/02")
+
 
 (provide 'nim-suggest)
 ;;; nim-suggest.el ends here
