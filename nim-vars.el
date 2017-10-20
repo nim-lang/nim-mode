@@ -180,6 +180,7 @@ specific directory or buffer.  See also ‘dir-locals-file’.")
   (rx (or "\\" "/") (in "nN") "im" (or "\\" "/") "compiler" (or "\\" "/")))
 (defvar nim-inside-compiler-dir-p nil)
 
+;; Keymaps
 (defvar nim-mode-map
   (let ((map (make-sparse-keymap)))
     ;; Allowed keys: C-c with control-letter, or {,}, <, >, :, ;
@@ -192,6 +193,14 @@ specific directory or buffer.  See also ‘dir-locals-file’.")
     ;; implement mark-defun
     ;;
     map))
+
+(defvar nimsuggest-doc-mode-map
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map (make-composed-keymap special-mode-map))
+    (define-key map (kbd ">") 'nimsuggest-doc-next)
+    (define-key map (kbd "<") 'nimsuggest-doc-previous)
+    map)
+  "Nimsuggest doc mode keymap.")
 
 ;; Turn off syntax highlight for big files
 ;; FIXME: what number should we set as default?

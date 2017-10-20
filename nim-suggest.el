@@ -125,14 +125,6 @@ The CALLBACK is called with a list of ‘nimsuggest--epc’ structs."
           (lambda (err)
             (message "%s" (error-message-string err))))))))
 
-(defvar nim-dirty-directory
-  ;; Even users changed the temp directory name,
-  ;; ‘file-name-as-directory’ ensures suffix directory separator.
-  (mapconcat 'file-name-as-directory
-             `(,temporary-file-directory "emacs-nim-mode") "")
-  "Directory name, which nimsuggest uses temporarily.
-Note that this directory is removed when you exit from Emacs.")
-
 (defun nimsuggest--get-dirty-dir ()
   "Return temp directory.
 The directory name consists of `nimsuggest-dirty-directory' and current
@@ -320,14 +312,6 @@ crash when some emacsclients open the same file."
 ;;; misc
 
 ;; work in progress
-
-(defvar nimsuggest-doc-mode-map
-  (let ((map (make-sparse-keymap)))
-    (set-keymap-parent map (make-composed-keymap special-mode-map))
-    (define-key map (kbd ">") 'nimsuggest-doc-next)
-    (define-key map (kbd "<") 'nimsuggest-doc-previous)
-    map)
-  "Nimsuggest doc mode keymap.")
 
 (defcustom nimsuggest-doc-directive
   'def
