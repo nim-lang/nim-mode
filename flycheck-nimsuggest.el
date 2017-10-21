@@ -28,13 +28,26 @@
 ;; from Emacs 26, this package might be moved to other repository on the future.
 ;; (for less dependencies)
 
+;; Manual setup:
+;;     ;; write below configuration in your init file.
+;;     (add-hook 'nimsuggest-mode-hook 'flycheck-nimsuggest-setup)
+
+;; TODO: move this package to MELPA
+
 ;;; Code:
 
 (require 'flycheck)
 (require 'cl-lib)
 
-(autoload 'nim-call-epc "nim-suggest")
-(autoload 'nim-suggest-available-p "nim-suggest")
+;;;###autoload
+(add-hook 'nimsuggest-mode-hook 'flycheck-nimsuggest-setup)
+
+(defvar nim-use-flycheck-nimsuggest t
+  "Set nil if you really don’t want to use flycheck-nimsuggest.
+Mainly this variable is debug purpose.")
+
+(autoload 'nimsuggest--call-epc "nim-suggest")
+(autoload 'nimsuggest-available-p "nim-suggest")
 
 (defvar flycheck-nimsuggest-error-parser 'flycheck-nimsuggest-error-parser
   "Error parser that parse nimsuggest's erorrs.
@@ -65,7 +78,7 @@ CALLBACK is the status callback passed by Flycheck."
   ;; A callback function, which shall be used to report the results of a
   ;; syntax check back to Flycheck.
   (let ((buffer (current-buffer)))
-    (nim-call-epc
+    (nimsuggest--call-epc
      'chk
      (lambda (errors)
        (condition-case err
@@ -89,11 +102,12 @@ CHECKER and BUFFER are passed to flycheck's function."
                     line column level msg
                     :checker checker :buffer buffer :filename file)))
 
-
 ;;;###autoload
 (defun flycheck-nimsuggest-setup ()
   "Setup flycheck configuration for nimsuggest."
   (when (and (bound-and-true-p nim-use-flycheck-nimsuggest)
+             (not (bound-and-true-p flymake-mode))
+             (funcall 'nimsuggest-available-p)
              (not flycheck-checker))
     (flycheck-select-checker 'nim-nimsuggest)))
 
@@ -108,7 +122,7 @@ See URL `https://github.com/nim-lang/nimsuggest'."
        :modes '(nim-mode nimscript-mode)
        :predicate (lambda () (and
                          (bound-and-true-p nim-use-flycheck-nimsuggest)
-                         (nim-suggest-available-p))))
+                         (nimsuggest-available-p))))
 
      (add-to-list 'flycheck-checkers 'nim-nimsuggest)))
 

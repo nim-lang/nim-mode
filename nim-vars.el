@@ -23,15 +23,6 @@
   :link '(url-link "http://nim-lang.org/")
   :group 'languages)
 
-(defface nim-tab-face
-  '((((class color) (background dark))
-     (:background "grey22" :foreground "darkgray"))
-    (((class color) (background light))
-     (:background "beige"  :foreground "lightgray"))
-    (t (:inverse-video t)))
-  "Face used to visualize TAB."
-  :group 'nim)
-
 (defface nim-font-lock-export-face
   '((t :weight bold
        :slant italic
@@ -143,7 +134,7 @@ You don't need to set this if the nim executable is inside your PATH."
   :type '(repeat string)
   :group 'nim)
 
-(defcustom nim-nimsuggest-path (executable-find "nimsuggest")
+(defcustom nimsuggest-path (executable-find "nimsuggest")
   "Path to the nimsuggest binary."
   :type '(choice (const :tag "Path of nimsuggest binary" string)
                  (const :tag "" nil))
@@ -157,6 +148,16 @@ epc function."
                  (const :tag "" nil))
   :group 'nim)
 
+(defcustom nimsuggest-dirty-directory
+  ;; Even users changed the temp directory name,
+  ;; ‘file-name-as-directory’ ensures suffix directory separator.
+  (mapconcat 'file-name-as-directory
+             `(,temporary-file-directory "emacs-nim-mode") "")
+  "Directory name, which nimsuggest uses temporarily.
+Note that this directory is removed when you exit from Emacs."
+  :type 'directory
+  :group 'nim)
+
 (defvar nim-suggest-local-options '()
   "Options for Nimsuggest.
 Please use this variable to set nimsuggest’s options for
@@ -166,6 +167,8 @@ specific directory or buffer.  See also ‘dir-locals-file’.")
   (rx (or "\\" "/") (in "nN") "im" (or "\\" "/") "compiler" (or "\\" "/")))
 (defvar nim-inside-compiler-dir-p nil)
 
+
+;; Keymaps
 (defvar nim-mode-map
   (let ((map (make-sparse-keymap)))
     ;; Allowed keys: C-c with control-letter, or {,}, <, >, :, ;
@@ -179,6 +182,23 @@ specific directory or buffer.  See also ‘dir-locals-file’.")
     ;;
     map))
 
+(defvar nimsuggest-doc-mode-map
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map (make-composed-keymap special-mode-map))
+    (define-key map (kbd ">") 'nimsuggest-doc-next)
+    (define-key map (kbd "<") 'nimsuggest-doc-previous)
+    map)
+  "Nimsuggest doc mode keymap.")
+
+;; xref supported key binds:
+;;   esc-map "." xref-find-definitions
+;;   esc-map "," xref-pop-marker-stack
+;;   esc-map "?" xref-find-references
+;;   ctl-x-4-map "." xref-find-definitions-other-window
+;;   ctl-x-5-map "." xref-find-definitions-other-frame
+;;   TODO: esc-map [?\C-.] xref-find-apropos
+
+;;; Syntax table
 ;; Turn off syntax highlight for big files
 ;; FIXME: what number should we set as default?
 (defcustom nim-syntax-disable-limit 400000
@@ -584,6 +604,7 @@ The description is unofficial; PRs are welcome.")
   '(; from unittest.nim
     "NIMTEST_OUTPUT_LVL" "NIMTEST_NO_COLOR" "NIMTEST_ABORT_ON_ERROR"))
 
+
 ;; obsolete
 (defvar nimsuggest-vervosity "--verbosity:0"
   "This variable will not be needed for latest nimsuggest.
@@ -593,10 +614,14 @@ which supports ‘chk’ option for EPC.")
 (make-obsolete-variable
  'nimsuggest-vervosity 'nimsuggest-check-vervosity "0.1.0")
 
-;; flycheck-nimsuggest
-(defvar nim-use-flycheck-nimsuggest t
-  "Set nil if you really don’t want to use flycheck-nimsuggest.
-Mainly this variable is debug purpose.")
+(make-obsolete
+ 'nim-tab-face
+ "The nim-tab-face was obsoleted, use `white-space-mode' instead to highlight tabs."
+ "Oct/20/2017")
+
+;; Added Oct 17, 2017
+(define-obsolete-variable-alias 'nim-nimsuggest-path 'nimsuggest-path "Oct/20/2017")
+(define-obsolete-variable-alias 'nim-dirty-directory 'nimsuggest-dirty-directory "Oct/20/2017")
 
 (provide 'nim-vars)
 ;;; nim-vars.el ends here

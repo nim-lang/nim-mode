@@ -83,7 +83,7 @@
 
 ;; ```el
 ;; ;; can be optional.  See below note
-;; (setq nim-nimsuggest-path "path/to/nimsuggest")
+;; (setq nimsuggest-path "path/to/nimsuggest")
 
 ;; ;; Currently nimsuggest doesn't support nimscript files, so only nim-mode...
 ;; (add-hook 'nim-mode-hook 'nimsuggest-mode)
@@ -96,7 +96,7 @@
 ;; ;; (add-hook 'prog-mode-hook 'company-mode)
 ;; ```
 
-;; Note that above `nim-nimsuggest-path` variable is automatically set
+;; Note that above `nimsuggest-path` variable is automatically set
 ;; the result of `(executable-find "nimsuggest")`, so if you can get
 ;; value from the `executable-find`, you may not need that
 ;; configuration unless you want to set specific version of nimsuggest.
@@ -120,6 +120,7 @@
 (require 'paren) ; for ‘show-paren-data-function’
 (require 'nim-fill)
 (require 'commenter)
+(require 'nim-eldoc) ; for pragma info
 
 (put 'nim-mode 'font-lock-defaults '(nim-font-lock-keywords nil t))
 
@@ -150,6 +151,13 @@
   ;; actual comment values are defined here
   (setq-local commenter-config nim-comment)
   (commenter-setup)
+
+  ;; ElDoc
+  ;; See `eldoc-documentation-function'. Don't move this function out
+  ;; side of major-mode function; it may cause weird eldoc behavior
+  ;; (`eldoc-documentation-function' was set, but eldoc doesn't start
+  ;; only first time you open a nim file)
+  (nim-eldoc-on)
 
   ;; SMIE
   (smie-setup nim-mode-smie-grammar 'nim-mode-smie-rules
