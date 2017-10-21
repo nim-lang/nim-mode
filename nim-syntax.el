@@ -381,12 +381,13 @@ character address of the specified TYPE."
                    (1+  ppss9-last))))))))
 
 (defvar nim--pragma-regex
-  (let ((pragma (cl-loop for (kwd . _) in nim-pragmas collect kwd)))
-    (apply
-     `((lambda ()
-         (nim-rx (or (group (or (group (? ".") "}")
-                                (group "." (eval (cons 'or (list ,@pragma))))))
-                     (group (regexp ,(nim--format-keywords pragma))))))))))
+  (eval-when-compile
+    (let ((pragma (cl-loop for (kwd . _) in nim-pragmas collect kwd)))
+      (apply
+       `((lambda ()
+           (nim-rx (or (group (or (group (? ".") "}")
+                                  (group "." (eval (cons 'or (list ,@pragma))))))
+                       (group (regexp ,(nim--format-keywords pragma)))))))))))
 
 (defun nim-pragma-matcher (&optional _start-pos)
   "Highlight pragma."
