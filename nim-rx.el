@@ -23,8 +23,8 @@
 (require 'cl-lib)
 (require 'nim-vars)
 
-(eval-and-compile
-  (defvar nim-rx-constituents
+(defvar nim-rx-constituents
+  (eval-when-compile
     (let* ((constituents1
             (cl-loop for (sym . kwd) in `((dedenter          . ("elif" "else" "of" "except" "finally"))
                                           (defun             . ("proc" "method" "converter" "iterator" "template" "macro"))
@@ -89,8 +89,10 @@
                                                         (concat (char-to-string (1+ ?\')) "-" (char-to-string 126))))))
                                  (group "'"))))))
       (append constituents1 constituents2))
-    "Additional Nim specific sexps for `nim-rx'.")
+    ) ; end of eval-when-compile
+  "Additional Nim specific sexps for `nim-rx'.")
 
+(eval-and-compile
   (defmacro nim-rx (&rest regexps)
     "Nim mode specialized rx macro.
 This variant of `rx' supports common nim named REGEXPS."

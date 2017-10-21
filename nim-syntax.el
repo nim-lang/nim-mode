@@ -28,7 +28,8 @@
 ;; `revert-buffer', but I'm not sure this is good approach...
 
 ;;; Code:
-(eval-and-compile (require 'nim-rx))
+(require 'nim-vars)
+(require 'nim-rx)
 
 (defvar nim-font-lock-keywords
   `((,(nim-rx (1+ "\t")) . 'nim-tab-face)
