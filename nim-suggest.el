@@ -421,6 +421,80 @@ See `flymake-diagnostic-functions' for REPORT-FN and ARGS."
       (error (funcall report-fn :panic :explanation err)))))
 
 
+;;; ElDoc for nimsuggest
+
+(defvar nimsuggest-eldoc--data nil)
+
+;;;###autoload
+(defun nimsuggest-eldoc--nimsuggest ()
+  (when (nimsuggest-available-p)
+    (unless (nimsuggest-eldoc--same-try-p)
+      (nimsuggest-eldoc--call))
+    (when (eq (line-number-at-pos)
+              (assoc-default :line nimsuggest-eldoc--data))
+      (assoc-default :str nimsuggest-eldoc--data))))
+
+(defun nimsuggest-eldoc--same-try-p ()
+  (or (and (equal (nim-current-symbol)
+                  (assoc-default :name nimsuggest-eldoc--data))
+           (eq (assoc-default :line nimsuggest-eldoc--data)
+               (line-number-at-pos)))
+      (and (nim-eldoc-inside-paren-p)
+           (save-excursion
+             (nimsuggest-eldoc--move)
+             (or
+              ;; for template
+              (eq (point) (assoc-default :pos nimsuggest-eldoc--data))
+              ;; for proc
+              (eq (1- (point)) (assoc-default :pos nimsuggest-eldoc--data)))))))
+
+(defun nimsuggest-eldoc--move ()
+  (let ((pos  (point))
+        (ppss (syntax-ppss)))
+    (when (nim-eldoc-inside-paren-p)
+      (goto-char (nth 1 ppss))
+      (when (looking-back nim-eldoc--skip-regex nil)
+        (goto-char pos)))))
+
+(defun nim-eldoc-format-string (defs)
+  "Format data inside DEFS for eldoc.
+DEFS is group of definitions from nimsuggest."
+  ;; TODO: switch if there are multiple defs
+  (let* ((data    (cl-first defs))
+         (forth   (nimsuggest--epc-forth         data))
+         (symKind (nimsuggest--epc-symkind       data))
+         (qpath   (nimsuggest--epc-qualifiedPath data))
+         (doc     (nimsuggest--epc-doc           data)))
+    (nimsuggest--format forth symKind qpath doc)))
+
+(defun nimsuggest-eldoc--call ()
+  (save-excursion
+    (nimsuggest-eldoc--move)
+    (nimsuggest--call-epc
+     ;; version 2 protocol can use: ideDef, ideUse, ideDus
+     'dus 'nimsuggest-eldoc--update)))
+
+(defun nimsuggest-eldoc--update (defs)
+  (if defs
+      (nimsuggest-eldoc--update-1 defs)
+    (save-excursion
+      (when (nim-eldoc-inside-paren-p)
+        (nimsuggest-eldoc--move)
+        (backward-char)
+        (nimsuggest--call-epc 'dus 'nimsuggest-eldoc--update-1)))))
+
+(defun nimsuggest-eldoc--update-1 (defs)
+  (when defs
+    (setq nimsuggest-eldoc--data
+          (list
+           (cons :str  (nim-eldoc-format-string defs))
+           (cons :line (line-number-at-pos))
+           (cons :name (nim-current-symbol))
+           (cons :pos  (point))))
+    (setq eldoc-last-message (assoc-default :str nimsuggest-eldoc--data))
+    (message eldoc-last-message)))
+
+
 ;;; xref integration
 ;; This package likely be supported on Emacs 25.1 or later
 (eval-after-load "xref"
