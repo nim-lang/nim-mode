@@ -561,7 +561,7 @@ This uses `xref-find-definitions' as backend."
   (define-key nimsuggest-mode-map (kbd "M-.") #'nimsuggest-find-definition)
   (define-key nimsuggest-mode-map (kbd "M-,") #'pop-tag-mark)
   (require 'etags)
-  (defun nimsuggest-find-definition (id)
+  (defun nimsuggest-find-definition ()
     "Go to the definition of the symbol currently under the cursor."
     (nimsuggest--call-epc
      'def
