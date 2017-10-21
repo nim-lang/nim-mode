@@ -151,6 +151,13 @@
   (setq-local commenter-config nim-comment)
   (commenter-setup)
 
+  ;; ElDoc
+  ;; See `eldoc-documentation-function'. Don't move this function out
+  ;; side of major-mode function; it may cause weird eldoc behavior
+  ;; (`eldoc-documentation-function' was set, but eldoc doesn't start
+  ;; only first time you open a nim file)
+  (nim-eldoc-on)
+
   ;; SMIE
   (smie-setup nim-mode-smie-grammar 'nim-mode-smie-rules
               :forward-token 'nim-mode-forward-token

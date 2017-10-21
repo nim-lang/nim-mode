@@ -11,7 +11,6 @@
 (require 'epc)
 (require 'cl-lib)
 (require 'nim-compile)
-(require 'etags)
 
 ;;; If you change the order here, make sure to change it over in
 ;;; nimsuggest.nim too.
@@ -205,6 +204,7 @@ crash when some emacsclients open the same file."
 
 (defcustom nimsuggest-mode-hook nil
   "Hook run when entering Nimsuggest mode."
+  :options '(flycheck-nimsuggest-setup nimsuggest-flymake-setup nimsuggest-xref)
   :type 'hook
   :group 'nim)
 
@@ -212,28 +212,7 @@ crash when some emacsclients open the same file."
 (define-minor-mode nimsuggest-mode
   "Minor mode for nimsuggest."
   :lighter " nimsuggest"
-  :keymap nimsuggest-mode-map
-  (if nimsuggest-mode
-      ;; Turn on
-      (when (and (derived-mode-p 'nim-mode) (nimsuggest-available-p))
-        ;; EL-DOC
-        (when (or (bound-and-true-p eldoc-mode)
-                  (bound-and-true-p global-eldoc-mode))
-          (add-function :before-until (local 'eldoc-documentation-function)
-                        'nim-eldoc-function))
-        ;; Flycheck
-        (flycheck-nimsuggest-setup)
-        ;; Flymake
-        ;; From Emacs 26, flymake was re-written by João Távora.
-        ;; It supports asynchronous backend, so enable it if users
-        ;; turned on the flymake-mode.
-        (when (and (bound-and-true-p flymake-mode)
-                   (version<= "26" (number-to-string emacs-major-version)))
-          (add-hook 'flymake-diagnostic-functions 'flymake-nimsuggest nil t)))
-    ;; Turn off
-    ;; FIXME: find proper way to turn off flycheck
-    (remove-function (local 'eldoc-documentation-function) 'nim-eldoc-function)
-    (remove-function (local 'flymake-diagnostic-functions) 'flymake-nimsuggest)))
+  :keymap nimsuggest-mode-map)
 
 
 ;; Utilities
@@ -392,7 +371,26 @@ crash when some emacsclients open the same file."
       (nimsuggest--show-doc))))
 
 
-;;; Flymake integration from Emacs 26
+;;; Flymake integration
+
+;; From Emacs 26, flymake was re-written by João Távora.
+;; It supports asynchronous backend, so enable it if users
+;; turned on the flymake-mode.
+
+;; Manual configuration:
+;;   (add-hook 'nimsuggest-mode-hook 'nimsuggest-flymake-setup)
+
+(if (version<= "26" (number-to-string emacs-major-version))
+    (add-hook 'nimsuggest-mode-hook 'nimsuggest-flymake-setup)
+  (add-hook 'nimsuggest-mode-hook 'flycheck-nimsuggest-setup))
+
+;;;###autoload
+(defun nimsuggest-flymake-setup()
+  (when (and (bound-and-true-p flymake-mode)
+             (not (bound-and-true-p flycheck-mode)))
+    (if nimsuggest-mode
+        (add-hook  'flymake-diagnostic-functions 'flymake-nimsuggest nil t)
+      (remove-hook 'flymake-diagnostic-functions 'flymake-nimsuggest t))))
 
 (defun nimsuggest--flymake-error-parser (errors buffer)
   "Return list of result of `flymake-make-diagnostic' from ERRORS.
@@ -488,6 +486,7 @@ This uses `xref-find-definitions' as backend."
   ;; Note below configuration were removed on the future
   (define-key nimsuggest-mode-map (kbd "M-.") #'nimsuggest-find-definition)
   (define-key nimsuggest-mode-map (kbd "M-,") #'pop-tag-mark)
+  (require 'etags)
   (defun nimsuggest-find-definition (id)
     "Go to the definition of the symbol currently under the cursor."
     (nimsuggest--call-epc

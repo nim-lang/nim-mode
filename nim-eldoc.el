@@ -50,11 +50,33 @@
              (not (eq ?\s (char-after (point)))))
     (if (nim-inside-pragma-p)
         (nim-eldoc--pragma-at-point)
-      (unless (nim-eldoc-same-try-p)
-        (nim-eldoc--call-nimsuggest))
-      (when (eq (line-number-at-pos)
-                (assoc-default :line nim-eldoc--data))
-        (assoc-default :str nim-eldoc--data)))))
+      (nim-eldoc--nimsuggest))))
+
+(defun nim-eldoc--nimsuggest ()
+  (when (nimsuggest-available-p)
+    (unless (nim-eldoc-same-try-p)
+      (nim-eldoc--call-nimsuggest))
+    (when (eq (line-number-at-pos)
+              (assoc-default :line nim-eldoc--data))
+      (assoc-default :str nim-eldoc--data))))
+
+;;;###autoload
+(defun nim-eldoc-on ()
+  "This may or may not work.  Maybe this configuration has to set on.
+Major-mode configuration according to the document."
+  (interactive)
+  (add-function :before-until (local 'eldoc-documentation-function)
+                'nim-eldoc-function))
+
+(defun nim-eldoc-off ()
+  (interactive)
+  (remove-function (local 'eldoc-documentation-function) 'nim-eldoc-function))
+
+;;;###autoload
+(defun nim-eldoc-setup ()
+  (if (and nimsuggest-mode (nimsuggest-available-p))
+      (nim-eldoc-on)
+    (nim-eldoc-off)))
 
 (defun nim-eldoc--get-pragma (pragma)
   "Get the PRAGMA's doc string."

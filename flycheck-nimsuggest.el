@@ -28,10 +28,19 @@
 ;; from Emacs 26, this package might be moved to other repository on the future.
 ;; (for less dependencies)
 
+;; Manual setup:
+;;     ;; write below configuration in your init file.
+;;     (add-hook 'nimsuggest-mode-hook 'flycheck-nimsuggest-setup)
+
+;; TODO: move this package to MELPA
+
 ;;; Code:
 
 (require 'flycheck)
 (require 'cl-lib)
+
+;;;###autoload
+(add-hook 'nimsuggest-mode-hook 'flycheck-nimsuggest-setup)
 
 (defvar nim-use-flycheck-nimsuggest t
   "Set nil if you really don’t want to use flycheck-nimsuggest.
@@ -93,11 +102,12 @@ CHECKER and BUFFER are passed to flycheck's function."
                     line column level msg
                     :checker checker :buffer buffer :filename file)))
 
-
 ;;;###autoload
 (defun flycheck-nimsuggest-setup ()
   "Setup flycheck configuration for nimsuggest."
   (when (and (bound-and-true-p nim-use-flycheck-nimsuggest)
+             (not (bound-and-true-p flymake-mode))
+             (funcall 'nimsuggest-available-p)
              (not flycheck-checker))
     (flycheck-select-checker 'nim-nimsuggest)))
 
