@@ -120,6 +120,7 @@
 (require 'paren) ; for ‘show-paren-data-function’
 (require 'nim-fill)
 (require 'commenter)
+(require 'nim-eldoc) ; for pragma info
 
 (put 'nim-mode 'font-lock-defaults '(nim-font-lock-keywords nil t))
 
