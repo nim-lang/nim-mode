@@ -5,6 +5,9 @@
 ;; Author: Yuta Yamada <cokesboy"at"gmail.com>
 ;; Keywords: completion
 
+;; This package was made from company-nim.el and original authors were
+;; Simon Hafner.
+
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation, either version 3 of the License, or
@@ -266,7 +269,7 @@ List of WORDS are used as completion candidates."
 ;;; Company-mode integration
 (eval-after-load "company"
   '(defun company-nimsuggest (command &optional arg &rest _args)
-     "A function used to be as company-backend for `nim-mode`."
+     "A function used to be as company-backend for `nim-mode'."
      (interactive (list 'interactive))
      (cl-case command
        (interactive (company-begin-backend 'company-nimsuggest))

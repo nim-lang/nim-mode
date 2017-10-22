@@ -169,13 +169,21 @@ specific directory or buffer.  See also ‘dir-locals-file’.")
 
 
 ;; Keymaps
+
+;; Supported basic keybinds:
+;; C means Control-key
+;; M means Meta-key
+;; C-M-a        -- jump to head of proc
+;; C-M-e        -- jump to end of proc
+;; C-M-h        -- mark region of function
+
 (defvar nim-mode-map
   (let ((map (make-sparse-keymap)))
     ;; Allowed keys: C-c with control-letter, or {,}, <, >, :, ;
     ;; See also: http://www.gnu.org/software/emacs/manual/html_node/elisp/Key-Binding-Conventions.html
     (define-key map (kbd "C-c C-c") 'nim-compile)
-    (define-key map "\C-c<" 'nim-indent-shift-left)
-    (define-key map "\C-c>" 'nim-indent-shift-right)
+    (define-key map (kbd "C-c <") 'nim-indent-shift-left)
+    (define-key map (kbd "C-c >") 'nim-indent-shift-right)
     ;; TODO:
     ;; C-c C-j - imemu
     ;; implement mark-defun
@@ -198,6 +206,12 @@ specific directory or buffer.  See also ‘dir-locals-file’.")
 ;;   ctl-x-5-map "." xref-find-definitions-other-frame
 ;;   TODO: esc-map [?\C-.] xref-find-apropos
 
+;; hs-minor-mode:
+;; C-c @ C-M-h  -- hide/fold functions
+;; C-c @ C-M-s  -- show functions
+;; (You can do same thing by zr and zm keys on evil, a vim emulation plugin)
+
+
 ;;; Syntax table
 ;; Turn off syntax highlight for big files
 ;; FIXME: what number should we set as default?
@@ -273,7 +287,7 @@ It makes underscores and dots word constituent chars.")
         (comment-multi-line . t)
         (comment-use-syntax . nil)))))
 
-;;;;;;;;;;;;;;;;;;;;
+
 ;; Nim keywords
 
 ;; Those keywords are used to syntax highlight as well as
