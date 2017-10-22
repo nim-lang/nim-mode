@@ -46,24 +46,39 @@
 (require 'nim-suggest)
 (require 'nim-helper)
 
-(defcustom nim-capf--type-abbrevs '(("skProc"         . "f")
-                                    ("skIterator"     . "i")
-                                    ("skTemplate"     . "T")
-                                    ("skType"         . "t")
-                                    ("skMethod"       . "f")
-                                    ("skEnumField"    . "e")
-                                    ("skGenericParam" . "p")
-                                    ("skParam"        . "p")
-                                    ("skModule"       . "m")
-                                    ("skConverter"    . "C")
-                                    ("skMacro"        . "M")
-                                    ("skField"        . "F")
-                                    ("skForVar"       . "v")
-                                    ("skVar"          . "v")
-                                    ("skLet"          . "v")
-                                    ("skLabel"        . "l")
-                                    ("skConst"        . "c")
-                                    ("skResult"       . "r"))
+(defcustom nim-capf--type-abbrevs
+  ;; From ast.nim, some of them aren't used as completion maybe...
+  '(("skUnknown"      . "U")
+
+    ("skConditional"  . "")
+    ("skDynLib"       . "D")
+
+    ("skParam"        . "p")
+    ("skGenericParam" . "P")                         ;
+    ("skTemp"         . "t")
+    ("skModule"       . ".")
+    ("skType"         . "T")
+    ("skVar"          . "V")
+    ("skLet"          . "L")
+    ("skConst"        . "C")
+    ("skResult"       . "r")
+    ("skProc"         . "f")
+    ("skFunc"         . "F")
+    ("skMethod"       . "m")
+    ("skIterator"     . "I")
+    ("skConverter"    . "c")
+    ("skMacro"        . "M")
+    ("skTemplate"     . "T")
+
+    ("skField"        . "Fi")
+    ("skEnumField"    . "en")
+    ("skForVar"       . "fv")
+    ("skLabel"        . "la")
+    ("skStub"         . "st")
+
+    ("skPackage"      . "P")
+    ("skAlias"        . "A")
+    )
   "Abbrevs for completion."
   :type 'assoc
   :group 'nim)
