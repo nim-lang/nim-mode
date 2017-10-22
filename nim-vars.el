@@ -429,9 +429,6 @@ But all those functions can not use in NimScript.")
     "skipExt" "installDirs" "installFiles" "installExt" "bin"
     "requiresData"))
 
-(defvar nimsuggest-check-vervosity "--verbosity:1"
-  "Verbosity for chk option.  Current no meaning though.")
-
 (defconst nim-pragmas
   ;; alist of (PRAGMA_NAME . DESCRIPTION)
   ;; the DESCRIPTION can be either a string or list of string.
@@ -620,14 +617,6 @@ The description is unofficial; PRs are welcome.")
 
 
 ;; obsolete
-(defvar nimsuggest-vervosity "--verbosity:0"
-  "This variable will not be needed for latest nimsuggest.
-Please set this value to nil if you have latest nimsuggest,
-which supports ‘chk’ option for EPC.")
-
-(make-obsolete-variable
- 'nimsuggest-vervosity 'nimsuggest-check-vervosity "0.1.0")
-
 (make-obsolete
  'nim-tab-face
  "The nim-tab-face was obsoleted, use `white-space-mode' instead to highlight tabs."

@@ -25,8 +25,6 @@
 ;;   -- https://github.com/nim-lang/Nim/wiki/Using-nimscript-for-configuration
 
 ;;; Code:
-(require 'nim-vars)
-(require 'nim-syntax)
 (require 'nim-mode)
 
 (defvar nimscript-mode-syntax-table

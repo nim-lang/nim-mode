@@ -32,8 +32,7 @@
 (require 'nim-rx)
 
 (defvar nim-font-lock-keywords
-  `((,(nim-rx (1+ "\t")) . 'nim-tab-face)
-    (nim-proc-matcher
+  `((nim-proc-matcher
      (1 (if (match-string 2)
             'nim-font-lock-export-face
           font-lock-function-name-face)
@@ -327,7 +326,6 @@ character address of the specified TYPE."
   (when (nth 3 (save-excursion (syntax-ppss)))
     (re-search-forward "\\s|" nil t)))
 
-(defconst nim--backticks-regex (nim-rx backticks))
 (defun nim-backtick-matcher (&optional _start-pos)
   "Highlight matcher for ``symbol`` in comment."
   (nim-matcher-func
@@ -335,7 +333,7 @@ character address of the specified TYPE."
      (unless (nth 4 (save-excursion (syntax-ppss)))
        (re-search-forward "\\s<" nil t)))
    (lambda ()
-     (not (re-search-forward nim--backticks-regex nil t)))
+     (not (re-search-forward (nim-rx backticks) nil t)))
    (lambda (ppss) (not (nth 4 ppss)))))
 
 (defconst nim--string-interpolation-regex
@@ -381,12 +379,13 @@ character address of the specified TYPE."
                    (1+  ppss9-last))))))))
 
 (defvar nim--pragma-regex
-  (let ((pragma (cl-loop for (kwd . _) in nim-pragmas collect kwd)))
-    (apply
-     `((lambda ()
-         (nim-rx (or (group (or (group (? ".") "}")
-                                (group "." (eval (cons 'or (list ,@pragma))))))
-                     (group (regexp ,(nim--format-keywords pragma))))))))))
+  (eval-when-compile
+    (let ((pragma (cl-loop for (kwd . _) in nim-pragmas collect kwd)))
+      (apply
+       `((lambda ()
+           (nim-rx (or (group (or (group (? ".") "}")
+                                  (group "." (eval (cons 'or (list ,@pragma))))))
+                       (group (regexp ,(nim--format-keywords pragma)))))))))))
 
 (defun nim-pragma-matcher (&optional _start-pos)
   "Highlight pragma."
@@ -422,27 +421,24 @@ character address of the specified TYPE."
        nil)
       (t t)))))
 
-(defconst nim--colon-type-regex (nim-rx colon-type))
 (defun nim-type-matcher (&optional _start-pos)
   (nim-matcher-func
    'nim-skip-comment-and-string
-   (lambda () (not (re-search-forward nim--colon-type-regex nil t)))
+   (lambda () (not (re-search-forward (nim-rx colon-type) nil t)))
    (lambda (ppss)
      (or (eq (nth 0 ppss) 0)
          (not (eq ?\( (char-after (nth 1 ppss))))))))
 
-(defconst nim--colon-numbers-regex (nim-rx nim-numbers))
 (defun nim-number-matcher (&optional _start-pos)
   (nim-matcher-func
    'nim-skip-comment-and-string
-   (lambda () (not (re-search-forward nim--colon-numbers-regex nil t)))
+   (lambda () (not (re-search-forward (nim-rx nim-numbers) nil t)))
    (lambda (ppss) (or (nth 3 ppss) (nth 4 ppss)))))
 
-(defconst nim--font-lock-defun-regex (nim-rx font-lock-defun))
 (defun nim-proc-matcher (&optional _start-pos)
   (nim-matcher-func
    'nim-skip-comment-and-string
-   (lambda () (not (re-search-forward nim--font-lock-defun-regex nil t)))
+   (lambda () (not (re-search-forward (nim-rx font-lock-defun) nil t)))
    (lambda (ppss) (or (nth 3 ppss) (nth 4 ppss)))))
 
 (defun nim-syntax-disable-maybe ()
@@ -458,4 +454,3 @@ will be used if only user didn't set ‘font-lock-maximum-decoration’."
 
 (provide 'nim-syntax)
 ;;; nim-syntax.el ends here
-

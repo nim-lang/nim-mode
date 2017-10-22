@@ -230,13 +230,14 @@ company-mode.  See also: https://github.com/company-mode/company-mode/issues/583
 ;; completion at point
 (defun nim-capf-builtin-completion ()
   "This might not be precise, but maybe enough to someone."
-  (append nim-keywords
-          nim-types
-          nim-exceptions
-          nim-variables
-          nim-constants
-          nim-nonoverloadable-builtins
-          nim-builtins))
+  (eval-when-compile
+    (append nim-keywords
+            nim-types
+            nim-exceptions
+            nim-variables
+            nim-constants
+            nim-nonoverloadable-builtins
+            nim-builtins)))
 
 (defconst nim-capf-builtin-words
   (append (nim-capf-builtin-completion)
@@ -248,7 +249,7 @@ company-mode.  See also: https://github.com/company-mode/company-mode/issues/583
                   nimscript-variables)))
 
 (defvar nim-capf--pragma-words
-  (cl-loop for (kwd . _) in nim-pragmas collect kwd)
+  (eval-when-compile (cl-loop for (kwd . _) in nim-pragmas collect kwd))
   "List of pragmas for `complietion-at-point-functions'.")
 
 (defun nim-capf--static-completion (words)
