@@ -215,7 +215,37 @@ crash when some emacsclients open the same file."
 (define-minor-mode nimsuggest-mode
   "Minor mode for nimsuggest."
   :lighter " nimsuggest"
-  :keymap nimsuggest-mode-map)
+  :keymap nimsuggest-mode-map
+  (when nimsuggest-mode
+    (nimsuggest-ensure)))
+
+(defun nimsuggest-force-stop ()
+  "Try to stop nimsuggest related things, but not well tested."
+  (interactive)
+  (remove-hook 'flycheck-checkers 'nim-nimsuggest)
+  (remove-hook 'flymake-diagnostic-functions 'flymake-nimsuggest t)
+  (nim-eldoc-off)
+  (nimsuggest-xref 'off))
+
+(defun nimsuggest-ensure ()
+  "Ensure that users installed nimsuggest executable."
+  ;; I've seen so many people just stacked to install nimsuggest at
+  ;; first time. Probably this package's name is kinda confusing.
+  (interactive)
+  (let ((msg "Nimsuggest-mode needs external tool called nimsuggest.
+Generally you can build by './koch tools' or '.koch nimsuggest'
+on Nim repo (check koch.nim file), but it's good to check README
+on Nim's official repository on yourself in case this document
+was outdated."))
+    (when (not nimsuggest-path)
+      (nimsuggest-force-stop)
+      (error msg))
+    (when (not (file-executable-p nimsuggest-path))
+      (nimsuggest-force-stop)
+      (error "`nimsuggest-path' isn't executable; %s" msg))
+    (if nimsuggest-mode
+        (nim-log "nimsuggest-mode started")
+      (nim-log "nimsuggest-mode stopped"))))
 
 
 ;; Utilities
