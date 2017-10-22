@@ -333,7 +333,7 @@ List of WORDS are used as completion candidates."
 ;; Suggestion-box-el
 ;; https://github.com/yuutayamada/suggestion-box-el
 (eval-after-load "suggestion-box"
-  '(add-to-list 'nim-capf-after-exit-function-hook 'suggestion-box-nim-by-type))
+  '(add-hook 'nim-capf-after-exit-function-hook 'suggestion-box-nim-by-type))
 
 (provide 'nim-capf)
 
