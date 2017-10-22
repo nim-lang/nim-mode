@@ -5,6 +5,9 @@
 ;; Author: Yuta Yamada <cokesboy"at"gmail.com>
 ;; Keywords: completion
 
+;; This package was made from company-nim.el and original authors were
+;; Simon Hafner.
+
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation, either version 3 of the License, or
@@ -43,24 +46,39 @@
 (require 'nim-suggest)
 (require 'nim-helper)
 
-(defcustom nim-capf--type-abbrevs '(("skProc"         . "f")
-                                    ("skIterator"     . "i")
-                                    ("skTemplate"     . "T")
-                                    ("skType"         . "t")
-                                    ("skMethod"       . "f")
-                                    ("skEnumField"    . "e")
-                                    ("skGenericParam" . "p")
-                                    ("skParam"        . "p")
-                                    ("skModule"       . "m")
-                                    ("skConverter"    . "C")
-                                    ("skMacro"        . "M")
-                                    ("skField"        . "F")
-                                    ("skForVar"       . "v")
-                                    ("skVar"          . "v")
-                                    ("skLet"          . "v")
-                                    ("skLabel"        . "l")
-                                    ("skConst"        . "c")
-                                    ("skResult"       . "r"))
+(defcustom nim-capf--type-abbrevs
+  ;; From ast.nim, some of them aren't used as completion maybe...
+  '(("skUnknown"      . "U")
+
+    ("skConditional"  . "")
+    ("skDynLib"       . "D")
+
+    ("skParam"        . "p")
+    ("skGenericParam" . "P")                         ;
+    ("skTemp"         . "t")
+    ("skModule"       . ".")
+    ("skType"         . "T")
+    ("skVar"          . "V")
+    ("skLet"          . "L")
+    ("skConst"        . "C")
+    ("skResult"       . "r")
+    ("skProc"         . "f")
+    ("skFunc"         . "F")
+    ("skMethod"       . "m")
+    ("skIterator"     . "I")
+    ("skConverter"    . "c")
+    ("skMacro"        . "M")
+    ("skTemplate"     . "T")
+
+    ("skField"        . "Fi")
+    ("skEnumField"    . "en")
+    ("skForVar"       . "fv")
+    ("skLabel"        . "la")
+    ("skStub"         . "st")
+
+    ("skPackage"      . "P")
+    ("skAlias"        . "A")
+    )
   "Abbrevs for completion."
   :type 'assoc
   :group 'nim)
@@ -212,13 +230,14 @@ company-mode.  See also: https://github.com/company-mode/company-mode/issues/583
 ;; completion at point
 (defun nim-capf-builtin-completion ()
   "This might not be precise, but maybe enough to someone."
-  (append nim-keywords
-          nim-types
-          nim-exceptions
-          nim-variables
-          nim-constants
-          nim-nonoverloadable-builtins
-          nim-builtins))
+  (eval-when-compile
+    (append nim-keywords
+            nim-types
+            nim-exceptions
+            nim-variables
+            nim-constants
+            nim-nonoverloadable-builtins
+            nim-builtins)))
 
 (defconst nim-capf-builtin-words
   (append (nim-capf-builtin-completion)
@@ -230,7 +249,7 @@ company-mode.  See also: https://github.com/company-mode/company-mode/issues/583
                   nimscript-variables)))
 
 (defvar nim-capf--pragma-words
-  (cl-loop for (kwd . _) in nim-pragmas collect kwd)
+  (eval-when-compile (cl-loop for (kwd . _) in nim-pragmas collect kwd))
   "List of pragmas for `complietion-at-point-functions'.")
 
 (defun nim-capf--static-completion (words)
@@ -266,7 +285,7 @@ List of WORDS are used as completion candidates."
 ;;; Company-mode integration
 (eval-after-load "company"
   '(defun company-nimsuggest (command &optional arg &rest _args)
-     "A function used to be as company-backend for `nim-mode`."
+     "A function used to be as company-backend for `nim-mode'."
      (interactive (list 'interactive))
      (cl-case command
        (interactive (company-begin-backend 'company-nimsuggest))
@@ -314,7 +333,7 @@ List of WORDS are used as completion candidates."
 ;; Suggestion-box-el
 ;; https://github.com/yuutayamada/suggestion-box-el
 (eval-after-load "suggestion-box"
-  '(add-to-list 'nim-capf-after-exit-function-hook 'suggestion-box-nim-by-type))
+  '(add-hook 'nim-capf-after-exit-function-hook 'suggestion-box-nim-by-type))
 
 (provide 'nim-capf)
 

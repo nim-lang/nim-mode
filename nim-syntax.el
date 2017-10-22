@@ -32,8 +32,7 @@
 (require 'nim-rx)
 
 (defvar nim-font-lock-keywords
-  `((,(nim-rx (1+ "\t")) . 'nim-tab-face)
-    (nim-proc-matcher
+  `((nim-proc-matcher
      (1 (if (match-string 2)
             'nim-font-lock-export-face
           font-lock-function-name-face)

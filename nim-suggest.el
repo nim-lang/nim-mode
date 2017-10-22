@@ -23,7 +23,7 @@
 (defun nimsuggest--parse-epc (obj method)
   "Parse OBJ according to METHOD."
   (cl-case method
-    (chk obj)
+    ((chk highlight outline) obj)
     ((sug con def use dus)
      (cl-mapcar
       (lambda (sublist)
@@ -47,23 +47,22 @@ PROJECT-PATH is added as the last option."
                 ;; longer can use.
                 ;; (when (eq 'nimscript-mode major-mode)
                 ;;   '("--define:nimscript" "--define:nimconfig"))
-                (list (with-no-warnings nimsuggest-vervosity)
-                      "--epc" project-path))))
+                (list "--epc" project-path))))
 
 (defun nimsuggest--find-or-create-epc ()
   "Get the epc responsible for the current buffer."
   (let ((file buffer-file-name))
-    (or (let ((epc-process (cdr (assoc file nimsuggest--epc-processes-alist))))
-          (if (eq 'run (epc:manager-status-server-process epc-process))
-              epc-process
-            (prog1 ()
-              (nimsuggest--kill-zombie-processes file))))
-        (let ((epc-process
+    (or (let ((old-epc (cdr (assoc file nimsuggest--epc-processes-alist))))
+          (if (eq 'run (epc:manager-status-server-process old-epc))
+              (prog1 old-epc
+                (nim-log "nimsuggest: use old EPC process\n - %s" old-epc))
+            (prog1 () (nimsuggest--kill-zombie-processes file))))
+        (let ((new-epc
                (epc:start-epc
                 nimsuggest-path
                 (nimsuggest-get-options file))))
-          (push (cons file epc-process) nimsuggest--epc-processes-alist)
-          epc-process))))
+          (push (cons file new-epc) nimsuggest--epc-processes-alist)
+          new-epc))))
 
 ;;;###autoload
 (defun nimsuggest-available-p ()
@@ -100,9 +99,10 @@ The CALLBACK is called with a list of ‘nimsuggest--epc’ structs."
       (deferred:$
         (epc:call-deferred
          (nimsuggest--find-or-create-epc)
-         method
+         (prog1 method
+           (nim-log "EPC-1 %S" (symbol-name method)))
          (cl-case method
-           (chk
+           ((chk highlight outline)
             (list (buffer-file-name)
                   -1 -1
                   temp-dirty-file))
@@ -112,14 +112,17 @@ The CALLBACK is called with a list of ‘nimsuggest--epc’ structs."
                   (current-column)
                   temp-dirty-file))))
         (deferred:nextc it
-          (lambda (x) (funcall callback (nimsuggest--parse-epc x method))))
+          (lambda (x)
+            (nim-log "EPC nextc %S" (symbol-name method))
+            (funcall callback (nimsuggest--parse-epc x method))))
         (deferred:watch it
           (lambda (_)
+            (nim-log "EPC delete %S" (symbol-name method))
             (unless (get-buffer buf)
               (delete-file temp-dirty-file))))
         (deferred:error it
           (lambda (err)
-            (message "%s" (error-message-string err))))))))
+            (nim-log "EPC error %s" (error-message-string err))))))))
 
 (defun nimsuggest--call-sync (method callback)
   (let* ((buf (current-buffer))
@@ -212,7 +215,37 @@ crash when some emacsclients open the same file."
 (define-minor-mode nimsuggest-mode
   "Minor mode for nimsuggest."
   :lighter " nimsuggest"
-  :keymap nimsuggest-mode-map)
+  :keymap nimsuggest-mode-map
+  (when nimsuggest-mode
+    (nimsuggest-ensure)))
+
+(defun nimsuggest-force-stop ()
+  "Try to stop nimsuggest related things, but not well tested."
+  (interactive)
+  (remove-hook 'flycheck-checkers 'nim-nimsuggest)
+  (remove-hook 'flymake-diagnostic-functions 'flymake-nimsuggest t)
+  (nim-eldoc-off)
+  (nimsuggest-xref 'off))
+
+(defun nimsuggest-ensure ()
+  "Ensure that users installed nimsuggest executable."
+  ;; I've seen so many people just stacked to install nimsuggest at
+  ;; first time. Probably this package's name is kinda confusing.
+  (interactive)
+  (let ((msg "Nimsuggest-mode needs external tool called nimsuggest.
+Generally you can build by './koch tools' or '.koch nimsuggest'
+on Nim repo (check koch.nim file), but it's good to check README
+on Nim's official repository on yourself in case this document
+was outdated."))
+    (when (not nimsuggest-path)
+      (nimsuggest-force-stop)
+      (error msg))
+    (when (not (file-executable-p nimsuggest-path))
+      (nimsuggest-force-stop)
+      (error "`nimsuggest-path' isn't executable; %s" msg))
+    (if nimsuggest-mode
+        (nim-log "nimsuggest-mode started")
+      (nim-log "nimsuggest-mode stopped"))))
 
 
 ;; Utilities
@@ -415,10 +448,13 @@ See `flymake-diagnostic-functions' for REPORT-FN and ARGS."
         (nimsuggest--call-epc
          'chk
          (lambda (errors)
+           (nim-log "FLYMAKE(OK): report(s) number of %i" (length errors))
            (let ((report-action
                   (nimsuggest--flymake-error-parser errors buffer)))
              (funcall report-fn (delq nil report-action)))))
-      (error (funcall report-fn :panic :explanation err)))))
+      (error
+       (prog1 (funcall report-fn :panic :explanation err)
+         (nim-log "FLYMAKE(NG): %s" err))))))
 
 
 ;;; ElDoc for nimsuggest
@@ -460,6 +496,7 @@ See `flymake-diagnostic-functions' for REPORT-FN and ARGS."
   "Format data inside DEFS for eldoc.
 DEFS is group of definitions from nimsuggest."
   ;; TODO: switch if there are multiple defs
+  (nim-log "ELDOC format")
   (let* ((data    (cl-first defs))
          (forth   (nimsuggest--epc-forth         data))
          (symKind (nimsuggest--epc-symkind       data))
@@ -470,11 +507,13 @@ DEFS is group of definitions from nimsuggest."
 (defun nimsuggest-eldoc--call ()
   (save-excursion
     (nimsuggest-eldoc--move)
+    (nim-log "ELDOC-1")
     (nimsuggest--call-epc
      ;; version 2 protocol can use: ideDef, ideUse, ideDus
      'dus 'nimsuggest-eldoc--update)))
 
 (defun nimsuggest-eldoc--update (defs)
+  (nim-log "ELDOC update")
   (if defs
       (nimsuggest-eldoc--update-1 defs)
     (save-excursion
@@ -501,9 +540,12 @@ DEFS is group of definitions from nimsuggest."
   '(progn
      (defun nimsuggest--xref-backend () 'nimsuggest)
      (defun nimsuggest-xref (&optional on-or-off)
-       (if (or on-or-off nimsuggest-mode)
-           (add-hook 'xref-backend-functions #'nimsuggest--xref-backend nil t)
-         (remove-hook 'xref-backend-functions #'nimsuggest--xref-backend t)))
+       (nim-log "xref status: %s" on-or-off)
+       (cl-case on-or-off
+         (on  (add-hook 'xref-backend-functions #'nimsuggest--xref-backend nil t))
+         (off (remove-hook 'xref-backend-functions #'nimsuggest--xref-backend t))
+         (t (when on-or-off
+              (nimsuggest-xref (if nimsuggest-mode 'on 'off))))))
 
      (add-hook 'nimsuggest-mode-hook 'nimsuggest-xref)
 
@@ -561,7 +603,7 @@ This uses `xref-find-definitions' as backend."
   (define-key nimsuggest-mode-map (kbd "M-.") #'nimsuggest-find-definition)
   (define-key nimsuggest-mode-map (kbd "M-,") #'pop-tag-mark)
   (require 'etags)
-  (defun nimsuggest-find-definition ()
+  (defun nimsuggest-find-definition (&optional _id)
     "Go to the definition of the symbol currently under the cursor."
     (nimsuggest--call-epc
      'def
