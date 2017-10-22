@@ -23,7 +23,7 @@
 (defun nimsuggest--parse-epc (obj method)
   "Parse OBJ according to METHOD."
   (cl-case method
-    (chk obj)
+    ((chk highlight outline) obj)
     ((sug con def use dus)
      (cl-mapcar
       (lambda (sublist)
