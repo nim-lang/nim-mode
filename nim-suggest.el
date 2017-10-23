@@ -41,7 +41,7 @@
 
 PROJECT-PATH is added as the last option."
   (delq nil
-        (append nim-suggest-options nim-suggest-local-options
+        (append nimsuggest-options nimsuggest-local-options
                 ;; FIXME:
                 ;; In recent nim’s update, this configuration no
                 ;; longer can use.
@@ -69,7 +69,7 @@ PROJECT-PATH is added as the last option."
 (defun nimsuggest-available-p ()
   "Return non-nil if nimsuggest is available in current buffer."
   (and nimsuggest-path
-       (not nim-inside-compiler-dir-p)
+       (not nim--inside-compiler-dir-p)
        ;; Prevent turn on nimsuggest related feature on org-src block
        ;; or nimscript-mode (nimsuggest doesn't support yet).
        ;; https://github.com/nim-lang/nimsuggest/issues/29

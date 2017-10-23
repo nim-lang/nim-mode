@@ -136,10 +136,10 @@
   "Common configuration for ‘nim-mode’ and ‘nimscript-mode’."
   (run-hooks 'nim-common-init-hook)
 
-  (setq-local nim-inside-compiler-dir-p
+  (setq-local nim--inside-compiler-dir-p
               (when (and buffer-file-name
                          (string-match
-                          nim-suggest-ignore-dir-regex buffer-file-name))
+                          nimsuggest-ignore-dir-regex buffer-file-name))
                 t))
 
   ;; Comment
