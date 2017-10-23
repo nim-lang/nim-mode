@@ -61,6 +61,7 @@ PROJECT-PATH is added as the last option."
                (epc:start-epc
                 nimsuggest-path
                 (nimsuggest-get-options file))))
+          (nim-log "nimsuggest: new EPC process created\n - %s" new-epc)
           (push (cons file new-epc) nimsuggest--epc-processes-alist)
           new-epc))))
 
@@ -115,12 +116,12 @@ REPORT-FN is for `flymake'.  See `flymake-diagnostic-functions'"
                   temp-dirty-file))))
         (deferred:nextc it
           (lambda (x)
-            (nim-log "EPC nextc %S" (symbol-name method))
+            (nim-log "EPC(%S) nextc" (symbol-name method))
             (funcall callback (nimsuggest--parse-epc x method))))
         (deferred:watch it
           (lambda (_)
-            (nim-log "EPC delete %S" (symbol-name method))
             (unless (get-buffer buf)
+              (nim-log "EPC(%S) delete %s" (symbol-name method) buf)
               (delete-file temp-dirty-file))))
         (deferred:error it
           (lambda (err)
@@ -139,7 +140,7 @@ REPORT-FN is for `flymake'.  See `flymake-diagnostic-functions'"
          (setq res (funcall callback candidates)))))
     (while (and (eq 'trash res) (eq (current-buffer) buf))
       (if (> (- (time-to-seconds) start) 2)
-          (error "Nimsuggest(%s): timeout %d sec" method 2)
+          (nim-log "EPC-sync(%s): timeout %d sec" (symbol-name method) 2)
         (sleep-for 0.03)))
     (unless (eq 'trash res)
       res)))
