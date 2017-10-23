@@ -61,6 +61,7 @@ PROJECT-PATH is added as the last option."
                (epc:start-epc
                 nimsuggest-path
                 (nimsuggest-get-options file))))
+          (nim-log "nimsuggest: new EPC process created\n - %s" new-epc)
           (push (cons file new-epc) nimsuggest--epc-processes-alist)
           new-epc))))
 
@@ -78,7 +79,7 @@ PROJECT-PATH is added as the last option."
                      (org-in-src-block-p t))))))
 (define-obsolete-function-alias 'nim-suggest-available-p 'nimsuggest-available-p "2017/9/02")
 
-(defun nimsuggest--call-epc (method callback)
+(defun nimsuggest--call-epc (method callback &optional report-fn)
   "Call the nimsuggest process on point.
 
 Call the nimsuggest process responsible for the current buffer.
@@ -91,7 +92,9 @@ def: where the symbol is defined
 use: where the symbol is used
 dus: def + use
 
-The CALLBACK is called with a list of ‘nimsuggest--epc’ structs."
+The CALLBACK is called with a list of ‘nimsuggest--epc’ structs.
+
+REPORT-FN is for `flymake'.  See `flymake-diagnostic-functions'"
   (when (nimsuggest-available-p)
     ;; See also compiler/modulegraphs.nim for dirty file
     (let ((temp-dirty-file (nimsuggest--save-buffer-temporarly))
@@ -113,16 +116,18 @@ The CALLBACK is called with a list of ‘nimsuggest--epc’ structs."
                   temp-dirty-file))))
         (deferred:nextc it
           (lambda (x)
-            (nim-log "EPC nextc %S" (symbol-name method))
+            (nim-log "EPC(%S) nextc" (symbol-name method))
             (funcall callback (nimsuggest--parse-epc x method))))
         (deferred:watch it
           (lambda (_)
-            (nim-log "EPC delete %S" (symbol-name method))
             (unless (get-buffer buf)
+              (nim-log "EPC(%S) delete %s" (symbol-name method) buf)
               (delete-file temp-dirty-file))))
         (deferred:error it
           (lambda (err)
-            (nim-log "EPC error %s" (error-message-string err))))))))
+            (nim-log "EPC error %s" (error-message-string err))
+            (when (member 'flymake-nimsuggest flymake-diagnostic-functions)
+              (funcall report-fn :panic :explanation err))))))))
 
 (defun nimsuggest--call-sync (method callback)
   (let* ((buf (current-buffer))
@@ -135,7 +140,7 @@ The CALLBACK is called with a list of ‘nimsuggest--epc’ structs."
          (setq res (funcall callback candidates)))))
     (while (and (eq 'trash res) (eq (current-buffer) buf))
       (if (> (- (time-to-seconds) start) 2)
-          (error "Nimsuggest(%s): timeout %d sec" method 2)
+          (nim-log "EPC-sync(%s): timeout %d sec" (symbol-name method) 2)
         (sleep-for 0.03)))
     (unless (eq 'trash res)
       res)))
@@ -444,17 +449,14 @@ parsed file was different."
   "A Flymake backend for Nim language using Nimsuggest.
 See `flymake-diagnostic-functions' for REPORT-FN and ARGS."
   (let ((buffer (current-buffer)))
-    (condition-case err
-        (nimsuggest--call-epc
-         'chk
-         (lambda (errors)
-           (nim-log "FLYMAKE(OK): report(s) number of %i" (length errors))
-           (let ((report-action
-                  (nimsuggest--flymake-error-parser errors buffer)))
-             (funcall report-fn (delq nil report-action)))))
-      (error
-       (prog1 (funcall report-fn :panic :explanation err)
-         (nim-log "FLYMAKE(NG): %s" err))))))
+    (nimsuggest--call-epc
+     'chk
+     (lambda (errors)
+       (nim-log "FLYMAKE(OK): report(s) number of %i" (length errors))
+       (let ((report-action
+              (nimsuggest--flymake-error-parser errors buffer)))
+         (funcall report-fn (delq nil report-action))))
+     report-fn)))
 
 
 ;;; ElDoc for nimsuggest
@@ -513,14 +515,16 @@ DEFS is group of definitions from nimsuggest."
      'dus 'nimsuggest-eldoc--update)))
 
 (defun nimsuggest-eldoc--update (defs)
-  (nim-log "ELDOC update")
-  (if defs
-      (nimsuggest-eldoc--update-1 defs)
-    (save-excursion
-      (when (nim-eldoc-inside-paren-p)
-        (nimsuggest-eldoc--move)
-        (backward-char)
-        (nimsuggest--call-epc 'dus 'nimsuggest-eldoc--update-1)))))
+  (if (nim-eldoc--on-string-p)
+      (nim-log "ELDOC stop update")
+    (nim-log "ELDOC update")
+    (if defs
+        (nimsuggest-eldoc--update-1 defs)
+      (save-excursion
+        (when (nim-eldoc-inside-paren-p)
+          (nimsuggest-eldoc--move)
+          (backward-char)
+          (nimsuggest--call-epc 'dus 'nimsuggest-eldoc--update-1))))))
 
 (defun nimsuggest-eldoc--update-1 (defs)
   (when defs
