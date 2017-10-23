@@ -79,7 +79,7 @@ PROJECT-PATH is added as the last option."
                      (org-in-src-block-p t))))))
 (define-obsolete-function-alias 'nim-suggest-available-p 'nimsuggest-available-p "2017/9/02")
 
-(defun nimsuggest--call-epc (method callback &optional report-fn)
+(defun nimsuggest--call-epc (method callback)
   "Call the nimsuggest process on point.
 
 Call the nimsuggest process responsible for the current buffer.
@@ -422,6 +422,7 @@ was outdated."))
 
 ;;;###autoload
 (defun nimsuggest-flymake-setup()
+  "Kinda experimental function to use flymake on Emacs 26."
   (when (and (bound-and-true-p flymake-mode)
              (not (bound-and-true-p flycheck-mode)))
     (if nimsuggest-mode
@@ -451,10 +452,20 @@ See `flymake-diagnostic-functions' for REPORT-FN and ARGS."
      'chk
      (lambda (errors)
        (nim-log "FLYMAKE(OK): report(s) number of %i" (length errors))
-       (let ((report-action
-              (nimsuggest--flymake-error-parser errors buffer)))
-         (funcall report-fn (delq nil report-action))))
-     report-fn)))
+       (condition-case err
+           (let ((report-action
+                  (nimsuggest--flymake-error-parser errors buffer)))
+             (funcall report-fn (delq nil report-action)))
+         (error
+          (nimsuggest-flymake--panic report-fn (error-message-string err))))))))
+
+;; TODO: not sure where to use this yet... Using this function cause
+;; to stop flymake completely which is not suitable for nimsuggest
+;; because nimsuggest re-start after its crush.
+(defun nimsuggest-flymake--panic (report-fn err)
+  (when (member 'flymake-nimsuggest flymake-diagnostic-functions)
+    (nim-log-err "FLYMAKE(ERR): %s" err)
+    (funcall report-fn :panic :explanation err)))
 
 
 ;;; ElDoc for nimsuggest
