@@ -37,18 +37,23 @@
                  symbol-end (0+ " "))
           (group line-start (0+ " ")))))
 
-(defun nim-eldoc-p()
+(defun nim-eldoc-on-p()
   "Return non-nil if `eldoc-mode' or `global-eldoc-mode' were non-nil."
   (or (bound-and-true-p eldoc-mode)
       ;; This mode was added at Emacs 25
       (bound-and-true-p global-eldoc-mode)))
 
+(defun nim-eldoc--on-string-p ()
+  (and (nim-eldoc-on-p)
+       (not (member (char-after (point))
+                    ;; not sure this works on windows
+                    '(?\s ?\n)))))
+
 ;;;###autoload
 (defun nim-eldoc-function ()
   "Return a doc string appropriate for the current context, or nil."
   (interactive)
-  (when (and (nim-eldoc-p)
-             (not (eq ?\s (char-after (point)))))
+  (when (nim-eldoc--on-string-p)
     (if (nim-inside-pragma-p)
         (nim-eldoc--pragma-at-point)
       (funcall 'nimsuggest-eldoc--nimsuggest))))
@@ -66,8 +71,8 @@ Major-mode configuration according to the document."
   (remove-function (local 'eldoc-documentation-function) 'nim-eldoc-function))
 
 ;;;###autoload
-(defun nim-eldoc-setup ()
-  (if (nim-eldoc-p) (nim-eldoc-on) (nim-eldoc-off)))
+(defun nim-eldoc-setup (&rest _args)
+  (if (nim-eldoc-on-p) (nim-eldoc-on) (nim-eldoc-off)))
 
 (defun nim-eldoc--get-pragma (pragma)
   "Get the PRAGMA's doc string."

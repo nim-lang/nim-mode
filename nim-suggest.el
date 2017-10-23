@@ -515,14 +515,16 @@ DEFS is group of definitions from nimsuggest."
      'dus 'nimsuggest-eldoc--update)))
 
 (defun nimsuggest-eldoc--update (defs)
-  (nim-log "ELDOC update")
-  (if defs
-      (nimsuggest-eldoc--update-1 defs)
-    (save-excursion
-      (when (nim-eldoc-inside-paren-p)
-        (nimsuggest-eldoc--move)
-        (backward-char)
-        (nimsuggest--call-epc 'dus 'nimsuggest-eldoc--update-1)))))
+  (if (nim-eldoc--on-string-p)
+      (nim-log "ELDOC stop update")
+    (nim-log "ELDOC update")
+    (if defs
+        (nimsuggest-eldoc--update-1 defs)
+      (save-excursion
+        (when (nim-eldoc-inside-paren-p)
+          (nimsuggest-eldoc--move)
+          (backward-char)
+          (nimsuggest--call-epc 'dus 'nimsuggest-eldoc--update-1))))))
 
 (defun nimsuggest-eldoc--update-1 (defs)
   (when defs
