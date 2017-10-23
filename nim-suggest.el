@@ -78,7 +78,7 @@ PROJECT-PATH is added as the last option."
                      (org-in-src-block-p t))))))
 (define-obsolete-function-alias 'nim-suggest-available-p 'nimsuggest-available-p "2017/9/02")
 
-(defun nimsuggest--call-epc (method callback)
+(defun nimsuggest--call-epc (method callback &optional report-fn)
   "Call the nimsuggest process on point.
 
 Call the nimsuggest process responsible for the current buffer.
@@ -91,7 +91,9 @@ def: where the symbol is defined
 use: where the symbol is used
 dus: def + use
 
-The CALLBACK is called with a list of ‘nimsuggest--epc’ structs."
+The CALLBACK is called with a list of ‘nimsuggest--epc’ structs.
+
+REPORT-FN is for `flymake'.  See `flymake-diagnostic-functions'"
   (when (nimsuggest-available-p)
     ;; See also compiler/modulegraphs.nim for dirty file
     (let ((temp-dirty-file (nimsuggest--save-buffer-temporarly))
@@ -122,7 +124,9 @@ The CALLBACK is called with a list of ‘nimsuggest--epc’ structs."
               (delete-file temp-dirty-file))))
         (deferred:error it
           (lambda (err)
-            (nim-log "EPC error %s" (error-message-string err))))))))
+            (nim-log "EPC error %s" (error-message-string err))
+            (when (member 'flymake-nimsuggest flymake-diagnostic-functions)
+              (funcall report-fn :panic :explanation err))))))))
 
 (defun nimsuggest--call-sync (method callback)
   (let* ((buf (current-buffer))
@@ -444,17 +448,14 @@ parsed file was different."
   "A Flymake backend for Nim language using Nimsuggest.
 See `flymake-diagnostic-functions' for REPORT-FN and ARGS."
   (let ((buffer (current-buffer)))
-    (condition-case err
-        (nimsuggest--call-epc
-         'chk
-         (lambda (errors)
-           (nim-log "FLYMAKE(OK): report(s) number of %i" (length errors))
-           (let ((report-action
-                  (nimsuggest--flymake-error-parser errors buffer)))
-             (funcall report-fn (delq nil report-action)))))
-      (error
-       (prog1 (funcall report-fn :panic :explanation err)
-         (nim-log "FLYMAKE(NG): %s" err))))))
+    (nimsuggest--call-epc
+     'chk
+     (lambda (errors)
+       (nim-log "FLYMAKE(OK): report(s) number of %i" (length errors))
+       (let ((report-action
+              (nimsuggest--flymake-error-parser errors buffer)))
+         (funcall report-fn (delq nil report-action))))
+     report-fn)))
 
 
 ;;; ElDoc for nimsuggest
