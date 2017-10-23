@@ -148,6 +148,14 @@ epc function."
                  (const :tag "" nil))
   :group 'nim)
 
+(defcustom nimsuggest-local-options '()
+  "Options for Nimsuggest.
+Please use this variable to set nimsuggest’s options for
+specific directory or buffer.  See also ‘dir-locals-file’."
+  :type '(choice (repeat :tag "List of options" string)
+                 (const :tag "" nil))
+  :group 'nim)
+
 (defcustom nimsuggest-dirty-directory
   ;; Even users changed the temp directory name,
   ;; ‘file-name-as-directory’ ensures suffix directory separator.
@@ -157,11 +165,6 @@ epc function."
 Note that this directory is removed when you exit from Emacs."
   :type 'directory
   :group 'nim)
-
-(defvar nimsuggest-local-options '()
-  "Options for Nimsuggest.
-Please use this variable to set nimsuggest’s options for
-specific directory or buffer.  See also ‘dir-locals-file’.")
 
 (defvar nimsuggest-ignore-dir-regex
   (rx (or "\\" "/") (in "nN") "im" (or "\\" "/") "compiler" (or "\\" "/")))
