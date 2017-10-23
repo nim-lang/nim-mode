@@ -125,9 +125,7 @@ REPORT-FN is for `flymake'.  See `flymake-diagnostic-functions'"
               (delete-file temp-dirty-file))))
         (deferred:error it
           (lambda (err)
-            (nim-log "EPC error %s" (error-message-string err))
-            (when (member 'flymake-nimsuggest flymake-diagnostic-functions)
-              (funcall report-fn :panic :explanation err))))))))
+            (nim-log-err "EPC error %s" (error-message-string err))))))))
 
 (defun nimsuggest--call-sync (method callback)
   (let* ((buf (current-buffer))
