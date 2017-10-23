@@ -140,10 +140,9 @@ You don't need to set this if the nim executable is inside your PATH."
                  (const :tag "" nil))
   :group 'nim)
 
-(defcustom nimsuggest-options '()
-  "Options for Nimsuggest.
-Note that ‘--verbosity:0’ and ‘--epc’ are automatically passed nim-mode’s
-epc function."
+(defcustom nimsuggest-options '("--refresh")
+  "Options for Nimsuggest. ‘--epc’ are automatically passed
+  nim-mode’s EPC (Emacs RPC) function."
   :type '(choice (repeat :tag "List of options" string)
                  (const :tag "" nil))
   :group 'nim)
