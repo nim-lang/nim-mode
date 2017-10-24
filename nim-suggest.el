@@ -7,10 +7,9 @@
 
 ;;; Code:
 
-(require 'nim-vars)
+(require 'nim-mode)
 (require 'epc)
 (require 'cl-lib)
-(require 'nim-compile)
 
 ;;; If you change the order here, make sure to change it over in
 ;;; nimsuggest.nim too.
