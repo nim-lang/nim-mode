@@ -7,10 +7,9 @@
 
 ;;; Code:
 
-(require 'nim-vars)
+(require 'nim-mode)
 (require 'epc)
 (require 'cl-lib)
-(require 'nim-compile)
 
 ;;; If you change the order here, make sure to change it over in
 ;;; nimsuggest.nim too.
@@ -41,7 +40,7 @@
 
 PROJECT-PATH is added as the last option."
   (delq nil
-        (append nim-suggest-options nim-suggest-local-options
+        (append nimsuggest-options nimsuggest-local-options
                 ;; FIXME:
                 ;; In recent nim’s update, this configuration no
                 ;; longer can use.
@@ -69,7 +68,7 @@ PROJECT-PATH is added as the last option."
 (defun nimsuggest-available-p ()
   "Return non-nil if nimsuggest is available in current buffer."
   (and nimsuggest-path
-       (not nim-inside-compiler-dir-p)
+       (not nim--inside-compiler-dir-p)
        ;; Prevent turn on nimsuggest related feature on org-src block
        ;; or nimscript-mode (nimsuggest doesn't support yet).
        ;; https://github.com/nim-lang/nimsuggest/issues/29
@@ -79,7 +78,7 @@ PROJECT-PATH is added as the last option."
                      (org-in-src-block-p t))))))
 (define-obsolete-function-alias 'nim-suggest-available-p 'nimsuggest-available-p "2017/9/02")
 
-(defun nimsuggest--call-epc (method callback &optional report-fn)
+(defun nimsuggest--call-epc (method callback)
   "Call the nimsuggest process on point.
 
 Call the nimsuggest process responsible for the current buffer.
@@ -111,8 +110,8 @@ REPORT-FN is for `flymake'.  See `flymake-diagnostic-functions'"
                   temp-dirty-file))
            (t
             (list (buffer-file-name)
-                  (line-number-at-pos)
-                  (current-column)
+                  (line-number-at-pos) ; min is 1 in suggest.nim
+                  (current-column)     ; min is 0 in suggest.nim
                   temp-dirty-file))))
         (deferred:nextc it
           (lambda (x)
@@ -125,9 +124,7 @@ REPORT-FN is for `flymake'.  See `flymake-diagnostic-functions'"
               (delete-file temp-dirty-file))))
         (deferred:error it
           (lambda (err)
-            (nim-log "EPC error %s" (error-message-string err))
-            (when (member 'flymake-nimsuggest flymake-diagnostic-functions)
-              (funcall report-fn :panic :explanation err))))))))
+            (nim-log-err "EPC error %s" (error-message-string err))))))))
 
 (defun nimsuggest--call-sync (method callback)
   (let* ((buf (current-buffer))
@@ -424,6 +421,7 @@ was outdated."))
 
 ;;;###autoload
 (defun nimsuggest-flymake-setup()
+  "Kinda experimental function to use flymake on Emacs 26."
   (when (and (bound-and-true-p flymake-mode)
              (not (bound-and-true-p flycheck-mode)))
     (if nimsuggest-mode
@@ -453,10 +451,20 @@ See `flymake-diagnostic-functions' for REPORT-FN and ARGS."
      'chk
      (lambda (errors)
        (nim-log "FLYMAKE(OK): report(s) number of %i" (length errors))
-       (let ((report-action
-              (nimsuggest--flymake-error-parser errors buffer)))
-         (funcall report-fn (delq nil report-action))))
-     report-fn)))
+       (condition-case err
+           (let ((report-action
+                  (nimsuggest--flymake-error-parser errors buffer)))
+             (funcall report-fn (delq nil report-action)))
+         (error
+          (nimsuggest-flymake--panic report-fn (error-message-string err))))))))
+
+;; TODO: not sure where to use this yet... Using this function cause
+;; to stop flymake completely which is not suitable for nimsuggest
+;; because nimsuggest re-start after its crush.
+(defun nimsuggest-flymake--panic (report-fn err)
+  (when (member 'flymake-nimsuggest flymake-diagnostic-functions)
+    (nim-log-err "FLYMAKE(ERR): %s" err)
+    (funcall report-fn :panic :explanation err)))
 
 
 ;;; ElDoc for nimsuggest

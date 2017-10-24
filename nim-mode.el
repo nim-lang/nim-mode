@@ -26,83 +26,60 @@
 ;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth
 ;; Floor, Boston, MA 02110-1301, USA.
 ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;; Commentary:
 
+;; Abstraction:
 ;; Large parts of this code is shamelessly stolen from python.el and
-;; adapted to Nim
-;;
+;; adapted to Nim.
 ;;
 ;; This package provide a major-mode future (syntax highlight and
 ;; indentation) and some necessity futures (jump-to-definition,
 ;; linting, el-doc) if you install nimsuggest.  See below for the detail.
-
-;; Configuration:
 ;;
-;; If you installed from MELPA, pretty much all configuration are set
-;; by default to just use this major-mode.  (syntax highlight and indentation)
-;; But if you want some editor integration like jump-to-definition or
-;; auto-completion, you need to install/build (or just include it in
-;; the PATH if you already have it) `nimsuggest' which is Nim
-;; language's an editor agnostic tool.
+;;; Commentary:
+;; ## TL;DR
 
-;; ## Nimsuggest
-;; (if you are impatient, skip until `install nimsuggest` to install it)
-
-;; Nimsuggest is an editor agnostic tool for Nim and nim-mode provides:
-
-;; 1. Completion feature -- `C-M-i` and `M-TAB` keys and auto-complete feature if
-;;    you install [company-mode](https://github.com/company-mode/company-mode)
-;; 2. Asynchronous linting -- nimsuggest take care .nims files as
-;;    configuration file, so it's smarter than `nim check` command (1)
-;; 3. Showing info under the cursor in minibuffer -- (1)
-;; 4. Jump to definition feature -- `M-.` for go to def and `M-,` for
-;;    back to before the go to def position
-
-;; (1): those are automatically turned on if you turned on `nimsuggest-mode`
-
-;; ### Install nimsuggest
-
-;; 1. Use stable version:
-;;    See [official download instruction](http://nim-lang.org/download.html) at
-;;    "Installation based on generated C code" section.
-
-;; 2. Use latest version:
-;;    This way may or may not work (depending on Nim or nimsuggest's
-;;    state and we can't support all the way), so use above way
-;;    if you prefer stable.
-;;    ```sh
-;;    #  assuming you already installed Nim
-;;    cd /path/to/Nim_repository
-;;    ./koch tools
-;;    ```
-
-;; After you installed nimsuggest, you may need following configuration in
-;; your Emacs configuration file (e.g, ~/.emacs.d/init.el):
-
-;; ```el
-;; ;; can be optional.  See below note
-;; (setq nimsuggest-path "path/to/nimsuggest")
-
-;; ;; Currently nimsuggest doesn't support nimscript files, so only nim-mode...
-;; (add-hook 'nim-mode-hook 'nimsuggest-mode)
-
-;; ;; if you installed company-mode (optional)
-;; (add-hook 'nim-mode-hook 'company-mode)
-;; (add-hook 'nimscript-mode-hook 'company-mode)
-;; ;; or use below instead if you want to activate `company-mode` on all programming
-;; ;; related modes.
-;; ;; (add-hook 'prog-mode-hook 'company-mode)
-;; ```
-
-;; Note that above `nimsuggest-path` variable is automatically set
-;; the result of `(executable-find "nimsuggest")`, so if you can get
-;; value from the `executable-find`, you may not need that
-;; configuration unless you want to set specific version of nimsuggest.
+;; For regular Emacs users, all you need is below configuration in your
+;; dot Emacs after you installed nim-mode from MELPA and nimsuggest
+;; which you can make by `./koch tools` or `./koch nimsuggest`command in
+;; the Nim repository (or check the official document on Nim website if
+;; this information was outdated):
 ;;
-;; TODO:
-;; - find reference
+;; Activate nimsuggest dedicated mode on `nim-mode':
+;;
+;;   (add-hook 'nim-mode-hook 'nimsuggest-mode)
+;;
+;; Below configs are can be optional
+;;
+;; The `nimsuggest-path` will be set the value of (executable-find "nimsuggest")
+;; automatically.
+;;
+;;   (setq nimsuggest-path "path/to/nimsuggest")
+;;
+;; You may need to install below package if you haven't installed yet.
+;;
+;; -- Auto completion --
+;; You can omit if you configured company-mode on 'prog-mode-hook
+;;   (add-hook 'nimsuggest-mode-hook 'company-mode)  ; auto complete package
+;;
+;; -- Auto lint --
+;; You can omit if you configured flycheck-mode on 'prog-mode-hook
+;;
+;;   (add-hook 'nimsuggest-mode-hook 'flycheck-mode) ; auto linter package
+;;
+;; If you use Emacs 26 or higher, you can also use `flymake' package which
+;; Emacs' builtin standard package for auto lint (it was re written on
+;; Emacs 26) which you can use by below config:
+;;
+;;   (add-hook 'nimsuggest-mode-hook 'flymake-mode) ; auto linter package
+;;
+;;   Note that currently nim-mode has three choice for the flyXXX's auto
+;;   linter and currently nim-mode repo has `flycheck-nimsuggest' and
+;;   `flymake-nimsuggeset'.  On the future plan, this repo will only ship
+;;   `flymake-nimsuggst' because it is Emacs 26 builtin.
+;;
+;;   FYI:
+;;   might be supproted in the future, but not for now
+;;   (add-hook 'nimsuggest-mode-hook 'nimsuggest-mode)
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -136,10 +113,10 @@
   "Common configuration for ‘nim-mode’ and ‘nimscript-mode’."
   (run-hooks 'nim-common-init-hook)
 
-  (setq-local nim-inside-compiler-dir-p
+  (setq-local nim--inside-compiler-dir-p
               (when (and buffer-file-name
                          (string-match
-                          nim-suggest-ignore-dir-regex buffer-file-name))
+                          nimsuggest-ignore-dir-regex buffer-file-name))
                 t))
 
   ;; Comment

@@ -140,10 +140,17 @@ You don't need to set this if the nim executable is inside your PATH."
                  (const :tag "" nil))
   :group 'nim)
 
-(defcustom nim-suggest-options '("--v2")
+(defcustom nimsuggest-options '("--refresh")
+  "Options for Nimsuggest. ‘--epc’ are automatically passed
+  nim-mode’s EPC (Emacs RPC) function."
+  :type '(choice (repeat :tag "List of options" string)
+                 (const :tag "" nil))
+  :group 'nim)
+
+(defcustom nimsuggest-local-options '()
   "Options for Nimsuggest.
-Note that ‘--verbosity:0’ and ‘--epc’ are automatically passed nim-mode’s
-epc function."
+Please use this variable to set nimsuggest’s options for
+specific directory or buffer.  See also ‘dir-locals-file’."
   :type '(choice (repeat :tag "List of options" string)
                  (const :tag "" nil))
   :group 'nim)
@@ -158,14 +165,9 @@ Note that this directory is removed when you exit from Emacs."
   :type 'directory
   :group 'nim)
 
-(defvar nim-suggest-local-options '()
-  "Options for Nimsuggest.
-Please use this variable to set nimsuggest’s options for
-specific directory or buffer.  See also ‘dir-locals-file’.")
-
-(defvar nim-suggest-ignore-dir-regex
+(defvar nimsuggest-ignore-dir-regex
   (rx (or "\\" "/") (in "nN") "im" (or "\\" "/") "compiler" (or "\\" "/")))
-(defvar nim-inside-compiler-dir-p nil)
+(defvar nim--inside-compiler-dir-p nil)
 
 
 ;; Keymaps
@@ -625,6 +627,10 @@ The description is unofficial; PRs are welcome.")
 ;; Added Oct 17, 2017
 (define-obsolete-variable-alias 'nim-nimsuggest-path 'nimsuggest-path "Oct/20/2017")
 (define-obsolete-variable-alias 'nim-dirty-directory 'nimsuggest-dirty-directory "Oct/20/2017")
+(define-obsolete-variable-alias 'nim-suggest-options 'nimsuggest-options "Oct/23/2017")
+(define-obsolete-variable-alias 'nim-suggest-local-options 'nimsuggest-local-options "Oct/23/2017")
+(define-obsolete-variable-alias 'nim-suggest-ignore-dir-regex 'nimsuggest-ignore-dir-regex "Oct/23/2017")
+(define-obsolete-variable-alias 'nim-inside-compiler-dir-p 'nim--inside-compiler-dir-p "Oct/23/2017")
 
 (provide 'nim-vars)
 ;;; nim-vars.el ends here
