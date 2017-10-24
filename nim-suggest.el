@@ -124,7 +124,12 @@ REPORT-FN is for `flymake'.  See `flymake-diagnostic-functions'"
               (delete-file temp-dirty-file))))
         (deferred:error it
           (lambda (err)
-            (nim-log-err "EPC error %s" (error-message-string err))))))))
+            ;; Note that it seems like this error clause is not *rare* to
+            ;; called when you write broken nim code. (probably with
+            ;; template or macro) So, just put a log function and see
+            ;; what's going on only if users or I are interested.
+            (nim-log "EPC(%S) ERROR %s"
+                     (symbol-name method) (error-message-string err))))))))
 
 (defun nimsuggest--call-sync (method callback)
   (let* ((buf (current-buffer))
@@ -456,7 +461,7 @@ See `flymake-diagnostic-functions' for REPORT-FN and ARGS."
                   (nimsuggest--flymake-error-parser errors buffer)))
              (funcall report-fn (delq nil report-action)))
          (error
-          (nimsuggest-flymake--panic report-fn (error-message-string err))))))))
+          (nim-log "FLYMAKE(debug error): %s" (error-message-string err))))))))
 
 ;; TODO: not sure where to use this yet... Using this function cause
 ;; to stop flymake completely which is not suitable for nimsuggest
