@@ -110,8 +110,8 @@ REPORT-FN is for `flymake'.  See `flymake-diagnostic-functions'"
                   temp-dirty-file))
            (t
             (list (buffer-file-name)
-                  (line-number-at-pos)
-                  (current-column)
+                  (line-number-at-pos) ; min is 1 in suggest.nim
+                  (current-column)     ; min is 0 in suggest.nim
                   temp-dirty-file))))
         (deferred:nextc it
           (lambda (x)

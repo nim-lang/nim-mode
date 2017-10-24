@@ -142,7 +142,8 @@ Basically copied from `compile-command's document."
 ;;;###autoload
 (defun nim-compile (&optional command)
   "Compile and execute the current buffer as a nim file.
-All output is written into the *nim-compile* buffer."
+All output is written into the *nim-compile* buffer.
+If you put COMMAND argument, you can specify the compilation command."
   (interactive)
   (when (derived-mode-p 'nim-mode)
     (setq-local compile-command

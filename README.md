@@ -6,18 +6,55 @@ This package provides (requires Emacs 24.4 or higher version):
 - Syntax highlight for .nim, .nims, nimble, nim.cfg
 - Auto-indent
 - Outline by procedures (`hs-hide-all`, `hs-show-all` etc.)
-- more features with Nimsuggest (see below)
+- more features with Nimsuggest: auto-lint, auto-completion, eldoc (hover)
+
+## TL;DR
+
+For regular emacs users, all you need is below configuration in your
+dot emacs after you installed nim-mode from MELPA and nimsuggest
+which you can make by `./koch tools` or `./koch nimsuggest`command in
+the Nim repository (or check the official document on Nim website if
+this information was outdated):
+
+``` elisp
+(add-hook 'nim-mode-hook 'nimsuggest-mode)
+
+;; Below configs are can be optional
+;;
+;; The `nimsuggest-path` will be set the value of
+;; (executable-find "nimsuggest"), automatically.
+(setq nimsuggest-path "path/to/nimsuggest")
+
+;; You may need to install below package if you haven't installed yet.
+
+;; -- Auto completion --
+;; You can omit if you configured company-mode on 'prog-mode-hook
+(add-hook 'nimsuggest-mode-hook 'company-mode)  ; auto complete package
+;; -- Auto lint --
+;; You can omit if you configured flycheck-mode on 'prog-mode-hook
+(add-hook 'nimsuggest-mode-hook 'flycheck-mode) ; auto linter package
+;; If you use Emacs 26 or higher, you can also use `flymake' package which
+;; Emacs' builtin standard package for auto lint (it was re written on
+;; Emacs 26) which you can use by below config:
+;; (add-hook 'nimsuggest-mode-hook 'flymake-mode) ; auto linter package
+
+;; Note that currently nim-mode has three choice for the flyXXX's auto
+;; linter and currently nim-mode repo has `flycheck-nimsuggest' and
+;; `flymake-nimsuggeset'. On the future plan, this repo will only ship
+;; `flymake-nimsuggst' because it is Emacs 26 builtin.
+
+;; FYI:
+;; might be supproted in the future, but not for now
+;; (add-hook 'nimsuggest-mode-hook 'nimsuggest-mode)
+
+```
 
 ## Installation
 
 * Install `nim-mode.el` via [MELPA](https://melpa.org/#/getting-started).
   * Check the MELPA's link and add the package archive if you don't set yet
-  * `M-x list-packages`  opens the list of all packages (M is the emacs name for Alt)
-  * `C-s nim-mode`       moves cursor to nim mode
-  * `ESC`                ends search
-  * `i`                  tags for install
-  * `x`                  executes install
-  * `y`                  to confirm question
+  * `M-x package-install`
+  *  type `nim-mode` and then enter
 
 Please take a look next `Nimsuggest` section if you interested in
 editor integration like code-completion, jump-to-definition, or linting.
@@ -53,29 +90,6 @@ Nimsuggest is an editor agnostic tool for Nim and nim-mode provides:
    cd /path/to/Nim_repository
    ./koch tools
    ```
-
-After you installed nimsuggest, you may need following configuration in
-your Emacs configuration file (e.g, ~/.emacs.d/init.el):
-
-```elisp
-;; can be optional.  See below note
-(setq nimsuggest-path "path/to/nimsuggest")
-
-;; Currently nimsuggest doesn't support nimscript files, so only nim-mode...
-(add-hook 'nim-mode-hook 'nimsuggest-mode)
-
-;; if you installed company-mode (optional)
-(add-hook 'nim-mode-hook 'company-mode)
-(add-hook 'nimscript-mode-hook 'company-mode)
-;; or use below instead if you want to activate `company-mode` on all programming
-;; related modes.
-;; (add-hook 'prog-mode-hook 'company-mode)
-```
-
-Note that above `nimsuggest-path` variable is automatically set
-the result of `(executable-find "nimsuggest")`, so if you can get
-value from the `executable-find`, you may not need that
-configuration unless you want to set specific version of nimsuggest.
 
 ## Other convenience packages for editing Nim source code
 
