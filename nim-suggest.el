@@ -563,7 +563,7 @@ DEFS is group of definitions from nimsuggest."
      'dus 'nimsuggest-eldoc--update)))
 
 (defun nimsuggest-eldoc--update (defs)
-  (if (nim-eldoc--on-string-p)
+  (if (not (nim-eldoc--on-string-p))
       (nim-log "ELDOC stop update")
     (nim-log "ELDOC update")
     (if defs

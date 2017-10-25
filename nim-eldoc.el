@@ -45,6 +45,7 @@
 
 (defun nim-eldoc--on-string-p ()
   (and (nim-eldoc-on-p)
+       (not (nim-line-comment-p))
        (not (member (char-after (point))
                     ;; not sure this works on windows
                     '(?\s ?\n)))))
