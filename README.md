@@ -1,12 +1,19 @@
-`nim-mode` A major mode for editing Nim source code[![Travis CI](https://travis-ci.org/nim-lang/nim-mode.svg?branch=master)](https://travis-ci.org/nim-lang/nim-mode)
+`nim-mode` A major mode for editing Nim source code
 ===================================================
+[![Travis CI](https://travis-ci.org/nim-lang/nim-mode.svg?branch=master)](https://travis-ci.org/nim-lang/nim-mode)
 
-This package provides (requires Emacs 24.4 or higher version):
+This package provides (and requires Emacs 24.4 or higher version):
 
 - Syntax highlight for .nim, .nims, nimble, nim.cfg
 - Auto-indent
 - Outline by procedures (`hs-hide-all`, `hs-show-all` etc.)
-- more features with Nimsuggest: auto-lint, auto-completion, eldoc (hover)
+- nim compile command by "C-c C-c" (`nim-compile`)
+- more features with Nimsuggest:
+  - on the fly linter using flycheck, or flymake (from Emacs 26)
+  - auto-completion with company-mode ("C-M-i" for manual completion)
+  - jump-to-definition ("M-.", and "M-," keys)
+  - find-references ("M-?" key)
+  - eldoc or help on hover in term of LSP
 
 ## TL;DR
 
@@ -18,35 +25,45 @@ this information was outdated):
 
 ``` elisp
 (add-hook 'nim-mode-hook 'nimsuggest-mode)
+```
 
-;; Below configs are can be optional
-;;
-;; The `nimsuggest-path` will be set the value of
+Below configuration can be optional
+
+```elisp
+;; The `nimsuggest-path' will be set the value of
 ;; (executable-find "nimsuggest"), automatically.
 (setq nimsuggest-path "path/to/nimsuggest")
 
-;; You may need to install below package if you haven't installed yet.
+;; You may need to install below packages if you haven't installed yet.
 
 ;; -- Auto completion --
-;; You can omit if you configured company-mode on 'prog-mode-hook
+;; You can omit if you configured company-mode on `prog-mode-hook'
 (add-hook 'nimsuggest-mode-hook 'company-mode)  ; auto complete package
 ;; -- Auto lint --
-;; You can omit if you configured flycheck-mode on 'prog-mode-hook
+;; You can omit if you configured flycheck-mode on `prog-mode-hook'
 (add-hook 'nimsuggest-mode-hook 'flycheck-mode) ; auto linter package
-;; If you use Emacs 26 or higher, you can also use `flymake' package which
-;; Emacs' builtin standard package for auto lint (it was re written on
-;; Emacs 26) which you can use by below config:
-;; (add-hook 'nimsuggest-mode-hook 'flymake-mode) ; auto linter package
-
-;; Note that currently nim-mode has three choice for the flyXXX's auto
-;; linter and currently nim-mode repo has `flycheck-nimsuggest' and
-;; `flymake-nimsuggeset'. On the future plan, this repo will only ship
-;; `flymake-nimsuggst' because it is Emacs 26 builtin.
 
 ;; FYI:
 ;; might be supproted in the future, but not for now
 ;; (add-hook 'nimsuggest-mode-hook 'nimsuggest-mode)
+```
 
+Supplemental information:
+
+Note that currently nim-mode has three choices for auto linters:
+`flycheck-nimsuggest`, `flymake-nimsuggeset`, and `flycheck-nim`.
+First two linters use same backend nimsuggest whereas flycheck-nim uses
+Nim compiler's `check` command. If you prefer to configure Nim's configuration
+inside Emacs (ex. Compile option), flycheck-nim might be the best, but if not
+nimsuggest based backends are good for you probably.
+
+
+If you use Emacs 26 or higher, you can also use `flymake' package which
+Emacs' builtin standard package for auto lint (it was re written on
+Emacs 26). You can use by below config:
+
+``` elisp
+(add-hook 'nimsuggest-mode-hook 'flymake-mode) ; builtin auto linter package
 ```
 
 ## Installation
