@@ -433,19 +433,33 @@ was outdated."))
         (add-hook  'flymake-diagnostic-functions 'flymake-nimsuggest nil t)
       (remove-hook 'flymake-diagnostic-functions 'flymake-nimsuggest t))))
 
+(defun nimsuggest--flymake-filter (errors buffer)
+  "Remove not related errors from ERRORS in the BUFFER."
+  (cl-loop for (_ _ _ file type line col text _) in errors
+           if (and (eq buffer (get-file-buffer file))
+                   (<= 1 line) (<= 0 col))
+           ;; column needs to be increased by 1 to highlight correctly
+           collect (list file type line (1+ col) text)))
+
+(defun nimsuggest--flymake-region (file buf line col)
+  "Work around for https://github.com/nim-lang/nim-mode/issues/183."
+  (if (not (eq (get-file-buffer file) (current-buffer)))
+      (cons 0 1)
+    (cl-letf* (((symbol-function 'end-of-thing)
+                (lambda (&rest _r) nil)))
+      (funcall 'flymake-diag-region buf line col))))
+
 (defun nimsuggest--flymake-error-parser (errors buffer)
   "Return list of result of `flymake-make-diagnostic' from ERRORS.
 The list can be nil.  ERRORS will be skipped if BUFFER and
 parsed file was different."
-  (cl-loop for (_ _ _ file typ line col text _) in errors
+  (cl-loop with errs = (nimsuggest--flymake-filter errors buffer)
+           for (file typ line col text) in errs
            for type = (cl-case (string-to-char typ)
                         (?E :error)
                         (?W :warning)
                         (t  :note))
-           ;; nimsuggest's column starts from 1, but Emacs is 0.
-           ;; Use funcall to circumvent emacs' not defined warning
-           for (beg . end) = (funcall 'flymake-diag-region buffer line (1+ col))
-           if (eq buffer (get-file-buffer file))
+           for (beg . end) = (nimsuggest--flymake-region file buffer line col)
            collect (funcall 'flymake-make-diagnostic buffer beg end type text)))
 
 (defun flymake-nimsuggest (report-fn &rest _args)
@@ -455,13 +469,13 @@ See `flymake-diagnostic-functions' for REPORT-FN and ARGS."
     (nimsuggest--call-epc
      'chk
      (lambda (errors)
-       (nim-log "FLYMAKE(OK): report(s) number of %i" (length errors))
+       (nim-log "FLYMAKE(start): report(s) number of %i" (length errors))
        (condition-case err
            (let ((report-action
                   (nimsuggest--flymake-error-parser errors buffer)))
-             (funcall report-fn (delq nil report-action)))
+             (funcall report-fn report-action))
          (error
-          (nim-log "FLYMAKE(debug error): %s" (error-message-string err))))))))
+          (nim-log "FLYMAKE(error): %s" (error-message-string err))))))))
 
 ;; TODO: not sure where to use this yet... Using this function cause
 ;; to stop flymake completely which is not suitable for nimsuggest
