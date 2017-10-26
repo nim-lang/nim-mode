@@ -1,5 +1,26 @@
 ;;; nim-suggest.el --- a plugin to use nimsuggest from Emacs -*- lexical-binding: t -*-
 
+;; Description: A minor mode for Nim language tooling using nimsuggest
+;; Author: Simon Hafner
+;; Maintainer: Yuta Yamada <cokesboy"at"gmail.com>
+
+;; Package-Requires: ((emacs "24.4") (epc "0.1.1"))
+
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation; either version 2, or (at your option)
+;; any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this program; see the file COPYING.  If not, write to
+;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth
+;; Floor, Boston, MA 02110-1301, USA.
+
 ;;; Commentary:
 
 ;; memo
@@ -14,10 +35,11 @@
 ;;; If you change the order here, make sure to change it over in
 ;;; nimsuggest.nim too.
 (defconst nimsuggest--epc-order
-  '(:section :symkind :qualifiedPath :filePath :forth :line :column :doc :quality))
+  '(:section :symkind :qualifiedPath :filePath :forth :line :column
+    :doc :quality :prefix))
 
 (cl-defstruct nimsuggest--epc
-  section symkind qualifiedPath filePath forth line column doc quality)
+  section symkind qualifiedPath filePath forth line column doc quality prefix)
 
 (defun nimsuggest--parse-epc (obj method)
   "Parse OBJ according to METHOD."
@@ -224,6 +246,7 @@ crash when some emacsclients open the same file."
   :lighter " nimsuggest"
   :keymap nimsuggest-mode-map
   (when nimsuggest-mode
+    (when (require 'xref nil t) (nimsuggest-xref 'on))
     (nimsuggest-ensure)))
 
 (defun nimsuggest-force-stop ()
@@ -433,19 +456,33 @@ was outdated."))
         (add-hook  'flymake-diagnostic-functions 'flymake-nimsuggest nil t)
       (remove-hook 'flymake-diagnostic-functions 'flymake-nimsuggest t))))
 
+(defun nimsuggest--flymake-filter (errors buffer)
+  "Remove not related errors from ERRORS in the BUFFER."
+  (cl-loop for (_ _ _ file type line col text _) in errors
+           if (and (eq buffer (get-file-buffer file))
+                   (<= 1 line) (<= 0 col))
+           ;; column needs to be increased by 1 to highlight correctly
+           collect (list file type line (1+ col) text)))
+
+(defun nimsuggest--flymake-region (file buf line col)
+  "Work around for https://github.com/nim-lang/nim-mode/issues/183."
+  (if (not (eq (get-file-buffer file) (current-buffer)))
+      (cons 0 1)
+    (cl-letf* (((symbol-function 'end-of-thing)
+                (lambda (&rest _r) nil)))
+      (funcall 'flymake-diag-region buf line col))))
+
 (defun nimsuggest--flymake-error-parser (errors buffer)
   "Return list of result of `flymake-make-diagnostic' from ERRORS.
 The list can be nil.  ERRORS will be skipped if BUFFER and
 parsed file was different."
-  (cl-loop for (_ _ _ file typ line col text _) in errors
+  (cl-loop with errs = (nimsuggest--flymake-filter errors buffer)
+           for (file typ line col text) in errs
            for type = (cl-case (string-to-char typ)
                         (?E :error)
                         (?W :warning)
                         (t  :note))
-           ;; nimsuggest's column starts from 1, but Emacs is 0.
-           ;; Use funcall to circumvent emacs' not defined warning
-           for (beg . end) = (funcall 'flymake-diag-region buffer line (1+ col))
-           if (eq buffer (get-file-buffer file))
+           for (beg . end) = (nimsuggest--flymake-region file buffer line col)
            collect (funcall 'flymake-make-diagnostic buffer beg end type text)))
 
 (defun flymake-nimsuggest (report-fn &rest _args)
@@ -455,13 +492,13 @@ See `flymake-diagnostic-functions' for REPORT-FN and ARGS."
     (nimsuggest--call-epc
      'chk
      (lambda (errors)
-       (nim-log "FLYMAKE(OK): report(s) number of %i" (length errors))
+       (nim-log "FLYMAKE(start): report(s) number of %i" (length errors))
        (condition-case err
            (let ((report-action
                   (nimsuggest--flymake-error-parser errors buffer)))
-             (funcall report-fn (delq nil report-action)))
+             (funcall report-fn report-action))
          (error
-          (nim-log "FLYMAKE(debug error): %s" (error-message-string err))))))))
+          (nim-log "FLYMAKE(error): %s" (error-message-string err))))))))
 
 ;; TODO: not sure where to use this yet... Using this function cause
 ;; to stop flymake completely which is not suitable for nimsuggest
@@ -528,7 +565,7 @@ DEFS is group of definitions from nimsuggest."
      'dus 'nimsuggest-eldoc--update)))
 
 (defun nimsuggest-eldoc--update (defs)
-  (if (nim-eldoc--on-string-p)
+  (if (not (nim-eldoc--on-string-p))
       (nim-log "ELDOC stop update")
     (nim-log "ELDOC update")
     (if defs
@@ -557,7 +594,6 @@ DEFS is group of definitions from nimsuggest."
   '(progn
      (defun nimsuggest--xref-backend () 'nimsuggest)
      (defun nimsuggest-xref (&optional on-or-off)
-       (nim-log "xref status: %s" on-or-off)
        (cl-case on-or-off
          (on  (add-hook 'xref-backend-functions #'nimsuggest--xref-backend nil t))
          (off (remove-hook 'xref-backend-functions #'nimsuggest--xref-backend t))

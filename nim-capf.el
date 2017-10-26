@@ -96,7 +96,8 @@
      :nim-file   (nimsuggest--epc-filePath cand)
      :nim-sk     (nimsuggest--epc-symkind  cand)
      :nim-sig    (assoc-default
-                  (nimsuggest--epc-symkind cand) nim-capf--type-abbrevs))))
+                  (nimsuggest--epc-symkind cand) nim-capf--type-abbrevs)
+     :nim-prefix     (nimsuggest--epc-prefix   cand))))
 
 (defun nim-capf--format-candidates (_arg candidates)
   "Put text attributes to CANDIDATES."

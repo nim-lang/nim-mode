@@ -33,7 +33,7 @@ You can turn off nimsuggest by setting `nimsuggest-path` to `nil`:
 (defconst nimsuggest-path nil)
 ```
 
-Generally, `nim-mode` uses nimsuggest via `company-mode`, `eldoc-mode`,
+`nim-mode` uses nimsuggest via `company-mode`, `eldoc-mode`,
 `flycheck-mode`, and `nimsuggest-find-definition` (goto definition).
 
 If you are completely new to Emacs, please check next section as well.
