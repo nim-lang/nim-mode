@@ -246,6 +246,7 @@ crash when some emacsclients open the same file."
   :lighter " nimsuggest"
   :keymap nimsuggest-mode-map
   (when nimsuggest-mode
+    (when (require 'xref nil t) (nimsuggest-xref 'on))
     (nimsuggest-ensure)))
 
 (defun nimsuggest-force-stop ()
@@ -593,7 +594,6 @@ DEFS is group of definitions from nimsuggest."
   '(progn
      (defun nimsuggest--xref-backend () 'nimsuggest)
      (defun nimsuggest-xref (&optional on-or-off)
-       (nim-log "xref status: %s" on-or-off)
        (cl-case on-or-off
          (on  (add-hook 'xref-backend-functions #'nimsuggest--xref-backend nil t))
          (off (remove-hook 'xref-backend-functions #'nimsuggest--xref-backend t))
