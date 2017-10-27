@@ -704,6 +704,7 @@ DEFS is group of definitions from nimsuggest."
                  (?o 'outline))))
       (if (null key)
           (minibuffer-message "unexpected key %c" input)
+        (message "calling nimsuggest ...")
         (nimsuggest--call-epc
          key
          (lambda (args)
