@@ -284,8 +284,8 @@ List of WORDS are used as completion candidates."
 
 
 ;;; Company-mode integration
-(eval-after-load "company"
-  '(defun company-nimsuggest (command &optional arg &rest _args)
+(with-eval-after-load "company"
+  (defun company-nimsuggest (command &optional arg &rest _args)
      "A function used to be as company-backend for `nim-mode'."
      (interactive (list 'interactive))
      (cl-case command

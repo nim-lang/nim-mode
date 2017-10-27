@@ -586,59 +586,58 @@ DEFS is group of definitions from nimsuggest."
 
 ;;; xref integration
 ;; This package likely be supported on Emacs 25.1 or later
-(eval-after-load "xref"
-  '(progn
-     (defun nimsuggest--xref-backend () 'nimsuggest)
-     (defun nimsuggest-xref (&optional on-or-off)
-       (cl-case on-or-off
-         (on  (add-hook 'xref-backend-functions #'nimsuggest--xref-backend nil t))
-         (off (remove-hook 'xref-backend-functions #'nimsuggest--xref-backend t))
-         (t (when on-or-off
-              (nimsuggest-xref (if nimsuggest-mode 'on 'off))))))
+(with-eval-after-load "xref"
+  (defun nimsuggest--xref-backend () 'nimsuggest)
+  (defun nimsuggest-xref (&optional on-or-off)
+    (cl-case on-or-off
+      (on  (add-hook 'xref-backend-functions #'nimsuggest--xref-backend nil t))
+      (off (remove-hook 'xref-backend-functions #'nimsuggest--xref-backend t))
+      (t (when on-or-off
+           (nimsuggest-xref (if nimsuggest-mode 'on 'off))))))
 
-     (add-hook 'nimsuggest-mode-hook 'nimsuggest-xref)
+  (add-hook 'nimsuggest-mode-hook 'nimsuggest-xref)
 
-     (cl-defmethod xref-backend-identifier-at-point ((_backend (eql nimsuggest)))
-       "Return string or nil for identifier at point."
-       ;; Well this function may not needed for current xref functions for
-       ;; nimsuggest backend.
-       (with-syntax-table nim-dotty-syntax-table
-         (let ((thing (thing-at-point 'symbol)))
-           (and thing (substring-no-properties thing)))))
+  (cl-defmethod xref-backend-identifier-at-point ((_backend (eql nimsuggest)))
+    "Return string or nil for identifier at point."
+    ;; Well this function may not needed for current xref functions for
+    ;; nimsuggest backend.
+    (with-syntax-table nim-dotty-syntax-table
+      (let ((thing (thing-at-point 'symbol)))
+        (and thing (substring-no-properties thing)))))
 
-     (defun nimsuggest--xref-make-obj (id def)
-       (let ((summary id)
-             (location (xref-make-file-location
-                        (nimsuggest--epc-filePath def)
-                        (nimsuggest--epc-line def)
-                        (nimsuggest--epc-column def))))
-         (xref-make summary location)))
+  (defun nimsuggest--xref-make-obj (id def)
+    (let ((summary id)
+          (location (xref-make-file-location
+                     (nimsuggest--epc-filePath def)
+                     (nimsuggest--epc-line def)
+                     (nimsuggest--epc-column def))))
+      (xref-make summary location)))
 
-     (defun nimsuggest--xref (query id)
-       (nimsuggest--call-sync
-        query
-        (lambda (results)
-          (cond
-           ((null results) nil)
-           ((listp results)
-            (cl-loop for result in results
-                     collect (nimsuggest--xref-make-obj id result)))))))
+  (defun nimsuggest--xref (query id)
+    (nimsuggest--call-sync
+     query
+     (lambda (results)
+       (cond
+        ((null results) nil)
+        ((listp results)
+         (cl-loop for result in results
+                  collect (nimsuggest--xref-make-obj id result)))))))
 
-     (cl-defmethod xref-backend-definitions ((_backend (eql nimsuggest)) id)
-       (nimsuggest--xref 'def id))
+  (cl-defmethod xref-backend-definitions ((_backend (eql nimsuggest)) id)
+    (nimsuggest--xref 'def id))
 
-     (cl-defmethod xref-backend-references ((_backend (eql nimsuggest)) id)
-       (nimsuggest--xref 'dus id))
+  (cl-defmethod xref-backend-references ((_backend (eql nimsuggest)) id)
+    (nimsuggest--xref 'dus id))
 
-     ;; just define empty backend to use `xref-backend-references' for
-     ;; nimsuggest.
-     (cl-defmethod xref-backend-identifier-completion-table
-       ((_backend (eql nimsuggest))))
+  ;; just define empty backend to use `xref-backend-references' for
+  ;; nimsuggest.
+  (cl-defmethod xref-backend-identifier-completion-table
+    ((_backend (eql nimsuggest))))
 
-     ;; Not implement yet, or not sure maybe, won't...
-     ;; (cl-defmethod xref-backend-apropos ((_backend (eql nimsuggest)) pattern))
+  ;; Not implement yet, or not sure maybe, won't...
+  ;; (cl-defmethod xref-backend-apropos ((_backend (eql nimsuggest)) pattern))
 
-     )) ; end of eval-after-load xref
+  ) ; end of with-eval-after-load xref
 
 ;; Work around for old Emacsen
 (if (fboundp 'xref-find-definitions)
