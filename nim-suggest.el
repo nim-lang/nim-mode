@@ -383,25 +383,26 @@ was outdated."))
       (switch-to-buffer-other-window "*nim-doc*"))
     (setq buffer-read-only nil)
     (erase-buffer)
-    (cl-loop for str in (list
-                         ;; (format "debug %s\n" nimsuggest--doc-args)
-                         (let ((nominator (caar nimsuggest--doc-args))
-                               (denominator (length nimsuggest--doc-args)))
-                           (format "%s %s\n"
-                                   (mapconcat 'identity (nimsuggest--epc-qualifiedPath def) " ")
-                                   (if (eq 1 denominator)
-                                       ""
-                                     (format "%s/%s %s" nominator denominator
-                                             "-- < next, > previous"))))
-                         (format "Signature\n#########\n%s\n"
-                                 (format "%s %s"
-                                         (nimsuggest--epc-symkind def)
-                                         (nimsuggest--epc-forth def)))
-                         (format "Document\n########\n%s\n"
-                                 (nimsuggest--epc-doc def))
-                         (format "Location\n########\n%s\n"
-                                 (nimsuggest--epc-filePath def)))
-             do (insert (concat str "\n")))
+    (cl-mapcar
+     (lambda (x) (insert (concat x "\n")))
+     (list
+      ;; (format "debug %s\n" nimsuggest--doc-args)
+      (let ((nominator (caar nimsuggest--doc-args))
+            (denominator (length nimsuggest--doc-args)))
+        (format "%s %s\n"
+                (mapconcat 'identity (nimsuggest--epc-qualifiedPath def) " ")
+                (if (eq 1 denominator)
+                    ""
+                  (format "%s/%s %s" nominator denominator
+                          "-- < next, > previous"))))
+      (format "Signature\n#########\n%s\n"
+              (format "%s %s"
+                      (nimsuggest--epc-symkind def)
+                      (nimsuggest--epc-forth def)))
+      (format "Document\n########\n%s\n"
+              (nimsuggest--epc-doc def))
+      (format "Location\n########\n%s\n"
+              (nimsuggest--epc-filePath def))))
     ;; For highlight stuff
     (when (fboundp 'rst-mode) (rst-mode))
     (goto-char (point-min))
