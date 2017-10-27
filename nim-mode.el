@@ -4,7 +4,7 @@
 ;; Description: A major mode for the Nim programming language
 ;; Author: Simon Hafner
 ;; Maintainer: Simon Hafner <hafnersimon@gmail.com>
-;; Version: 0.4.1
+;; Version: 0.4.2
 ;; Keywords: nim languages
 ;; Compatibility: GNU Emacs 24.4
 ;; Package-Requires: ((emacs "24.4") (epc "0.1.1") (let-alist "1.0.1") (commenter "0.5.1") (flycheck-nimsuggest "0.8.1"))
