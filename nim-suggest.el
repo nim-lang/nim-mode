@@ -41,16 +41,16 @@
 (cl-defstruct nimsuggest--epc
   section symkind qualifiedPath filePath forth line column doc quality prefix)
 
-(defun nimsuggest--parse-epc (obj method)
-  "Parse OBJ according to METHOD."
+(defun nimsuggest--parse-epc (epc-result method)
+  "Parse EPC-RESULT according to METHOD."
   (cl-case method
-    ((chk highlight outline) obj)
+    ((chk highlight outline) epc-result)
     ((sug con def use dus)
      (cl-mapcar
       (lambda (sublist)
         (apply #'make-nimsuggest--epc
                (cl-mapcan #'list nimsuggest--epc-order sublist)))
-      obj))))
+      epc-result))))
 
 (defvar nimsuggest--epc-processes-alist nil)
 
