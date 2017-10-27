@@ -939,7 +939,7 @@ But, string-face's CHAR is ignored.  If you set POS, the check starts from POS."
 ;; below functions were copied from subr-x.el
 ;; (I tried dash’s -if-let, but unfortunately it didn’t pass tests
 ;; , though not sure why)
-(unless (or (fboundp 'if-let) (fboundp 'when-let))
+(unless (or (fboundp 'if-let*) (fboundp 'when-let*))
   (with-no-warnings ; <- suppress fboudp return value is empty
     (eval-when-compile
       (defmacro internal--thread-argument (first? &rest forms)
@@ -970,12 +970,30 @@ threading."
                  (debug (form &rest [&or symbolp (sexp &rest form)])))
         `(internal--thread-argument t ,@forms))
 
+      (defmacro thread-last (&rest forms)
+        "Thread FORMS elements as the last argument of their successor.
+Example:
+    (thread-last
+      5
+      (+ 20)
+      (/ 25)
+      -
+      (+ 40))
+Is equivalent to:
+    (+ 40 (- (/ 25 (+ 20 5))))
+Note how the single `-' got converted into a list before
+threading."
+        (declare (indent 1) (debug thread-first))
+        `(internal--thread-argument nil ,@forms))
 
       (defsubst internal--listify (elt)
-        "Wrap ELT in a list if it is not one."
-        (if (not (listp elt))
-            (list elt)
-          elt))
+        "Wrap ELT in a list if it is not one.
+If ELT is of the form ((EXPR)), listify (EXPR) with a dummy symbol."
+        (cond
+         ((symbolp elt) (list elt elt))
+         ((null (cdr elt))
+          (list (make-symbol "s") (car elt)))
+         (t elt)))
 
       (defsubst internal--check-binding (binding)
         "Check BINDING is properly formed."
@@ -987,7 +1005,8 @@ threading."
 
       (defsubst internal--build-binding-value-form (binding prev-var)
         "Build the conditional value form for BINDING using PREV-VAR."
-        `(,(car binding) (and ,prev-var ,(cadr binding))))
+        (let ((var (car binding)))
+          `(,var (and ,prev-var ,(cadr binding)))))
 
       (defun internal--build-binding (binding prev-var)
         "Check and build a single BINDING with PREV-VAR."
@@ -1006,31 +1025,36 @@ threading."
                       binding))
                   bindings)))
 
-      (defmacro if-let (bindings then &rest else)
-        "Process BINDINGS and if all values are non-nil eval THEN, else ELSE.
-Argument BINDINGS is a list of tuples whose car is a symbol to be
-bound and (optionally) used in THEN, and its cadr is a sexp to be
-evalled to set symbol's value.  In the special case you only want
-to bind a single value, BINDINGS can just be a plain tuple."
-        (declare (indent 2)
-                 (debug ([&or (&rest (symbolp form)) (symbolp form)] form body)))
-        (when (and (<= (length bindings) 2)
-                   (not (listp (car bindings))))
-          ;; Adjust the single binding case
-          (setq bindings (list bindings)))
-        `(let* ,(internal--build-bindings bindings)
-           (if ,(car (internal--listify (car (last bindings))))
-               ,then
-             ,@else)))
+      (defmacro if-let* (varlist then &rest else)
+        "Bind variables according to VARLIST and eval THEN or ELSE.
+Each binding is evaluated in turn, and evaluation stops if a
+binding value is nil.  If all are non-nil, the value of THEN is
+returned, or the last form in ELSE is returned.
 
-      (defmacro when-let (bindings &rest body)
-        "Process BINDINGS and if all values are non-nil eval BODY.
-Argument BINDINGS is a list of tuples whose car is a symbol to be
-bound and (optionally) used in BODY, and its cadr is a sexp to be
-evalled to set symbol's value.  In the special case you only want
-to bind a single value, BINDINGS can just be a plain tuple."
-        (declare (indent 1) (debug if-let))
-        (list 'if-let bindings (macroexp-progn body))))))
+Each element of VARLIST is a list (SYMBOL VALUEFORM) which binds
+SYMBOL to the value of VALUEFORM.  An element can additionally
+be of the form (VALUEFORM), which is evaluated and checked for
+nil; i.e. SYMBOL can be omitted if only the test result is of
+interest."
+        (declare (indent 2)
+                 (debug ((&rest [&or symbolp (symbolp form) (sexp)])
+                         form body)))
+        (if varlist
+            `(let* ,(setq varlist (internal--build-bindings varlist))
+               (if ,(caar (last varlist))
+                   ,then
+                 ,@else))
+          `(let* () ,then)))
+
+      (defmacro when-let* (varlist &rest body)
+        "Bind variables according to VARLIST and conditionally eval BODY.
+Each binding is evaluated in turn, and evaluation stops if a
+binding value is nil.  If all are non-nil, the value of the last
+form in BODY is returned.
+
+VARLIST is the same as in `if-let*'."
+        (declare (indent 1) (debug if-let*))
+        (list 'if-let* varlist (macroexp-progn body))))))
 
 (provide 'nim-helper)
 ;;; nim-helper.el ends here

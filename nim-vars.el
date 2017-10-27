@@ -165,6 +165,8 @@ Note that this directory is removed when you exit from Emacs."
   :type 'directory
   :group 'nim)
 
+(defvar nimsuggest-eldoc-function 'nimsuggest-eldoc--nimsuggest)
+
 (defvar nimsuggest-ignore-dir-regex
   (rx (or "\\" "/") (in "nN") "im" (or "\\" "/") "compiler" (or "\\" "/")))
 (defvar nim--inside-compiler-dir-p nil)
@@ -266,6 +268,10 @@ See also ‘nim-syntax-disable-keywords-list’."
     table)
   "Dotty syntax table for Nim files.
 It makes underscores and dots word constituent chars.")
+
+(defvar nimscript-mode-syntax-table
+  (copy-syntax-table nim-mode-syntax-table)
+  "Syntax table for NimScript files.")
 
 (defconst nim-comment
   `((single

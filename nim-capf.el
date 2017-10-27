@@ -85,19 +85,19 @@
 
 (defun nim-capf--format-candidate (cand)
   "Put text property to CAND."
-  (let ((qpath (nimsuggest--epc-qualifiedPath cand)))
+  (let ((qpath (nim--epc-qpath cand)))
     (propertize
      (car (last qpath))
-     :nim-line   (nimsuggest--epc-line     cand)
-     :nim-column (nimsuggest--epc-column   cand)
-     :nim-type   (nimsuggest--epc-forth    cand)
-     :nim-doc    (nimsuggest--epc-doc      cand)
+     :nim-line   (nim--epc-line     cand)
+     :nim-column (nim--epc-column   cand)
+     :nim-type   (nim--epc-forth    cand)
+     :nim-doc    (nim--epc-doc      cand)
      :nim-qpath  qpath
-     :nim-file   (nimsuggest--epc-filePath cand)
-     :nim-sk     (nimsuggest--epc-symkind  cand)
+     :nim-file   (nim--epc-file cand)
+     :nim-sk     (nim--epc-symkind  cand)
      :nim-sig    (assoc-default
-                  (nimsuggest--epc-symkind cand) nim-capf--type-abbrevs)
-     :nim-prefix     (nimsuggest--epc-prefix   cand))))
+                  (nim--epc-symkind cand) nim-capf--type-abbrevs)
+     :nim-prefix     (nim--epc-prefix   cand))))
 
 (defun nim-capf--format-candidates (_arg candidates)
   "Put text attributes to CANDIDATES."
@@ -136,11 +136,9 @@ If SKIP is non-nil, skip length check ."
 
 (defun nim-capf--docsig (candidate)
   "Return meta/docsig information for company-mode of CANDIDATE."
-  (let ((forth   (get-text-property 0 :nim-type  candidate))
-        (symkind (get-text-property 0 :nim-sk    candidate))
-        (qpath   (get-text-property 0 :nim-qpath candidate))
-        (doc     (get-text-property 0 :nim-doc   candidate)))
-    (nimsuggest--format forth symkind qpath doc)))
+  (apply 'nimsuggest--format
+           (mapcar `(lambda (x) (get-text-property 0 x ,candidate))
+                   '(:nim-type :nim-sk :nim-qpath :nim-doc))))
 
 (defun nim-capf--location (cand)
   "Get location info for CAND."
@@ -206,9 +204,9 @@ If SKIP is non-nil, skip length check ."
 
 (defun nim-capf--post-completion (candidate)
   "Post complete function based on CANDIDATE."
-  (when-let ((type-sig (get-text-property 0 :nim-sig candidate)))
+  (when-let* ((type-sig (get-text-property 0 :nim-sig candidate)))
     (cl-case (intern type-sig)
-      ((f T)
+      ((f F m I c M T)
        (insert "()")
        (backward-char 1)
        (run-hook-with-args 'nim-capf-after-exit-function-hook candidate)))))
@@ -284,8 +282,8 @@ List of WORDS are used as completion candidates."
 
 
 ;;; Company-mode integration
-(eval-after-load "company"
-  '(defun company-nimsuggest (command &optional arg &rest _args)
+(with-eval-after-load "company"
+  (defun company-nimsuggest (command &optional arg &rest _args)
      "A function used to be as company-backend for `nim-mode'."
      (interactive (list 'interactive))
      (cl-case command
@@ -305,6 +303,7 @@ List of WORDS are used as completion candidates."
 
 
 ;; Setup function
+
 ;;;###autoload
 (defun nim-capf-setup ()
   "Setup."
@@ -329,6 +328,8 @@ List of WORDS are used as completion candidates."
     ;; version works with :async keyword.
     (when (bound-and-true-p company-backends)
       (add-to-list 'company-backends 'company-nimsuggest))))
+
+;;;###autoload (add-hook 'nim-suggest-mode-hook 'nim-capf-setup)
 
 
 ;; Suggestion-box-el

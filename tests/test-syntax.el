@@ -132,7 +132,6 @@
 
  ) ; end of describe function
 
-(require 'nimscript-mode)
 (describe "Syntax nimscript-mode"
  (before-each
   (set-buffer (get-buffer-create "*Test*"))

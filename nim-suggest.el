@@ -32,25 +32,24 @@
 (require 'epc)
 (require 'cl-lib)
 
-;;; If you change the order here, make sure to change it over in
-;;; nimsuggest.nim too.
-(defconst nimsuggest--epc-order
-  '(:section :symkind :qualifiedPath :filePath :forth :line :column
-    :doc :quality :prefix))
+(defconst nim--epc-keywords
+  '(:section :symkind :qpath :file :forth :line :column :doc :quality :prefix)
+  "Keywords for SexpNode type on nimsuggest.nim.
+Note: qpath -- qualifiedPath, file -- filePath.")
 
-(cl-defstruct nimsuggest--epc
-  section symkind qualifiedPath filePath forth line column doc quality prefix)
+(cl-defstruct nim--epc
+  section symkind qpath file forth line column doc quality prefix)
 
-(defun nimsuggest--parse-epc (obj method)
-  "Parse OBJ according to METHOD."
+(defun nimsuggest--parse-epc (epc-result method)
+  "Parse EPC-RESULT according to METHOD."
   (cl-case method
-    ((chk highlight outline) obj)
+    ((chk highlight outline) epc-result)
     ((sug con def use dus)
      (cl-mapcar
       (lambda (sublist)
-        (apply #'make-nimsuggest--epc
-               (cl-mapcan #'list nimsuggest--epc-order sublist)))
-      obj))))
+        (apply #'make-nim--epc
+               (cl-mapcan #'list nim--epc-keywords sublist)))
+      epc-result))))
 
 (defvar nimsuggest--epc-processes-alist nil)
 
@@ -113,9 +112,7 @@ def: where the symbol is defined
 use: where the symbol is used
 dus: def + use
 
-The CALLBACK is called with a list of ‘nimsuggest--epc’ structs.
-
-REPORT-FN is for `flymake'.  See `flymake-diagnostic-functions'"
+The CALLBACK is called with a list of ‘nim--epc’ structs."
   (when (nimsuggest-available-p)
     ;; See also compiler/modulegraphs.nim for dirty file
     (let ((temp-dirty-file (nimsuggest--save-buffer-temporarly))
@@ -138,7 +135,7 @@ REPORT-FN is for `flymake'.  See `flymake-diagnostic-functions'"
         (deferred:nextc it
           (lambda (x)
             (nim-log "EPC(%S) nextc" (symbol-name method))
-            (funcall callback (nimsuggest--parse-epc x method))))
+            (when x (funcall callback (nimsuggest--parse-epc x method)))))
         (deferred:watch it
           (lambda (_)
             (unless (get-buffer buf)
@@ -232,7 +229,7 @@ crash when some emacsclients open the same file."
 
 (defcustom nimsuggest-mode-hook nil
   "Hook run when entering Nimsuggest mode."
-  :options '(flycheck-nimsuggest-setup nimsuggest-flymake-setup nimsuggest-xref)
+  :options '(flycheck-nimsuggest-setup nimsuggest-flymake-setup nimsuggest-xref-setup)
   :type 'hook
   :group 'nim)
 
@@ -242,7 +239,6 @@ crash when some emacsclients open the same file."
   :lighter " nimsuggest"
   :keymap nimsuggest-mode-map
   (when nimsuggest-mode
-    (when (require 'xref nil t) (nimsuggest-xref 'on))
     (nimsuggest-ensure)))
 
 (defun nimsuggest-force-stop ()
@@ -251,7 +247,7 @@ crash when some emacsclients open the same file."
   (remove-hook 'flycheck-checkers 'nim-nimsuggest)
   (remove-hook 'flymake-diagnostic-functions 'flymake-nimsuggest t)
   (nim-eldoc-off)
-  (nimsuggest-xref 'off))
+  (nimsuggest-xref-on-or-off 'off))
 
 (defun nimsuggest-ensure ()
   "Ensure that users installed nimsuggest executable."
@@ -384,25 +380,26 @@ was outdated."))
       (switch-to-buffer-other-window "*nim-doc*"))
     (setq buffer-read-only nil)
     (erase-buffer)
-    (cl-loop for str in (list
-                         ;; (format "debug %s\n" nimsuggest--doc-args)
-                         (let ((nominator (caar nimsuggest--doc-args))
-                               (denominator (length nimsuggest--doc-args)))
-                           (format "%s %s\n"
-                                   (mapconcat 'identity (nimsuggest--epc-qualifiedPath def) " ")
-                                   (if (eq 1 denominator)
-                                       ""
-                                     (format "%s/%s %s" nominator denominator
-                                             "-- < next, > previous"))))
-                         (format "Signature\n#########\n%s\n"
-                                 (format "%s %s"
-                                         (nimsuggest--epc-symkind def)
-                                         (nimsuggest--epc-forth def)))
-                         (format "Document\n########\n%s\n"
-                                 (nimsuggest--epc-doc def))
-                         (format "Location\n########\n%s\n"
-                                 (nimsuggest--epc-filePath def)))
-             do (insert (concat str "\n")))
+    (cl-mapcar
+     (lambda (x) (insert (concat x "\n")))
+     (list
+      ;; (format "debug %s\n" nimsuggest--doc-args)
+      (let ((nominator (caar nimsuggest--doc-args))
+            (denominator (length nimsuggest--doc-args)))
+        (format "%s %s\n"
+                (mapconcat 'identity (nim--epc-qpath def) " ")
+                (if (eq 1 denominator)
+                    ""
+                  (format "%s/%s %s" nominator denominator
+                          "-- < next, > previous"))))
+      (format "Signature\n#########\n%s\n"
+              (format "%s %s"
+                      (nim--epc-symkind def)
+                      (nim--epc-forth def)))
+      (format "Document\n########\n%s\n"
+              (nim--epc-doc def))
+      (format "Location\n########\n%s\n"
+              (nim--epc-file def))))
     ;; For highlight stuff
     (when (fboundp 'rst-mode) (rst-mode))
     (goto-char (point-min))
@@ -439,9 +436,8 @@ was outdated."))
 ;; Manual configuration:
 ;;   (add-hook 'nimsuggest-mode-hook 'nimsuggest-flymake-setup)
 
-(if (version<= "26" (number-to-string emacs-major-version))
-    (add-hook 'nimsuggest-mode-hook 'nimsuggest-flymake-setup)
-  (add-hook 'nimsuggest-mode-hook 'flycheck-nimsuggest-setup))
+(when (version<= "26" (number-to-string emacs-major-version))
+  (add-hook 'nimsuggest-mode-hook 'nimsuggest-flymake-setup))
 
 ;;;###autoload
 (defun nimsuggest-flymake-setup()
@@ -545,12 +541,10 @@ See `flymake-diagnostic-functions' for REPORT-FN and ARGS."
 DEFS is group of definitions from nimsuggest."
   ;; TODO: switch if there are multiple defs
   (nim-log "ELDOC format")
-  (let* ((data    (cl-first defs))
-         (forth   (nimsuggest--epc-forth         data))
-         (symKind (nimsuggest--epc-symkind       data))
-         (qpath   (nimsuggest--epc-qualifiedPath data))
-         (doc     (nimsuggest--epc-doc           data)))
-    (nimsuggest--format forth symKind qpath doc)))
+  (let ((data (cl-first defs)))
+    (apply 'nimsuggest--format
+           (mapcar (lambda (x) (funcall x data))
+           '(nim--epc-forth nim--epc-symkind nim--epc-qpath nim--epc-doc)))))
 
 (defun nimsuggest-eldoc--call ()
   (save-excursion
@@ -561,7 +555,7 @@ DEFS is group of definitions from nimsuggest."
      'dus 'nimsuggest-eldoc--update)))
 
 (defun nimsuggest-eldoc--update (defs)
-  (if (not (nim-eldoc--on-string-p))
+  (if (not (nim-eldoc--try-p))
       (nim-log "ELDOC stop update")
     (nim-log "ELDOC update")
     (if defs
@@ -586,90 +580,134 @@ DEFS is group of definitions from nimsuggest."
 
 ;;; xref integration
 ;; This package likely be supported on Emacs 25.1 or later
-(eval-after-load "xref"
-  '(progn
-     (defun nimsuggest--xref-backend () 'nimsuggest)
-     (defun nimsuggest-xref (&optional on-or-off)
-       (cl-case on-or-off
-         (on  (add-hook 'xref-backend-functions #'nimsuggest--xref-backend nil t))
-         (off (remove-hook 'xref-backend-functions #'nimsuggest--xref-backend t))
-         (t (when on-or-off
-              (nimsuggest-xref (if nimsuggest-mode 'on 'off))))))
 
-     (add-hook 'nimsuggest-mode-hook 'nimsuggest-xref)
+(defvar nimsuggest-find-definition-function nil
+  "Function for `nimsuggest-find-definition'.")
 
-     (cl-defmethod xref-backend-identifier-at-point ((_backend (eql nimsuggest)))
-       "Return string or nil for identifier at point."
-       ;; Well this function may not needed for current xref functions for
-       ;; nimsuggest backend.
-       (with-syntax-table nim-dotty-syntax-table
-         (let ((thing (thing-at-point 'symbol)))
-           (and thing (substring-no-properties thing)))))
+;;;###autoload (add-hook 'nimsuggest-mode-hook 'nimsuggest-xref-setup)
+;;;###autoload
+(defun nimsuggest-xref-setup ()
+  (cond
+   ((not (require 'xref nil t))
+    (setq nimsuggest-find-definition-function 'nimsuggest-find-definition-old)
+    ;; Note below configuration were removed on the future
+    (define-key nimsuggest-mode-map (kbd "M-.") #'nimsuggest-find-definition)
+    (define-key nimsuggest-mode-map (kbd "M-,") #'pop-tag-mark))
+   ((version<= "25.1.0" emacs-version)
+    (require 'xref)
+    (setq nimsuggest-find-definition-function 'xref-find-definitions)
+    (nimsuggest-xref-on-or-off (if nimsuggest-mode 'on 'off)))
+   (t (nim-log "xref unexpected condition"))))
 
-     (defun nimsuggest--xref-make-obj (id def)
-       (let ((summary id)
-             (location (xref-make-file-location
-                        (nimsuggest--epc-filePath def)
-                        (nimsuggest--epc-line def)
-                        (nimsuggest--epc-column def))))
-         (xref-make summary location)))
+(defun nimsuggest-xref-on-or-off (on-or-off)
+  (cl-case on-or-off
+    (on  (add-hook 'xref-backend-functions #'nimsuggest--xref-backend nil t))
+    (off (remove-hook 'xref-backend-functions #'nimsuggest--xref-backend t))))
 
-     (defun nimsuggest--xref (query id)
-       (nimsuggest--call-sync
-        query
-        (lambda (results)
-          (cond
-           ((null results) nil)
-           ((listp results)
-            (cl-loop for result in results
-                     collect (nimsuggest--xref-make-obj id result)))))))
+(defun nimsuggest-find-definition ()
+  (interactive)
+  (call-interactively nimsuggest-find-definition-function))
 
-     (cl-defmethod xref-backend-definitions ((_backend (eql nimsuggest)) id)
-       (nimsuggest--xref 'def id))
+(with-eval-after-load "xref"
+  (defun nimsuggest--xref-backend () 'nimsuggest)
+  (cl-defmethod xref-backend-identifier-at-point ((_backend (eql nimsuggest)))
+    "Return string or nil for identifier at point."
+    ;; Well this function may not needed for current xref functions for
+    ;; nimsuggest backend.
+    (with-syntax-table nim-dotty-syntax-table
+      (let ((thing (thing-at-point 'symbol)))
+        (and thing (substring-no-properties thing)))))
 
-     (cl-defmethod xref-backend-references ((_backend (eql nimsuggest)) id)
-       (nimsuggest--xref 'dus id))
+  (defun nimsuggest--xref-make-obj (id def)
+    (let ((summary id)
+          (location (xref-make-file-location
+                     (nim--epc-file def)
+                     (nim--epc-line def)
+                     (nim--epc-column def))))
+      (xref-make summary location)))
 
-     ;; just define empty backend to use `xref-backend-references' for
-     ;; nimsuggest.
-     (cl-defmethod xref-backend-identifier-completion-table
-       ((_backend (eql nimsuggest))))
+  (defun nimsuggest--xref (query id)
+    (nimsuggest--call-sync
+     query
+     (lambda (results)
+       (cond
+        ((null results) nil)
+        ((listp results)
+         (cl-loop for result in results
+                  collect (nimsuggest--xref-make-obj id result)))))))
 
-     ;; Not implement yet, or not sure maybe, won't...
-     ;; (cl-defmethod xref-backend-apropos ((_backend (eql nimsuggest)) pattern))
+  (cl-defmethod xref-backend-definitions ((_backend (eql nimsuggest)) id)
+    (nimsuggest--xref 'def id))
 
-     )) ; end of eval-after-load xref
+  (cl-defmethod xref-backend-references ((_backend (eql nimsuggest)) id)
+    (nimsuggest--xref 'dus id))
 
-;; Work around for old Emacsen
-(if (fboundp 'xref-find-definitions)
-    (defun nimsuggest-find-definition (id)
-      "Go to the definition of the symbol currently under the cursor.
-This uses `xref-find-definitions' as backend."
-      (interactive (list (xref--read-identifier "Find definitions of: ")))
-      (xref-find-definitions id))
+  ;; just define empty backend to use `xref-backend-references' for
+  ;; nimsuggest.
+  (cl-defmethod xref-backend-identifier-completion-table
+    ((_backend (eql nimsuggest))))
 
-  ;; Note below configuration were removed on the future
-  (define-key nimsuggest-mode-map (kbd "M-.") #'nimsuggest-find-definition)
-  (define-key nimsuggest-mode-map (kbd "M-,") #'pop-tag-mark)
-  (require 'etags)
-  (defun nimsuggest-find-definition (&optional _id)
-    "Go to the definition of the symbol currently under the cursor."
-    (nimsuggest--call-epc
-     'def
-     (lambda (defs)
-       (let ((def (cl-first defs)))
-         (when (not def) (error "Definition not found"))
-         (if (fboundp 'xref-push-marker-stack)
-             (xref-push-marker-stack)
-           (with-no-warnings
-             (ring-insert find-tag-marker-ring (point-marker))))
-         (find-file (nimsuggest--epc-filePath def))
-         (goto-char (point-min))
-         (forward-line (1- (nimsuggest--epc-line def))))))))
+  ;; Not implement yet, or not sure maybe, won't...
+  ;; (cl-defmethod xref-backend-apropos ((_backend (eql nimsuggest)) pattern))
+
+  ) ; end of with-eval-after-load xref
+
+;; Workaround for old Emacsen
+(require 'etags)
+(defun nimsuggest-find-definition-old ()
+  "Go to the definition of the symbol currently under the cursor."
+  (nimsuggest--call-epc
+   'def
+   (lambda (defs)
+     (let ((def (cl-first defs)))
+       (when (not def) (error "Definition not found"))
+       (if (fboundp 'xref-push-marker-stack)
+           (xref-push-marker-stack)
+         (with-no-warnings
+           (ring-insert find-tag-marker-ring (point-marker))))
+       (find-file (nim--epc-file def))
+       (goto-char (point-min))
+       (forward-line (1- (nim--epc-line def)))))))
 
 (define-obsolete-function-alias 'nim-goto-sym 'nimsuggest-find-definition
   "2017/9/02")
 
+
+;;; Debug
+(defun nimsuggest--put (text where)
+  "Put text property to TEXT of WHERE."
+  (put-text-property where (1+ where) 'face 'success text))
+
+(defun nimsuggest--debug-prompt ()
+  "Return string for read key."
+  (let ((msgs '(sug (def . 2) dus use con highlight outline)))
+    (cl-loop for msg in msgs
+             for text = (symbol-name (if (symbolp msg) msg (car msg)))
+             for where = (if (symbolp msg) 0 (cdr msg))
+             do (nimsuggest--put text where)
+             collect text into res
+             finally return (mapconcat 'identity res " "))))
+
+(defun nimsuggest--debug-print ()
+  "Print result of nimsuggest's epc call."
+  (interactive)
+  (let ((input (read-key (nimsuggest--debug-prompt))))
+    (let ((key (cl-case input
+                 (?s 'sug)
+                 (?f 'def)
+                 (?d 'dus)
+                 (?u 'use)
+                 (?c 'con)
+                 (?h 'highlight)
+                 (?o 'outline))))
+      (if (null key)
+          (minibuffer-message "unexpected key %c" input)
+        (nimsuggest--call-epc
+         key
+         (lambda (args)
+           (message "nimsuggest's result:\n%s" args)))))))
+
+;; (define-key nimsuggest-mode-map (kbd "C-8") 'nimsuggest--debug-print)
 
 (provide 'nim-suggest)
 ;;; nim-suggest.el ends here
