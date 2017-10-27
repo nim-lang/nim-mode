@@ -23,8 +23,17 @@
 
 ;;; Commentary:
 
-;; memo
-;; https://irclogs.nim-lang.org/12-07-2017.html
+;; -- document is still work in progress --
+;; Supporting features:
+;; - Xref package (cross reference package for Emacs) -- from Emacs 25.1
+;; - flycheck/flymake (on the fly linter)
+;;   - flycheck-nimsugget is other repo
+;;   - flymake-nimsuggest is only available if you use Emacs 26 or higher
+;; - eldoc (help on the hover)
+;; - company-mode (auto-completion)
+
+;; TODO: write manual configuration, but basically you can find
+;; `nimsuggest-mode-hook' what this package does though.
 
 ;;; Code:
 
@@ -33,9 +42,18 @@
 (require 'cl-lib)
 
 (defconst nim--epc-keywords
-  '(:section :symkind :qpath :file :forth :line :column :doc :quality :prefix)
-  "Keywords for SexpNode type on nimsuggest.nim.
-Note: qpath -- qualifiedPath, file -- filePath.")
+  ;; Those names come from suggest.nim
+  '(:section ; sug, con, def, use, dus, highlight, outline
+    :symkind ; symKind
+    :qpath   ; qualifiedPath
+    :file    ; filePath
+    :forth   ; type
+    :line    ; min is 1 in suggest.nim
+    :column  ; min is 0 in suggest.nim
+    :doc     ; document
+    :quality ; rank of completion
+    :prefix) ; matching state. See also prefixmatches.nim
+  "Keywords for SexpNode type on nimsuggest.nim.")
 
 (cl-defstruct nim--epc
   section symkind qpath file forth line column doc quality prefix)
@@ -56,6 +74,8 @@ Note: qpath -- qualifiedPath, file -- filePath.")
 (defvar nimsuggest-get-option-function nil
   "Function to get options for nimsuggest.")
 
+;; TODO: Is there something needed in this function?
+;; https://irclogs.nim-lang.org/12-07-2017.html
 (defun nimsuggest-get-options (project-path)
   "Get prerequisite options for EPC mode.
 
@@ -129,8 +149,8 @@ The CALLBACK is called with a list of ‘nim--epc’ structs."
                   temp-dirty-file))
            (t
             (list (buffer-file-name)
-                  (line-number-at-pos) ; min is 1 in suggest.nim
-                  (current-column)     ; min is 0 in suggest.nim
+                  (line-number-at-pos)
+                  (current-column)
                   temp-dirty-file))))
         (deferred:nextc it
           (lambda (x)
@@ -151,6 +171,8 @@ The CALLBACK is called with a list of ‘nim--epc’ structs."
                      (symbol-name method) (error-message-string err))))))))
 
 (defun nimsuggest--call-sync (method callback)
+  "Synchronous call for nimsuggest using METHOD.
+The CALLBACK function is called when it got the response."
   (let* ((buf (current-buffer))
          (start (time-to-seconds))
          (res 'trash))
@@ -273,6 +295,7 @@ was outdated."))
 ;; Utilities
 
 (defun nimsuggest--put-face (text face)
+  "Put FACE on the TEXT."
   (when (and text (string< "" text))
     (add-text-properties
      0 (length text)
@@ -280,6 +303,7 @@ was outdated."))
      text)))
 
 (defun nimsuggest--parse (forth)
+  "Parse FORTH element."
   (when (string-match
          (rx (group (1+ word)) (0+ " ")
              (group (1+ nonl)))
@@ -303,7 +327,7 @@ was outdated."))
         (substring short-str 0 (- (length short-str) minus-offset))))))
 
 (defun nimsuggest--format (forth symKind qpath doc)
-  "Highlight returned result from nimsuggest."
+  "Highlight returned result from nimsuggest of FORTH, SYMKIND, QPATH, and DOC."
   (let* ((doc (mapconcat 'identity (split-string doc "\n") ""))
          (name
           (if (eq (length (cdr qpath)) 1)
@@ -374,6 +398,7 @@ was outdated."))
        (nimsuggest--show-doc)))))
 
 (defun nimsuggest--show-doc ()
+  "Internal function for `nimsuggest-show-doc'."
   (let ((def (cdar nimsuggest--doc-args)))
     (get-buffer-create "*nim-doc*")
     (unless (equal (current-buffer) (get-buffer "*nim-doc*"))
@@ -436,6 +461,7 @@ was outdated."))
 ;; Manual configuration:
 ;;   (add-hook 'nimsuggest-mode-hook 'nimsuggest-flymake-setup)
 
+;; TODO: specify more specific version
 (when (version<= "26" (number-to-string emacs-major-version))
   (add-hook 'nimsuggest-mode-hook 'nimsuggest-flymake-setup))
 
@@ -449,7 +475,7 @@ was outdated."))
       (remove-hook 'flymake-diagnostic-functions 'flymake-nimsuggest t))))
 
 (defun nimsuggest--flymake-filter (errors buffer)
-  "Remove not related errors from ERRORS in the BUFFER."
+  "Remove not related ERRORS in the BUFFER."
   (cl-loop for (_ _ _ file type line col text _) in errors
            if (and (eq buffer (get-file-buffer file))
                    (<= 1 line) (<= 0 col))
@@ -457,7 +483,8 @@ was outdated."))
            collect (list file type line (1+ col) text)))
 
 (defun nimsuggest--flymake-region (file buf line col)
-  "Work around for https://github.com/nim-lang/nim-mode/issues/183."
+  "Calculate beg and end for FILE, BUF, LINE, and COL.
+Workaround for https://github.com/nim-lang/nim-mode/issues/183."
   (if (not (eq (get-file-buffer file) (current-buffer)))
       (cons 0 1)
     (cl-letf* (((symbol-function 'end-of-thing)
@@ -492,10 +519,15 @@ See `flymake-diagnostic-functions' for REPORT-FN and ARGS."
          (error
           (nim-log "FLYMAKE(error): %s" (error-message-string err))))))))
 
-;; TODO: not sure where to use this yet... Using this function cause
-;; to stop flymake completely which is not suitable for nimsuggest
-;; because nimsuggest re-start after its crush.
+;; TODO: is this really needed?
 (defun nimsuggest-flymake--panic (report-fn err)
+  "TODO: not sure where to use this yet...
+Using this function cause to stop flymake completely which is not
+suitable for nimsuggest because nimsuggest re-start after its
+crush.
+
+You can find explanation REPORT-FN at `flymake-diagnostic-functions'
+and the ERR is captured error."
   (when (member 'flymake-nimsuggest flymake-diagnostic-functions)
     (nim-log-err "FLYMAKE(ERR): %s" err)
     (funcall report-fn :panic :explanation err)))
@@ -507,6 +539,7 @@ See `flymake-diagnostic-functions' for REPORT-FN and ARGS."
 
 ;;;###autoload
 (defun nimsuggest-eldoc--nimsuggest ()
+  "Update `eldoc-last-message' by nimsuggest's information."
   (when (nimsuggest-available-p)
     (unless (nimsuggest-eldoc--same-try-p)
       (nimsuggest-eldoc--call))
@@ -515,6 +548,7 @@ See `flymake-diagnostic-functions' for REPORT-FN and ARGS."
       (assoc-default :str nimsuggest-eldoc--data))))
 
 (defun nimsuggest-eldoc--same-try-p ()
+  "Predicate function if same try or not."
   (or (and (equal (nim-current-symbol)
                   (assoc-default :name nimsuggest-eldoc--data))
            (eq (assoc-default :line nimsuggest-eldoc--data)
@@ -529,6 +563,7 @@ See `flymake-diagnostic-functions' for REPORT-FN and ARGS."
               (eq (1- (point)) (assoc-default :pos nimsuggest-eldoc--data)))))))
 
 (defun nimsuggest-eldoc--move ()
+  "Move cursor appropriate point where calling nimsuggest is suitable."
   (let ((pos  (point))
         (ppss (syntax-ppss)))
     (when (nim-eldoc-inside-paren-p)
@@ -547,30 +582,33 @@ DEFS is group of definitions from nimsuggest."
            '(nim--epc-forth nim--epc-symkind nim--epc-qpath nim--epc-doc)))))
 
 (defun nimsuggest-eldoc--call ()
+  "Call nimsuggest for eldoc."
   (save-excursion
     (nimsuggest-eldoc--move)
     (nim-log "ELDOC-1")
-    (nimsuggest--call-epc
-     ;; version 2 protocol can use: ideDef, ideUse, ideDus
-     'dus 'nimsuggest-eldoc--update)))
+    (nimsuggest--call-epc 'dus 'nimsuggest-eldoc--update)))
 
-(defun nimsuggest-eldoc--update (defs)
+(defun nimsuggest-eldoc--update (def-use)
+  "Update eldoc information from DEF-USE of nimsuggest."
   (if (not (nim-eldoc--try-p))
       (nim-log "ELDOC stop update")
     (nim-log "ELDOC update")
-    (if defs
-        (nimsuggest-eldoc--update-1 defs)
+    (if def-use
+        (nimsuggest-eldoc--update-1 def-use)
       (save-excursion
         (when (nim-eldoc-inside-paren-p)
           (nimsuggest-eldoc--move)
           (backward-char)
           (nimsuggest--call-epc 'dus 'nimsuggest-eldoc--update-1))))))
 
-(defun nimsuggest-eldoc--update-1 (defs)
-  (when defs
+(defun nimsuggest-eldoc--update-1 (epc-result)
+  "Save EPC-RESULT into `nimsuggest-eldoc--data'.
+And show message of `eldoc-last-message'.
+The EPC-RESULT can be result of both def and/or dus."
+  (when epc-result
     (setq nimsuggest-eldoc--data
           (list
-           (cons :str  (nim-eldoc-format-string defs))
+           (cons :str  (nim-eldoc-format-string epc-result))
            (cons :line (line-number-at-pos))
            (cons :name (nim-current-symbol))
            (cons :pos  (point))))
@@ -587,6 +625,7 @@ DEFS is group of definitions from nimsuggest."
 ;;;###autoload (add-hook 'nimsuggest-mode-hook 'nimsuggest-xref-setup)
 ;;;###autoload
 (defun nimsuggest-xref-setup ()
+  "Setup xref backend for nimsuggest."
   (cond
    ((not (nimsuggest-available-p))
     (nim-log "xref package needs nimsuggest"))
@@ -602,14 +641,21 @@ DEFS is group of definitions from nimsuggest."
    (t (nim-log "xref unexpected condition"))))
 
 (defun nimsuggest-xref-on-or-off (on-or-off)
+  "Turn on or off xref feature for nimsuggest backend.
+You can specify `on' or `off' symbol as the ON-OR-OFF."
   (cl-case on-or-off
     (on  (add-hook 'xref-backend-functions #'nimsuggest--xref-backend nil t))
     (off (remove-hook 'xref-backend-functions #'nimsuggest--xref-backend t))))
 
 (defun nimsuggest-find-definition ()
+  "This function is preserved for backward compatibility.
+If your Emacs support cross reference library `xref' (from Emacs
+25.1), you might want to use `xref-find-definition' instead which
+binds to `M-.' in default."
   (interactive)
   (call-interactively nimsuggest-find-definition-function))
 
+;; Define xref backend for nimsuggest
 (with-eval-after-load "xref"
   (defun nimsuggest--xref-backend () 'nimsuggest)
   (cl-defmethod xref-backend-identifier-at-point ((_backend (eql nimsuggest)))
@@ -655,6 +701,7 @@ DEFS is group of definitions from nimsuggest."
   ) ; end of with-eval-after-load xref
 
 ;; Workaround for old Emacsen
+;; TODO: remove those stuff after Emacs 25 or 26 is dominant.
 (require 'etags)
 (defun nimsuggest-find-definition-old ()
   "Go to the definition of the symbol currently under the cursor."
