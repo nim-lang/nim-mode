@@ -439,9 +439,8 @@ was outdated."))
 ;; Manual configuration:
 ;;   (add-hook 'nimsuggest-mode-hook 'nimsuggest-flymake-setup)
 
-(if (version<= "26" (number-to-string emacs-major-version))
-    (add-hook 'nimsuggest-mode-hook 'nimsuggest-flymake-setup)
-  (add-hook 'nimsuggest-mode-hook 'flycheck-nimsuggest-setup))
+(when (version<= "26" (number-to-string emacs-major-version))
+  (add-hook 'nimsuggest-mode-hook 'nimsuggest-flymake-setup))
 
 ;;;###autoload
 (defun nimsuggest-flymake-setup()
