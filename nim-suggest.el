@@ -225,10 +225,6 @@ crash when some emacsclients open the same file."
                  collect (cons file manager)
                  else do (epc:stop-epc manager))))
 
-
-;; To avoid warning
-(autoload 'flycheck-nimsuggest-setup "flycheck-nimsuggest")
-
 (defvar nimsuggest-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-d") #'nimsuggest-show-doc)

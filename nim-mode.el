@@ -7,8 +7,8 @@
 ;; Version: 0.4.1
 ;; Keywords: nim languages
 ;; Compatibility: GNU Emacs 24.4
-;; Package-Requires: ((emacs "24.4") (epc "0.1.1") (let-alist "1.0.1") (commenter "0.5.1") (flycheck "28"))
-;;
+;; Package-Requires: ((emacs "24.4") (epc "0.1.1") (let-alist "1.0.1") (commenter "0.5.1") (flycheck-nimsuggest "0.8.1"))
+
 ;; Taken over from James H. Fisher <jameshfisher@gmail.com>
 ;;
 ;; This program is free software; you can redistribute it and/or modify
