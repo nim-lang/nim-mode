@@ -679,5 +679,41 @@ DEFS is group of definitions from nimsuggest."
   "2017/9/02")
 
 
+;;; Debug
+(defun nimsuggest--put (text where)
+  "Put text property to TEXT of WHERE."
+  (put-text-property where (1+ where) 'face 'success text))
+
+(defun nimsuggest--debug-prompt ()
+  "Return string for read key."
+  (let ((msgs '(sug (def . 2) dus use con highlight outline)))
+    (cl-loop for msg in msgs
+             for text = (symbol-name (if (symbolp msg) msg (car msg)))
+             for where = (if (symbolp msg) 0 (cdr msg))
+             do (nimsuggest--put text where)
+             collect text into res
+             finally return (mapconcat 'identity res " "))))
+
+(defun nimsuggest--debug-print ()
+  "Print result of nimsuggest's epc call."
+  (interactive)
+  (let ((input (read-key (nimsuggest--debug-prompt))))
+    (let ((key (cl-case input
+                 (?s 'sug)
+                 (?f 'def)
+                 (?d 'dus)
+                 (?u 'use)
+                 (?c 'con)
+                 (?h 'highlight)
+                 (?o 'outline))))
+      (if (null key)
+          (minibuffer-message "unexpected key %c" input)
+        (nimsuggest--call-epc
+         key
+         (lambda (args)
+           (message "nimsuggest's result:\n%s" args)))))))
+
+;; (define-key nimsuggest-mode-map (kbd "C-8") 'nimsuggest--debug-print)
+
 (provide 'nim-suggest)
 ;;; nim-suggest.el ends here
