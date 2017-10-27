@@ -4,11 +4,11 @@
 ;; Description: A major mode for the Nim programming language
 ;; Author: Simon Hafner
 ;; Maintainer: Simon Hafner <hafnersimon@gmail.com>
-;; Version: 0.4.1
+;; Version: 0.4.2
 ;; Keywords: nim languages
 ;; Compatibility: GNU Emacs 24.4
-;; Package-Requires: ((emacs "24.4") (epc "0.1.1") (let-alist "1.0.1") (commenter "0.5.1") (flycheck "28"))
-;;
+;; Package-Requires: ((emacs "24.4") (epc "0.1.1") (let-alist "1.0.1") (commenter "0.5.1") (flycheck-nimsuggest "0.8.1"))
+
 ;; Taken over from James H. Fisher <jameshfisher@gmail.com>
 ;;
 ;; This program is free software; you can redistribute it and/or modify
@@ -70,6 +70,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;; Code:
+
+;; To update some autoloads on local for `el-get'
+;; (el-get-update-autoloads 'nim-mode)
 
 (require 'cl-lib)
 
@@ -199,6 +202,8 @@
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.nim\\'" . nim-mode))
 
+
+;;; Font locks
 (defun nim--set-font-lock-keywords (mode &optional arg)
   (let ((keywords
          (cl-case mode
@@ -247,7 +252,7 @@ Note that without above values will be treated as t."
                nim-font-lock-keywords-2
                nim-font-lock-keywords-3))))
 
-;;;;;;;;;;;;;;
+
 ;; Electric
 ;; (https://www.emacswiki.org/emacs/Electricity)
 
@@ -335,6 +340,7 @@ The ARGS are passed to original ‘delete-backward-char’ function."
         (indent-line-to back)
       (apply 'delete-backward-char args))))
 
+
 ;; hideshow.el (hs-minor-mode)
 (defun nim-hideshow-forward-sexp-function (_arg)
   "Nim specific `forward-sexp' function for `hs-minor-mode'.
@@ -354,7 +360,7 @@ Argument ARG is ignored."
    nim-hideshow-forward-sexp-function
    nil))
 
-
+
 ;; capf
 (autoload 'nim-capf-setup "nim-capf")
 
