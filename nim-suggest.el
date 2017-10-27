@@ -32,14 +32,13 @@
 (require 'epc)
 (require 'cl-lib)
 
-;;; If you change the order here, make sure to change it over in
-;;; nimsuggest.nim too.
-(defconst nimsuggest--epc-order
-  '(:section :symkind :qualifiedPath :filePath :forth :line :column
-    :doc :quality :prefix))
+(defconst nim--epc-keywords
+  '(:section :symkind :qpath :file :forth :line :column :doc :quality :prefix)
+  "Keywords for SexpNode type on nimsuggest.nim.
+Note: qpath -- qualifiedPath, file -- filePath.")
 
-(cl-defstruct nimsuggest--epc
-  section symkind qualifiedPath filePath forth line column doc quality prefix)
+(cl-defstruct nim--epc
+  section symkind qpath file forth line column doc quality prefix)
 
 (defun nimsuggest--parse-epc (epc-result method)
   "Parse EPC-RESULT according to METHOD."
@@ -48,8 +47,8 @@
     ((sug con def use dus)
      (cl-mapcar
       (lambda (sublist)
-        (apply #'make-nimsuggest--epc
-               (cl-mapcan #'list nimsuggest--epc-order sublist)))
+        (apply #'make-nim--epc
+               (cl-mapcan #'list nim--epc-keywords sublist)))
       epc-result))))
 
 (defvar nimsuggest--epc-processes-alist nil)
@@ -113,9 +112,7 @@ def: where the symbol is defined
 use: where the symbol is used
 dus: def + use
 
-The CALLBACK is called with a list of ‘nimsuggest--epc’ structs.
-
-REPORT-FN is for `flymake'.  See `flymake-diagnostic-functions'"
+The CALLBACK is called with a list of ‘nim--epc’ structs."
   (when (nimsuggest-available-p)
     ;; See also compiler/modulegraphs.nim for dirty file
     (let ((temp-dirty-file (nimsuggest--save-buffer-temporarly))
@@ -390,19 +387,19 @@ was outdated."))
       (let ((nominator (caar nimsuggest--doc-args))
             (denominator (length nimsuggest--doc-args)))
         (format "%s %s\n"
-                (mapconcat 'identity (nimsuggest--epc-qualifiedPath def) " ")
+                (mapconcat 'identity (nim--epc-qpath def) " ")
                 (if (eq 1 denominator)
                     ""
                   (format "%s/%s %s" nominator denominator
                           "-- < next, > previous"))))
       (format "Signature\n#########\n%s\n"
               (format "%s %s"
-                      (nimsuggest--epc-symkind def)
-                      (nimsuggest--epc-forth def)))
+                      (nim--epc-symkind def)
+                      (nim--epc-forth def)))
       (format "Document\n########\n%s\n"
-              (nimsuggest--epc-doc def))
+              (nim--epc-doc def))
       (format "Location\n########\n%s\n"
-              (nimsuggest--epc-filePath def))))
+              (nim--epc-file def))))
     ;; For highlight stuff
     (when (fboundp 'rst-mode) (rst-mode))
     (goto-char (point-min))
@@ -547,8 +544,7 @@ DEFS is group of definitions from nimsuggest."
   (let ((data (cl-first defs)))
     (apply 'nimsuggest--format
            (mapcar (lambda (x) (funcall x data))
-                   '(nimsuggest--epc-forth nimsuggest--epc-symkind
-                     nimsuggest--epc-qualifiedPath nimsuggest--epc-doc)))))
+           '(nim--epc-forth nim--epc-symkind nim--epc-qpath nim--epc-doc)))))
 
 (defun nimsuggest-eldoc--call ()
   (save-excursion
@@ -625,9 +621,9 @@ DEFS is group of definitions from nimsuggest."
   (defun nimsuggest--xref-make-obj (id def)
     (let ((summary id)
           (location (xref-make-file-location
-                     (nimsuggest--epc-filePath def)
-                     (nimsuggest--epc-line def)
-                     (nimsuggest--epc-column def))))
+                     (nim--epc-file def)
+                     (nim--epc-line def)
+                     (nim--epc-column def))))
       (xref-make summary location)))
 
   (defun nimsuggest--xref (query id)
@@ -669,9 +665,9 @@ DEFS is group of definitions from nimsuggest."
            (xref-push-marker-stack)
          (with-no-warnings
            (ring-insert find-tag-marker-ring (point-marker))))
-       (find-file (nimsuggest--epc-filePath def))
+       (find-file (nim--epc-file def))
        (goto-char (point-min))
-       (forward-line (1- (nimsuggest--epc-line def)))))))
+       (forward-line (1- (nim--epc-line def)))))))
 
 (define-obsolete-function-alias 'nim-goto-sym 'nimsuggest-find-definition
   "2017/9/02")

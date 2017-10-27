@@ -85,19 +85,19 @@
 
 (defun nim-capf--format-candidate (cand)
   "Put text property to CAND."
-  (let ((qpath (nimsuggest--epc-qualifiedPath cand)))
+  (let ((qpath (nim--epc-qpath cand)))
     (propertize
      (car (last qpath))
-     :nim-line   (nimsuggest--epc-line     cand)
-     :nim-column (nimsuggest--epc-column   cand)
-     :nim-type   (nimsuggest--epc-forth    cand)
-     :nim-doc    (nimsuggest--epc-doc      cand)
+     :nim-line   (nim--epc-line     cand)
+     :nim-column (nim--epc-column   cand)
+     :nim-type   (nim--epc-forth    cand)
+     :nim-doc    (nim--epc-doc      cand)
      :nim-qpath  qpath
-     :nim-file   (nimsuggest--epc-filePath cand)
-     :nim-sk     (nimsuggest--epc-symkind  cand)
+     :nim-file   (nim--epc-file cand)
+     :nim-sk     (nim--epc-symkind  cand)
      :nim-sig    (assoc-default
-                  (nimsuggest--epc-symkind cand) nim-capf--type-abbrevs)
-     :nim-prefix     (nimsuggest--epc-prefix   cand))))
+                  (nim--epc-symkind cand) nim-capf--type-abbrevs)
+     :nim-prefix     (nim--epc-prefix   cand))))
 
 (defun nim-capf--format-candidates (_arg candidates)
   "Put text attributes to CANDIDATES."
