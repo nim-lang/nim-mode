@@ -588,6 +588,8 @@ DEFS is group of definitions from nimsuggest."
 ;;;###autoload
 (defun nimsuggest-xref-setup ()
   (cond
+   ((not (nimsuggest-available-p))
+    (nim-log "xref package needs nimsuggest"))
    ((not (require 'xref nil t))
     (setq nimsuggest-find-definition-function 'nimsuggest-find-definition-old)
     ;; Note below configuration were removed on the future
