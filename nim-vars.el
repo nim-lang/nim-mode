@@ -267,6 +267,10 @@ See also ‘nim-syntax-disable-keywords-list’."
   "Dotty syntax table for Nim files.
 It makes underscores and dots word constituent chars.")
 
+(defvar nimscript-mode-syntax-table
+  (copy-syntax-table nim-mode-syntax-table)
+  "Syntax table for NimScript files.")
+
 (defconst nim-comment
   `((single
      . ((comment-start      . "#")

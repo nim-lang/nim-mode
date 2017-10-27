@@ -199,8 +199,44 @@
   ;; Font lock
   (nim--set-font-lock-keywords 'nim-mode))
 
+;;; NimScript
+;;  -- https://nim-lang.org/docs/nims.html
+;;  -- https://github.com/nim-lang/Nim/wiki/Using-nimscript-for-configuration
+
 ;;;###autoload
-(add-to-list 'auto-mode-alist '("\\.nim\\'" . nim-mode))
+(define-derived-mode nimscript-mode prog-mode "NimScript"
+  "A major-mode for NimScript files.
+This major-mode is activated when you enter *.nims and *.nimble
+suffixed files, but if it’s .nimble file, also another logic is
+applied. See also ‘nimscript-mode-maybe’."
+  :group 'nim
+
+  (nim--common-init)
+
+  (nim--set-font-lock-keywords 'nimscript-mode))
+
+;;;###autoload
+(defun nimscript-mode-maybe ()
+  "Most likely turn on ‘nimscript-mode’.
+In *.nimble files, if the first line sentence matches
+‘nim-nimble-ini-format-regex’, this function activates ‘conf-mode’
+instead.  The default regex’s matching word is [Package]."
+  (interactive)
+  (if (not (buffer-file-name))
+      (nimscript-mode)
+    (let ((extension (file-name-extension (buffer-file-name))))
+      (cond ((equal "nims" extension)
+             (nimscript-mode))
+            ((equal "nimble" extension)
+             (save-excursion
+               (goto-char (point-min))
+               (if (looking-at-p nim-nimble-ini-format-regex)
+                   (conf-mode)
+                 (nimscript-mode))))))))
+
+;;; `auto-mode-alist'
+;;;###autoload (add-to-list 'auto-mode-alist '("\\.nim\\'" . nim-mode))
+;;;###autoload (add-to-list 'auto-mode-alist '("\\.nim\\(ble\\|s\\)\\'" . nimscript-mode-maybe))
 
 
 ;;; Font locks
