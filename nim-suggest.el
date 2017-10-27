@@ -92,7 +92,7 @@ PROJECT-PATH is added as the last option."
   (and nimsuggest-path
        (not nim--inside-compiler-dir-p)
        ;; Prevent turn on nimsuggest related feature on org-src block
-       ;; or nimscript-mode (nimsuggest doesn't support yet).
+       ;; and nimscript-mode (nimsuggest doesn't support yet).
        ;; https://github.com/nim-lang/nimsuggest/issues/29
        (not (memq major-mode '(org-mode nimscript-mode)))
        (not (and (fboundp 'org-in-src-block-p)

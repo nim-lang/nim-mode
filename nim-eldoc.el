@@ -38,7 +38,7 @@
           (group line-start (0+ " ")))))
 
 (defun nim-eldoc-on-p()
-  "Return non-nil if `eldoc-mode' or `global-eldoc-mode' were non-nil."
+  "Return non-nil if eldoc mode is activated."
   (or (bound-and-true-p eldoc-mode)
       ;; This mode was added at Emacs 25
       (bound-and-true-p global-eldoc-mode)))
@@ -68,11 +68,20 @@ Major-mode configuration according to the document."
                 'nim-eldoc-function))
 
 (defun nim-eldoc-off ()
+  "Turn off nim eldoc mode."
   (interactive)
   (remove-function (local 'eldoc-documentation-function) 'nim-eldoc-function))
 
 ;;;###autoload
 (defun nim-eldoc-setup (&rest _args)
+  "This function may not work.
+I tried to configure this stuff to be user definable, but currently failing.
+The eldoc support should be turned on automatically, so please
+use `nim-eldoc-off' manually if you this like it."
+  ;; TODO: describe not to support for manual configuration?
+  ;; see also `eldoc-documentation-function'. It implies that the
+  ;; configure should be done by major-mode side, so might be
+  ;; impossible to configure by hook?
   (if (nim-eldoc-on-p) (nim-eldoc-on) (nim-eldoc-off)))
 
 (defun nim-eldoc--get-pragma (pragma)
@@ -91,6 +100,7 @@ Major-mode configuration according to the document."
       (format "%s: %s" thing (nim-eldoc--get-pragma thing)))))
 
 (defun nim-eldoc-inside-paren-p ()
+  "Return non-nil if it's inside pragma."
   (save-excursion
     (let ((ppss (syntax-ppss)))
       (and (< 0 (nth 0 ppss))
