@@ -232,7 +232,7 @@ crash when some emacsclients open the same file."
 
 (defcustom nimsuggest-mode-hook nil
   "Hook run when entering Nimsuggest mode."
-  :options '(flycheck-nimsuggest-setup nimsuggest-flymake-setup nimsuggest-xref)
+  :options '(flycheck-nimsuggest-setup nimsuggest-flymake-setup nimsuggest-xref-setup)
   :type 'hook
   :group 'nim)
 
@@ -242,7 +242,6 @@ crash when some emacsclients open the same file."
   :lighter " nimsuggest"
   :keymap nimsuggest-mode-map
   (when nimsuggest-mode
-    (when (require 'xref nil t) (nimsuggest-xref 'on))
     (nimsuggest-ensure)))
 
 (defun nimsuggest-force-stop ()
@@ -251,7 +250,7 @@ crash when some emacsclients open the same file."
   (remove-hook 'flycheck-checkers 'nim-nimsuggest)
   (remove-hook 'flymake-diagnostic-functions 'flymake-nimsuggest t)
   (nim-eldoc-off)
-  (nimsuggest-xref 'off))
+  (nimsuggest-xref-on-or-off 'off))
 
 (defun nimsuggest-ensure ()
   "Ensure that users installed nimsuggest executable."
@@ -586,17 +585,36 @@ DEFS is group of definitions from nimsuggest."
 
 ;;; xref integration
 ;; This package likely be supported on Emacs 25.1 or later
+
+(defvar nimsuggest-find-definition-function nil
+  "Function for `nimsuggest-find-definition'.")
+
+;;;###autoload (add-hook 'nimsuggest-mode-hook 'nimsuggest-xref-setup)
+;;;###autoload
+(defun nimsuggest-xref-setup ()
+  (cond
+   ((not (require 'xref nil t))
+    (setq nimsuggest-find-definition-function 'nimsuggest-find-definition-old)
+    ;; Note below configuration were removed on the future
+    (define-key nimsuggest-mode-map (kbd "M-.") #'nimsuggest-find-definition)
+    (define-key nimsuggest-mode-map (kbd "M-,") #'pop-tag-mark))
+   ((version<= "25.1.0" emacs-version)
+    (require 'xref)
+    (setq nimsuggest-find-definition-function 'xref-find-definitions)
+    (nimsuggest-xref-on-or-off (if nimsuggest-mode 'on 'off)))
+   (t (nim-log "xref unexpected condition"))))
+
+(defun nimsuggest-xref-on-or-off (on-or-off)
+  (cl-case on-or-off
+    (on  (add-hook 'xref-backend-functions #'nimsuggest--xref-backend nil t))
+    (off (remove-hook 'xref-backend-functions #'nimsuggest--xref-backend t))))
+
+(defun nimsuggest-find-definition ()
+  (interactive)
+  (call-interactively nimsuggest-find-definition-function))
+
 (with-eval-after-load "xref"
   (defun nimsuggest--xref-backend () 'nimsuggest)
-  (defun nimsuggest-xref (&optional on-or-off)
-    (cl-case on-or-off
-      (on  (add-hook 'xref-backend-functions #'nimsuggest--xref-backend nil t))
-      (off (remove-hook 'xref-backend-functions #'nimsuggest--xref-backend t))
-      (t (when on-or-off
-           (nimsuggest-xref (if nimsuggest-mode 'on 'off))))))
-
-  (add-hook 'nimsuggest-mode-hook 'nimsuggest-xref)
-
   (cl-defmethod xref-backend-identifier-at-point ((_backend (eql nimsuggest)))
     "Return string or nil for identifier at point."
     ;; Well this function may not needed for current xref functions for
@@ -639,32 +657,22 @@ DEFS is group of definitions from nimsuggest."
 
   ) ; end of with-eval-after-load xref
 
-;; Work around for old Emacsen
-(if (fboundp 'xref-find-definitions)
-    (defun nimsuggest-find-definition (id)
-      "Go to the definition of the symbol currently under the cursor.
-This uses `xref-find-definitions' as backend."
-      (interactive (list (xref--read-identifier "Find definitions of: ")))
-      (xref-find-definitions id))
-
-  ;; Note below configuration were removed on the future
-  (define-key nimsuggest-mode-map (kbd "M-.") #'nimsuggest-find-definition)
-  (define-key nimsuggest-mode-map (kbd "M-,") #'pop-tag-mark)
-  (require 'etags)
-  (defun nimsuggest-find-definition (&optional _id)
-    "Go to the definition of the symbol currently under the cursor."
-    (nimsuggest--call-epc
-     'def
-     (lambda (defs)
-       (let ((def (cl-first defs)))
-         (when (not def) (error "Definition not found"))
-         (if (fboundp 'xref-push-marker-stack)
-             (xref-push-marker-stack)
-           (with-no-warnings
-             (ring-insert find-tag-marker-ring (point-marker))))
-         (find-file (nimsuggest--epc-filePath def))
-         (goto-char (point-min))
-         (forward-line (1- (nimsuggest--epc-line def))))))))
+;; Workaround for old Emacsen
+(require 'etags)
+(defun nimsuggest-find-definition-old ()
+  "Go to the definition of the symbol currently under the cursor."
+  (nimsuggest--call-epc
+   'def
+   (lambda (defs)
+     (let ((def (cl-first defs)))
+       (when (not def) (error "Definition not found"))
+       (if (fboundp 'xref-push-marker-stack)
+           (xref-push-marker-stack)
+         (with-no-warnings
+           (ring-insert find-tag-marker-ring (point-marker))))
+       (find-file (nimsuggest--epc-filePath def))
+       (goto-char (point-min))
+       (forward-line (1- (nimsuggest--epc-line def)))))))
 
 (define-obsolete-function-alias 'nim-goto-sym 'nimsuggest-find-definition
   "2017/9/02")
