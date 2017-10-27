@@ -86,7 +86,6 @@
 (require 'paren) ; for ‘show-paren-data-function’
 (require 'nim-fill)
 (require 'commenter)
-(require 'nim-eldoc) ; for pragma info
 
 (put 'nim-mode 'font-lock-defaults '(nim-font-lock-keywords nil t))
 
@@ -375,6 +374,93 @@ The ARGS are passed to original ‘delete-backward-char’ function."
                (setq back (cadr (member (current-indentation) levels)))))
         (indent-line-to back)
       (apply 'delete-backward-char args))))
+
+;;; ELDOC
+
+;; Eldoc supports for Nim's static information like pragma.
+;; When you activate nimsuggest-mode, this also support's
+;; nimsuggest's eldoc information.
+
+(defvar nim-eldoc--skip-regex
+  (rx (or (group symbol-start
+                 (or "if" "when" "elif" "while"
+                     ;; for tuple assignment
+                     "var" "let" "const")
+                 symbol-end (0+ " "))
+          (group line-start (0+ " ")))))
+
+(defun nim-eldoc-on-p()
+  "Return non-nil if eldoc mode is activated."
+  (or (bound-and-true-p eldoc-mode)
+      ;; This mode was added at Emacs 25
+      (bound-and-true-p global-eldoc-mode)))
+
+(defun nim-eldoc--try-p ()
+  "Return non-nil if current position can check eldoc."
+  (and (nim-eldoc-on-p)
+       (not (nim-line-comment-p))
+       (not (member (char-after (point))
+                    ;; not sure this works on windows
+                    '(?\s ?\n)))))
+
+;;;###autoload
+(defun nim-eldoc-function ()
+  "Return a doc string appropriate for the current context, or nil."
+  (interactive)
+  (when (nim-eldoc--try-p)
+    (if (nim-inside-pragma-p)
+        (nim-eldoc--pragma-at-point)
+      (funcall nimsuggest-eldoc-function))))
+
+;;;###autoload
+(defun nim-eldoc-on ()
+  "This may or may not work.  Maybe this configuration has to set on.
+Major-mode configuration according to the document."
+  (interactive)
+  (add-function :before-until (local 'eldoc-documentation-function)
+                'nim-eldoc-function))
+
+(defun nim-eldoc-off ()
+  "Turn off nim eldoc mode."
+  (interactive)
+  (remove-function (local 'eldoc-documentation-function) 'nim-eldoc-function))
+
+;;;###autoload
+(defun nim-eldoc-setup (&rest _args)
+  "This function may not work.
+I tried to configure this stuff to be user definable, but currently failing.
+The eldoc support should be turned on automatically, so please
+use `nim-eldoc-off' manually if you don't like it."
+  ;; TODO: describe not to support for manual configuration?
+  ;; see also `eldoc-documentation-function'. It implies that the
+  ;; configure should be done by major-mode side, so might be
+  ;; impossible to configure by hook?
+  (if (nim-eldoc-on-p) (nim-eldoc-on) (nim-eldoc-off)))
+
+(defun nim-eldoc--get-pragma (pragma)
+  "Get the PRAGMA's doc string."
+  (let ((data (assoc-default pragma nim-pragmas)))
+    (cl-typecase data
+      (string data)
+      ;; FIXME: more better operation
+      (list (car data)))))
+
+(defun nim-eldoc--pragma-at-point ()
+  "Return string of pragma's description at point."
+  (let* ((thing (thing-at-point 'symbol))
+         (desc (nim-eldoc--get-pragma thing)))
+    (when (and desc (string< "" desc))
+      (format "%s: %s" thing (nim-eldoc--get-pragma thing)))))
+
+(defun nim-eldoc-inside-paren-p ()
+  "Return non-nil if it's inside pragma."
+  (save-excursion
+    (let ((ppss (syntax-ppss)))
+      (and (< 0 (nth 0 ppss))
+           (eq ?\( (char-after (nth 1 ppss)))))))
+
+;; backward compatibility
+(defalias 'nim-eldoc-setup 'ignore)
 
 
 ;; hideshow.el (hs-minor-mode)
