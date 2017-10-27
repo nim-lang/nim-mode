@@ -305,6 +305,7 @@ List of WORDS are used as completion candidates."
 
 
 ;; Setup function
+
 ;;;###autoload
 (defun nim-capf-setup ()
   "Setup."
@@ -329,6 +330,8 @@ List of WORDS are used as completion candidates."
     ;; version works with :async keyword.
     (when (bound-and-true-p company-backends)
       (add-to-list 'company-backends 'company-nimsuggest))))
+
+;;;###autoload (add-hook 'nim-suggest-mode-hook 'nim-capf-setup)
 
 
 ;; Suggestion-box-el

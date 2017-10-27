@@ -360,13 +360,6 @@ Argument ARG is ignored."
    nim-hideshow-forward-sexp-function
    nil))
 
-
-;; capf
-(autoload 'nim-capf-setup "nim-capf")
-
-(add-hook 'nim-mode-hook 'nim-capf-setup)
-(add-hook 'nimscript-mode-hook 'nim-capf-setup)
-
 (provide 'nim-mode)
 
 ;;; nim-mode.el ends here
