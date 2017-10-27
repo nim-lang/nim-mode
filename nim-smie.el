@@ -116,7 +116,7 @@
 (defun nim-mode-smie-rules (kind token)
   "Nim-mode’s indent rules.
 See also ‘smie-rules-function’ about KIND and TOKEN."
-  (if-let ((ind (nim-smie--condition-after-equal-p)))
+  (if-let* ((ind (nim-smie--condition-after-equal-p)))
       (cons 'column ind)
     (pcase (cons kind token)
       ;; Proc
@@ -195,7 +195,7 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
   (goto-char (+ (point-at-bol) (current-indentation))))
 
 (defun nim-same-closer-line-p ()
-  (if-let ((closer-line (assoc-default :closer-line nim-smie--line-info)))
+  (if-let* ((closer-line (assoc-default :closer-line nim-smie--line-info)))
       (= (line-number-at-pos) closer-line)))
 
 (defun nim-smie--condition-after-equal-p ()
@@ -343,7 +343,7 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
        (nim-smie--handle-object-of token))
       ;; General ":" rule
       (t
-       (if-let ((parent (smie-rule-parent nim-indent-offset)))
+       (if-let* ((parent (smie-rule-parent nim-indent-offset)))
            parent
          (nim-traverse)
          (nim-set-force-indent (+ (current-indentation) nim-indent-offset))))))
@@ -395,7 +395,7 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
 (defun nim-smie--equal (kind)
   (cl-case kind
     ((:before :after)
-     (if-let ((parent (smie-rule-parent nim-indent-offset)))
+     (if-let* ((parent (smie-rule-parent nim-indent-offset)))
          (save-excursion
            (let ((pos (point))
                  ;; check if current indentation is closer
@@ -575,7 +575,7 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
      ((and (equal "var" token)
            (not (smie-rule-bolp)))
       (let ((ppss (syntax-ppss)))
-        (if-let ((open-paren (nth 1 ppss)))
+        (if-let* ((open-paren (nth 1 ppss)))
             (when (< 0 (nth 0 ppss)) ; depth
               (goto-char open-paren)
               (if (eq ?\( (char-after (point)))
@@ -651,7 +651,7 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
           ;; check current token is not return type of function signature.
           ;; if so, avoid the token.
           (unless (eq (point) (+ (point-at-bol) (current-indentation)))
-            (if-let ((data (nim-get-indent-start-p nim-smie--defuns)))
+            (if-let* ((data (nim-get-indent-start-p nim-smie--defuns)))
                 (progn (goto-char (car data))
                        (setq tok ".")))))
          ;; ignore dot
@@ -671,7 +671,7 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
           (setq tok "."))
          ;; Infix colon
          ((member tok2 '(":"))
-          (if-let ((data (nim-get-indent-start-p nil t)))
+          (if-let* ((data (nim-get-indent-start-p nil t)))
               (cond
                ((and (member (cdr data) '("if" "when" "elif" "while" "else" "of"))
                      ;; if the line is pair with else, don’t swap the token
@@ -689,7 +689,7 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
                             (nim-rx ":" (0+ " ") (or comment line-end)))))))
               (setq tok tok2)))))
          ((equal tok ":")
-          (if-let ((data (nim-get-indent-start-p nil t)))
+          (if-let* ((data (nim-get-indent-start-p nil t)))
               (when (member (cdr data) nim-smie--defuns)
                 (setq tok "."))))
          ((equal tok "=")
@@ -776,7 +776,7 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
            (t (nim-set-force-indent
                (- (current-indentation) nim-indent-offset)))))
     (:before ; break
-     (if-let ((parent (smie-rule-parent-p "while" "block" "for")))
+     (if-let* ((parent (smie-rule-parent-p "while" "block" "for")))
          (smie-rule-parent
           (cond
            ((smie-rule-prev-p ":")
@@ -826,7 +826,7 @@ See also ‘smie-rules-function’ about KIND and TOKEN."
 This works if only current line starts from comment."
   (save-excursion
     (goto-char (assoc-default :start-pos nim-smie--line-info))
-    (if-let ((column (and (not (eq (point-min) (point-at-bol)))
+    (if-let* ((column (and (not (eq (point-min) (point-at-bol)))
                           (not (eq ?\\ (char-before (- (point-at-bol) 1))))
                           (nim-line-comment-p nil (- (point-at-bol) 2)))))
         ;; when it is called from :list-intro, need to indent forcefully
@@ -853,7 +853,7 @@ This works if only current line starts from comment."
 
 (defun nim-get-comment-start-point ()
   "Return comment starting point."
-  (if-let ((ppss (and
+  (if-let* ((ppss (and
                   (not (eq (point-min) (point-at-bol)))
                   (save-excursion (syntax-ppss (- (point-at-bol) 2))))))
       (when (eq t (nth 4 ppss))
@@ -872,7 +872,7 @@ level."
                      (current-indentation))
                   (point)))))
     (save-excursion
-      (if-let ((indent (nim-indent-calculate-indentation previous)))
+      (if-let* ((indent (nim-indent-calculate-indentation previous)))
           (progn
             (indent-line-to indent)
             (run-hooks 'nim-smie-after-indent-hook))))
@@ -937,8 +937,8 @@ indentation levels from right to left."
               (cons :comment (nim-line-comment-p))
               (cons :force-indent (nim-get-empty-line-indent))
               (cons :line (line-number-at-pos))))
-  (if-let ((empty-line-indent
-            (assoc-default :force-indent nim-smie--line-info)))
+  (if-let* ((empty-line-indent
+             (assoc-default :force-indent nim-smie--line-info)))
       empty-line-indent
     (let* ((savep (point))
            (indent (or (with-demoted-errors
@@ -969,7 +969,7 @@ indentation levels from right to left."
 Get indentation of PREVIOUS level when argument is non-nil.
 Return the max level of the cycle when indentation reaches the
 minimum."
-  (if-let ((indentation (nim-smie-indent-calculate)))
+  (if-let* ((indentation (nim-smie-indent-calculate)))
       (let ((levels (nim-indent--calculate-levels indentation)))
         (if previous
             (nim-indent--previous-level levels (current-indentation))

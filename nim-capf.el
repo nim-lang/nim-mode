@@ -204,7 +204,7 @@ If SKIP is non-nil, skip length check ."
 
 (defun nim-capf--post-completion (candidate)
   "Post complete function based on CANDIDATE."
-  (when-let ((type-sig (get-text-property 0 :nim-sig candidate)))
+  (when-let* ((type-sig (get-text-property 0 :nim-sig candidate)))
     (cl-case (intern type-sig)
       ((f T)
        (insert "()")
