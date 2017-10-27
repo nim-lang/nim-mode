@@ -138,7 +138,7 @@ REPORT-FN is for `flymake'.  See `flymake-diagnostic-functions'"
         (deferred:nextc it
           (lambda (x)
             (nim-log "EPC(%S) nextc" (symbol-name method))
-            (funcall callback (nimsuggest--parse-epc x method))))
+            (when x (funcall callback (nimsuggest--parse-epc x method)))))
         (deferred:watch it
           (lambda (_)
             (unless (get-buffer buf)
@@ -544,12 +544,11 @@ See `flymake-diagnostic-functions' for REPORT-FN and ARGS."
 DEFS is group of definitions from nimsuggest."
   ;; TODO: switch if there are multiple defs
   (nim-log "ELDOC format")
-  (let* ((data    (cl-first defs))
-         (forth   (nimsuggest--epc-forth         data))
-         (symKind (nimsuggest--epc-symkind       data))
-         (qpath   (nimsuggest--epc-qualifiedPath data))
-         (doc     (nimsuggest--epc-doc           data)))
-    (nimsuggest--format forth symKind qpath doc)))
+  (let ((data (cl-first defs)))
+    (apply 'nimsuggest--format
+           (mapcar (lambda (x) (funcall x data))
+                   '(nimsuggest--epc-forth nimsuggest--epc-symkind
+                     nimsuggest--epc-qualifiedPath nimsuggest--epc-doc)))))
 
 (defun nimsuggest-eldoc--call ()
   (save-excursion

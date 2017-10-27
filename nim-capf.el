@@ -206,7 +206,7 @@ If SKIP is non-nil, skip length check ."
   "Post complete function based on CANDIDATE."
   (when-let* ((type-sig (get-text-property 0 :nim-sig candidate)))
     (cl-case (intern type-sig)
-      ((f T)
+      ((f F m I c M T)
        (insert "()")
        (backward-char 1)
        (run-hook-with-args 'nim-capf-after-exit-function-hook candidate)))))
