@@ -329,7 +329,7 @@ List of WORDS are used as completion candidates."
     (when (bound-and-true-p company-backends)
       (add-to-list 'company-backends 'company-nimsuggest))))
 
-;;;###autoload (add-hook 'nim-suggest-mode-hook 'nim-capf-setup)
+;;;###autoload (add-hook 'nimsuggest-mode-hook 'nim-capf-setup)
 
 
 ;; Suggestion-box-el
