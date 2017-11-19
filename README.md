@@ -1,6 +1,8 @@
 `nim-mode` A major mode for editing Nim source code
 ===================================================
 [![Travis CI](https://travis-ci.org/nim-lang/nim-mode.svg?branch=master)](https://travis-ci.org/nim-lang/nim-mode)
+[![MELPA](http://melpa.org/packages/nim-mode-badge.svg)](http://melpa.org/#/nim-mode)
+[![MELPA Stable](http://stable.melpa.org/packages/nim-mode-badge.svg)](http://stable.melpa.org/#/nim-mode)
 
 This package provides (and requires Emacs 24.4 or higher version):
 
