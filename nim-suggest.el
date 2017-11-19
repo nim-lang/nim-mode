@@ -567,9 +567,10 @@ and the ERR is captured error."
   (let ((pos  (point))
         (ppss (syntax-ppss)))
     (when (nim-eldoc-inside-paren-p)
-      (goto-char (nth 1 ppss))
-      (when (looking-back nim-eldoc--skip-regex nil)
-        (goto-char pos)))))
+      (save-excursion
+        (goto-char (nth 1 ppss))
+        (when (looking-back nim-eldoc--skip-regex nil)
+          (goto-char pos))))))
 
 (defun nim-eldoc-format-string (defs)
   "Format data inside DEFS for eldoc.
