@@ -275,7 +275,7 @@ It makes underscores and dots word constituent chars.")
 
 (defconst nim-comment
   `((single
-     . ((comment-start      . "#")
+     . ((comment-start      . "# ")
         (comment-end        . "")
         (comment-start-skip . ,(rx "#" (? "#") (? " ")))
         (comment-use-syntax . t)))
