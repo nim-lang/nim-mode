@@ -314,13 +314,15 @@ List of WORDS are used as completion candidates."
 
     ;; Add builtin capf function (pragma and some keywords)
     (unless (memq capf completion-at-point-functions)
-      (add-hook 'completion-at-point-functions capf))
+      (add-hook 'completion-at-point-functions
+                capf nil 'local))
 
     ;; if company-mode is disabled, just add nimsuggest's capf function.
     (unless (or (bound-and-true-p company-mode)
                 (bound-and-true-p global-company-mode))
       (unless (memq 'nim-capf-nimsuggest-completion-at-point completion-at-point-functions)
-        (add-hook 'completion-at-point-functions 'nim-capf-nimsuggest-completion-at-point)))
+        (add-hook 'completion-at-point-functions
+                  'nim-capf-nimsuggest-completion-at-point nil 'local)))
 
     ;; Add an asynchronous backend for company-mode.
     ;; The big difference between `company-nimsuggest' and
