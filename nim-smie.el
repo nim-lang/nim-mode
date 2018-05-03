@@ -36,7 +36,7 @@
 ;; INTERNAL VARIABLES
 (defvar nim-smie--line-info nil)
 (defvar nim-smie--defuns
-  '("proc" "method" "iterator" "template" "macro" "converter"))
+  '("proc" "func" "method" "iterator" "template" "macro" "converter"))
 
 (defconst nim-mode-smie-grammar
   (smie-prec2->grammar
@@ -73,7 +73,7 @@
                          (exp "=" "enum" enum-eq-comma)
                          (exp "=" "tuple" exp-colon)
                          (type-constituent))
-       (func ("proc" func-body) ("method" func-body) ("iterator" func-body)
+       (func ("proc" func-body) ("func" func-body) ("method" func-body) ("iterator" func-body)
              ("template" func-body) ("macro" func-body) ("converter" func-body))
        (func-body (any "=" ";"))
        (inst3

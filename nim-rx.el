@@ -27,8 +27,8 @@
   (eval-when-compile
     (let* ((constituents1
             (cl-loop for (sym . kwd) in `((dedenter          . ("elif" "else" "of" "except" "finally"))
-                                          (defun             . ("proc" "method" "converter" "iterator" "template" "macro"))
-                                          (block-start-defun . ("proc" "method" "converter" "iterator"
+                                          (defun             . ("proc" "func" "method" "converter" "iterator" "template" "macro"))
+                                          (block-start-defun . ("proc" "func" "method" "converter" "iterator"
                                                                 "template" "macro"
                                                                 "if" "elif" "else" "when" "while" "for" "case" "of"
                                                                 "try" "except" "finally"
