@@ -65,7 +65,7 @@ Note that this configuration affects other ‘template’, ‘macro’,
   :group 'nim)
 
 (defcustom nim-smie-indent-stoppers
-  '("proc" "template" "macro" "iterator" "converter" "type")
+  '("proc" "func" "template" "macro" "iterator" "converter" "type")
   "Indentation behavior after empty line.
 You can specify list of string, which you want to stop indenting.
 If it’s nil, it does nothing."
@@ -307,7 +307,7 @@ It makes underscores and dots word constituent chars.")
   '("addr" "and" "as" "asm" "atomic" "bind" "block" "break" "case"
     "cast" "concept" "const" "continue" "converter" "defer" "discard" "distinct"
     "div" "do" "elif" "else" "end" "enum" "except" "export" "finally" "for"
-    "from" "generic" "if" "import" "in" "include" "interface" "isnot"
+    "func" "from" "generic" "if" "import" "in" "include" "interface" "isnot"
     "iterator" "lambda" "let" "macro" "method" "mixin" "mod" "nil" "not"
     "notin" "object" "of" "or" "out" "proc" "ptr" "raise" "ref" "return"
     "shared" "shl" "shr" "static" "template" "try" "tuple" "type" "using"
