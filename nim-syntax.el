@@ -60,13 +60,13 @@
     (nim-backtick-matcher
      (10 font-lock-constant-face prepend))
     ;; Highlight $# and $[0-9]+ inside string
-    (nim-format-$-matcher . (1 font-lock-preprocessor-face prepend))
+    (nim-format-$-matcher 0 font-lock-preprocessor-face prepend)
     ;; Highlight word after ‘is’ and ‘distinct’
     (,(nim-rx " " symbol-start (or "is" "distinct") symbol-end (1+ " ")
               (group identifier))
      (1 font-lock-type-face))
     ;; pragma
-    (nim-pragma-matcher . (4 'nim-font-lock-pragma-face)))
+    (nim-pragma-matcher . (0 'nim-font-lock-pragma-face)))
   "Extra font-lock keywords.
 If you feel uncomfortable because of this font-lock keywords,
 set nil to this value by ‘nim-mode-init-hook’.")
@@ -338,97 +338,52 @@ character address of the specified TYPE."
 
 (defconst nim--string-interpolation-regex
   ;; I think two digit is enough...
-  (rx (group "$" (or "#" (and (in "1-9") (? num))))))
+  (rx "$" (or "#" (and (in "1-9") (? num)))))
 
 (defun nim-format-$-matcher (&optional limit)
-  "Highlight matcher for $# and $[1-9][0-9]? in string."
-  (nim-matcher-func
-   (lambda ()
-     (forward-comment (point-max))
-     (when (not (nth 3 (syntax-ppss)))
-       (unless (re-search-forward "\\s|" limit t)
-         (throw 'exit nil))))
-   (lambda ()
-     (let ((start (point))
-           (limit (if (re-search-forward "\\s|" limit t)
-                      (point)
-                    nil)))
-       (goto-char start)
-       (not (re-search-forward
-             nim--string-interpolation-regex limit t))))
-   (lambda (ppss)
-     (not (and (nth 3 ppss)
-               (or (not (eq ?$ (char-after (- (point) 3))))
-                   (and
-                    (member (char-after (- (point) 2))
-                            '(?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
-                    (not (eq ?$ (char-after (- (point) 4)))))))))))
+  "Highlight matcher for $# and $[1-9][0-9]? in string within LIMIT."
+  (let (res)
+    (while
+        (and
+         (setq res (re-search-forward
+                    nim--string-interpolation-regex limit t))
+         (not (nth 3 (syntax-ppss)))))
+    res))
 
-(defun nim-inside-pragma-p (&optional pos)
-  (let ((ppss (syntax-ppss pos)))
-    (when (not (or (nth 3 ppss) (nth 4 ppss)))
-      (let ((ppss9-first (car (nth 9 ppss)))
-            (ppss9-last  (car (last (nth 9 ppss)))))
-
-        (or (when ppss9-first
-              (and (eq ?\{ (char-after ppss9-first))
-                   (eq ?.  (char-after (1+  ppss9-first)))
-                   (1+  ppss9-first)))
-            (when ppss9-last
-              (and (eq ?\{ (char-after ppss9-last))
-                   (eq ?.  (char-after (1+  ppss9-last)))
-                   (1+  ppss9-last))))))))
+(defun nim-inside-pragma-p ()
+  (let* ((ppss (syntax-ppss))
+         (pos  (nth 1 ppss)))
+    (and
+     ;; not in comment or string
+     (not (or (nth 3 ppss) (nth 4 ppss)))
+     ;; there is an open brace
+     pos
+     ;; open brace is curly
+     (eq ?\{ (char-after pos))
+     ;; followed by a dot
+     (eq ?.  (char-after (1+  pos))))))
 
 (defvar nim--pragma-regex
-  (eval-when-compile
-    (let ((pragma (cl-loop for (kwd . _) in nim-pragmas collect kwd)))
-      (apply
-       `((lambda ()
-           (nim-rx (or (group (or (group (? ".") "}")
-                                  (group "." (eval (cons 'or (list ,@pragma))))))
-                       (group (regexp ,(nim--format-keywords pragma)))))))))))
+  (nim--format-keywords (mapcar 'car nim-pragmas)))
 
 (defun nim-pragma-matcher (&optional limit)
   "Highlight pragma."
-  (nim-matcher-func
-   (lambda ()
-     (nim-skip-comment-and-string limit)
-     (unless (nim-inside-pragma-p)
-       (while (and (not (nim-inside-pragma-p))
-                   (re-search-forward "{\\." limit t))
-         (when (nim-syntax-comment-or-string-p)
-           (nim-skip-comment-and-string limit))))
-     (unless (nim-inside-pragma-p)
-       (throw 'exit nil)))
-   (lambda ()
-     (not (re-search-forward nim--pragma-regex limit t)))
-   (lambda (ppss)
-     (cond
-      ((nth 4 ppss)
-       (forward-comment (point-max)) t)
-      ((nth 3 ppss)
-       (re-search-forward "\\s|" limit t) t)
-      ;; if deprecated pragma’s inside skip til close "]"
-      ((eq ?\[ (char-after (car (last (nth 9 ppss)))))
-       (unless (eq ?\] (char-after (point)))
-         (search-forward "]" nil t))
-       t)
-      ((eq ?\( (char-after (car (last (nth 9 ppss)))))
-       (unless (eq ?\) (char-after (point)))
-         (search-forward ")" nil t))
-       t)
-      ((and (not (match-string 1)) (match-string 4)
-            (nim-inside-pragma-p))
-       nil)
-      (t t)))))
+  (let (res)
+    (while
+        (and
+         (setq res (re-search-forward
+                    nim--pragma-regex limit t))
+         (not (nim-inside-pragma-p))))
+    res))
 
 (defun nim-type-matcher (&optional limit)
-  (nim-matcher-func
-   (lambda () (nim-skip-comment-and-string limit))
-   (lambda () (not (re-search-forward (nim-rx colon-type) limit t)))
-   (lambda (ppss)
-     (or (eq (nth 0 ppss) 0)
-         (not (eq ?\( (char-after (nth 1 ppss))))))))
+  (let (res)
+    (while
+        (and
+         (setq res (re-search-forward
+                    (nim-rx colon-type) limit t))
+         (let ((ppss (syntax-ppss))) (or (nth 3 ppss) (nth 4 ppss)))))
+    res))
 
 (defun nim-number-matcher (&optional limit)
   (nim-matcher-func
