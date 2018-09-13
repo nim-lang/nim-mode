@@ -48,8 +48,8 @@
 
                             (exponent
                              . ,(rx (group (in "eE") (? (or "+" "-")) digit (0+ (or "_" digit)))))
-                            (open-paren           . ,(rx (or "{" "[" "(")))
-                            (close-paren          . ,(rx (or "}" "]" ")")))
+                            (open-paren           . ,(rx (in "{[(")))
+                            (close-paren          . ,(rx (in "}])")))
                             ;; FIXME: Use regexp-opt.
                             (operator             . ,(rx (or (1+ (in "-=+*/<>@$~&%|!?^.:\\"))
                                                              (and
@@ -80,8 +80,7 @@
                                  (group "'")
                                  (or
                                   ;; escaped characters
-                                  (and ?\\ (or (in "a-c" "e" "f" "l" "r" "t" "v"
-                                                   "\\" "\"" "'")
+                                  (and ?\\ (or (in "abceflrtv\\\"'")
                                                (1+ digit)
                                                (and "x" (regex "[a-fA-F0-9]\\{2,2\\}"))))
                                   ;; One byte characters(except single quote and control characters)
@@ -104,26 +103,18 @@ This variant of `rx' supports common nim named REGEXPS."
             (t
              (rx-to-string (car regexps) t)))))
 
-  ;; based on nim manual
   (add-to-list 'nim-rx-constituents
-               ;; note rx.el already has ‘letter’
-               (cons 'nim-letter (rx (in "a-zA-Z-ÿ"))))
-
-  (add-to-list 'nim-rx-constituents
-               (cons 'identifier (nim-rx nim-letter
-                                         (0+ (or "_" nim-letter digit)))))
+               (cons 'identifier (nim-rx letter
+                                         (0+ (or "_" alnum)))))
 
   (add-to-list
    'nim-rx-constituents
    (cons 'quoted-chars
-         (nim-rx
-          (minimal-match
+         (rx
            (and "`"
-                (1+ (or
-                     nim-letter digit "_"
-                     "^" "*" "[" "]" "!" "$" "%" "&" "+" "-"
-                     "." "/" "<" "=" ">" "?" "@" "|" "~"))
-                "`")))))
+                (+? (char
+                     alnum "_^*[]!$%&+-./<=>?@|~"))
+                "`"))))
 
   (add-to-list 'nim-rx-constituents
                (cons 'comment
