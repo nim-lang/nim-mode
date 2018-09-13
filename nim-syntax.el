@@ -39,7 +39,11 @@
         keep t)
      (8 font-lock-type-face keep t))
     ;; Highlight type words
-    (nim-type-matcher
+    (,(nim-rx ;; (or identifier quoted-chars) (? "*") (* " ")
+       ":" (* " ")
+       (? (and "var " (0+ " ")))
+       (? (group (and (or "ref" "ptr") " " (* " "))))
+       (group identifier))
      (1 font-lock-keyword-face keep t)
      (2 font-lock-type-face keep))
     ;; This only works if it’s one line
@@ -136,7 +140,7 @@ is used to limit the scan."
 (defconst nim-syntax-propertize-function
   (syntax-propertize-rules
    ;; single/multi line comment
-   ((rx (or (group (or line-start (not (any "]" "#" "\"")))
+   ((rx (or (group (or line-start (not (any "]#\"")))
                    (group "#" (? "#") "["))
             (group "]" "#" (? "#"))
             (group "#")))
@@ -363,8 +367,7 @@ character address of the specified TYPE."
      ;; followed by a dot
      (eq ?.  (char-after (1+  pos))))))
 
-(defvar nim--pragma-regex
-  (nim--format-keywords (mapcar 'car nim-pragmas)))
+(defconst nim-pragma-regex (nim--format-keywords (mapcar 'car nim-pragmas)))
 
 (defun nim-pragma-matcher (&optional limit)
   "Highlight pragma."
@@ -372,17 +375,8 @@ character address of the specified TYPE."
     (while
         (and
          (setq res (re-search-forward
-                    nim--pragma-regex limit t))
+                    nim-pragma-regex limit t))
          (not (nim-inside-pragma-p))))
-    res))
-
-(defun nim-type-matcher (&optional limit)
-  (let (res)
-    (while
-        (and
-         (setq res (re-search-forward
-                    (nim-rx colon-type) limit t))
-         (let ((ppss (syntax-ppss))) (or (nth 3 ppss) (nth 4 ppss)))))
     res))
 
 (defun nim-number-matcher (&optional limit)
