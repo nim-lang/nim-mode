@@ -179,10 +179,8 @@ This variant of `rx' supports common nim named REGEXPS."
                      (nim-rx defun
                              (? (group (1+ " ") (or identifier quoted-chars)
                                        (0+ " ") (? (group "*"))))
-                             (? (minimal-match
-                                 (group (0+ " ") "[" (0+ (or any "\n")) "]")))
-                             (? (minimal-match
-                                 (group (0+ " ") "(" (0+ (or any "\n")) ")")))
+                             (? (group (*? " ") "[" (*? (or any "\n")) "]"))
+                             (? (group (*? " ") "(" (*? (or any "\n")) ")"))
                              ;; return type
                              (? (group (0+ " ") ":" (0+ " ")
                                        (? (group "var " (0+ " ")))

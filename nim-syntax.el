@@ -32,20 +32,27 @@
 (require 'nim-rx)
 
 (defvar nim-font-lock-keywords
-  `((nim-proc-matcher
+  `((,(nim-rx font-lock-defun)
      (1 (if (match-string 2)
             'nim-font-lock-export-face
           font-lock-function-name-face)
         keep t)
-     (8 font-lock-type-face keep t))
+     ;; (8 font-lock-type-face keep t) TODO nim-rx needs a proper colon-type expression
+     )
+
     ;; Highlight type words
     (,(nim-rx ;; (or identifier quoted-chars) (? "*") (* " ")
+       ;; everything behind a colon (:) is interpreted as a type
        ":" (* " ")
        (? (and "var " (0+ " ")))
-       (? (group (and (or "ref" "ptr") " " (* " "))))
+       (? (and (or "ref" "ptr") " " (* " ")))
        (group identifier))
-     (1 font-lock-keyword-face keep t)
-     (2 font-lock-type-face keep))
+
+     (1 font-lock-type-face keep))
+
+    ;; warning face for tab characters.
+    ("	+" . (0 font-lock-warning-face))
+
     ;; This only works if it’s one line
     (,(nim-rx (or "var" "let" "const" "type") (1+ " ")
               (group (or identifier quoted-chars) (? " ") (? (group "*"))))
@@ -58,7 +65,7 @@
   `(;; export properties
     (,(nim-rx font-lock-export) . (1 'nim-font-lock-export-face))
     ;; Number literal
-    (nim-number-matcher
+    (,(nim-rx nim-numbers)
      (0 'nim-font-lock-number-face))
     ;; Highlight identifier enclosed by "`"
     (nim-backtick-matcher
@@ -310,35 +317,15 @@ character address of the specified TYPE."
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;; Highlight matcher
 
-(defun nim-matcher-func (skip-func pred pred2)
-  (let* (data)
-    (catch 'exit
-      (while (not data)
-        (funcall skip-func)
-        (if (funcall pred)
-            (throw 'exit nil)
-          (setq data (match-data))
-          (let ((ppss (syntax-ppss)))
-            (if (funcall pred2 ppss)
-                (setq data nil)
-              ;; ensure match-data
-              (set-match-data data)
-              (throw 'exit data))))))))
-
-(defun nim-skip-comment-and-string (&optional limit)
-  (forward-comment (point-max))
-  (when (nth 3 (syntax-ppss))
-    (re-search-forward "\\s|" limit t)))
-
 (defun nim-backtick-matcher (&optional limit)
   "Highlight matcher for ``symbol`` in comment."
-  (nim-matcher-func
-   (lambda ()
-     (unless (nth 4 (syntax-ppss))
-       (re-search-forward "\\s<" limit t)))
-   (lambda ()
-     (not (re-search-forward (nim-rx backticks) limit t)))
-   (lambda (ppss) (not (nth 4 ppss)))))
+  (let (res)
+    (while
+        (and
+         (setq res (re-search-forward
+                    (nim-rx backticks) limit t))
+         (not (nth 4 (syntax-ppss)))))
+    res))
 
 (defconst nim--string-interpolation-regex
   ;; I think two digit is enough...
@@ -378,18 +365,6 @@ character address of the specified TYPE."
                     nim-pragma-regex limit t))
          (not (nim-inside-pragma-p))))
     res))
-
-(defun nim-number-matcher (&optional limit)
-  (nim-matcher-func
-   (lambda () (nim-skip-comment-and-string limit))
-   (lambda () (not (re-search-forward (nim-rx nim-numbers) limit t)))
-   (lambda (ppss) (or (nth 3 ppss) (nth 4 ppss)))))
-
-(defun nim-proc-matcher (&optional limit)
-  (nim-matcher-func
-   (lambda () (nim-skip-comment-and-string limit))
-   (lambda () (not (re-search-forward (nim-rx font-lock-defun) limit t)))
-   (lambda (ppss) (or (nth 3 ppss) (nth 4 ppss)))))
 
 (defun nim-syntax-disable-maybe ()
   "Turn off some syntax highlight if buffer size is greater than limit.
