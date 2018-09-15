@@ -45,7 +45,7 @@
        ;; everything behind a colon (:) is interpreted as a type
        ":" (* " ")
        (? (and "var " (* " ")))
-       (? (and (* "ref " "ptr ") (* " ")))
+       (? (and (* (or "ref " "ptr ")) (* " ")))
        (group identifier))
 
      (1 font-lock-type-face keep))
