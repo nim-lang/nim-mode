@@ -44,8 +44,8 @@
     (,(nim-rx ;; (or identifier quoted-chars) (? "*") (* " ")
        ;; everything behind a colon (:) is interpreted as a type
        ":" (* " ")
-       (? (and "var " (0+ " ")))
-       (? (and (or "ref" "ptr") " " (* " ")))
+       (? (and "var " (* " ")))
+       (? (and (* "ref " "ptr ") (* " ")))
        (group identifier))
 
      (1 font-lock-type-face keep))
@@ -54,7 +54,8 @@
     ("	+" . (0 font-lock-warning-face))
 
     ;; This only works if it’s one line
-    (,(nim-rx (or "var" "let" "const" "type") (1+ " ")
+    (,(nim-rx (or line-start ";") (* " ")
+              (or "var" "let" "const" "type") (+ " ")
               (group (or identifier quoted-chars) (? " ") (? (group "*"))))
      . (1 (if (match-string 2)
               'nim-font-lock-export-face
@@ -73,7 +74,7 @@
     ;; Highlight $# and $[0-9]+ inside string
     (nim-format-$-matcher 0 font-lock-preprocessor-face prepend)
     ;; Highlight word after ‘is’ and ‘distinct’
-    (,(nim-rx " " symbol-start (or "is" "distinct") symbol-end (1+ " ")
+    (,(nim-rx " " (or "is" "distinct") (+ " ")
               (group identifier))
      (1 font-lock-type-face))
     ;; pragma
@@ -365,17 +366,6 @@ character address of the specified TYPE."
                     nim-pragma-regex limit t))
          (not (nim-inside-pragma-p))))
     res))
-
-(defun nim-syntax-disable-maybe ()
-  "Turn off some syntax highlight if buffer size is greater than limit.
-The limit refers to ‘nim-syntax-disable-limit’.  This function
-will be used if only user didn't set ‘font-lock-maximum-decoration’."
-  (when (and nim-syntax-disable-limit
-             (< nim-syntax-disable-limit (point-max))
-             (eq t font-lock-maximum-decoration))
-    (setq-local font-lock-maximum-decoration 2)))
-
-(add-hook 'nim-mode-init-hook 'nim-syntax-disable-maybe)
 
 (provide 'nim-syntax)
 ;;; nim-syntax.el ends here

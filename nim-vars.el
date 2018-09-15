@@ -216,16 +216,6 @@ Note that this directory is removed when you exit from Emacs."
 ;; (You can do same thing by zr and zm keys on evil, a vim emulation plugin)
 
 
-;;; Syntax table
-;; Turn off syntax highlight for big files
-;; FIXME: what number should we set as default?
-(defcustom nim-syntax-disable-limit 400000
-  "Number of buffer size limit to turn off some syntax highlights.
-See also ‘nim-syntax-disable-keywords-list’."
-  :type '(choice (const :tag "unsigned integer" number)
-                 (const :tag "nil" nil))
-  :group 'nim)
-
 ;; Syntax table
 (defvar nim-mode-syntax-table
   (let ((table (make-syntax-table)))

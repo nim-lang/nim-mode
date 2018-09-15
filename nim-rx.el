@@ -105,7 +105,7 @@ This variant of `rx' supports common nim named REGEXPS."
 
   (add-to-list 'nim-rx-constituents
                (cons 'identifier (nim-rx letter
-                                         (0+ (or "_" alnum)))))
+                                         (* (or "_" alnum)))))
 
   (add-to-list
    'nim-rx-constituents
