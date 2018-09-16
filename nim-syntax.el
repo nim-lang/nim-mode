@@ -83,22 +83,22 @@
 If you feel uncomfortable because of this font-lock keywords,
 set nil to this value by ‘nim-mode-init-hook’.")
 
-(defun nim--convert-to-non-casesensitive (str)
-  (when (< 1 (length str))
-    (let ((first-str (substring str 0 1))
-          (rest-str  (substring str 1 (length str))))
-      (format "%s_?%s" first-str
-              (mapconcat
-               (lambda (s)
-                 (if (string-match "[a-zA-Z]" s)
-                     (format "[%s%s]" (downcase s) (upcase s))
-                   s))
-               (delq "" (split-string rest-str "")) "_?")))))
+(defun nim--convert-to-nim-style-insensitive (str)
+  (let ((first-str (substring str 0 1))
+        (rest-str  (substring str 1 (length str))))
+    (format "%s_?%s" first-str
+            (mapconcat
+             (lambda (s)
+               (if (string-match "[a-zA-Z]" s)
+                   (format "[%s%s]" (downcase s) (upcase s))
+                 s))
+             (split-string rest-str (rx not-word-boundary))
+             "_?"))))
 
 (defun nim--format-keywords (keywords)
   (format "\\_<\\(%s\\)\\_>"
           (mapconcat
-           'nim--convert-to-non-casesensitive
+           'nim--convert-to-nim-style-insensitive
            (cl-typecase keywords
              (symbol (symbol-value keywords))
              (list keywords))
@@ -111,7 +111,7 @@ set nil to this value by ‘nim-mode-init-hook’.")
                    (nim-variables . font-lock-variable-name-face)
                    (nim-exceptions . 'error)
                    (nim-constants . font-lock-constant-face)
-                   (nim-builtins . font-lock-builtin-face)
+                   (nim-builtin-functions . font-lock-builtin-face)
                    (nim-nonoverloadable-builtins . 'nim-non-overloadable-face)
                    (nim-keywords . font-lock-keyword-face))
     for (keywords . face) in pairs

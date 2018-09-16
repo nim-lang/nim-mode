@@ -354,11 +354,8 @@ updating.")
     "is" "of" "shallowCopy" "getAst" "astToStr" "spawn" "procCall")
   "Nim nonoverloadable builtins.")
 
-(defconst nim-builtins
-  '(; length 1 characters are ignored to highlight
-    "+" "-" "=" "<" ">" "@" "&" "*" "/"
-    ">=" "<=" "$" ">=%" ">%" "<%" "<=%" "==" "+%" "-%" "*%" "/%" "%%"
-    "div" "mod" "shr" "shl" "and" "or" "xor"
+(defconst nim-builtin-functions
+  '("div" "mod" "shr" "shl" "and" "or" "xor"
     "not" "notin" "isnot" "cmp" "succ" "pred" "inc"
     "dec" "newseq" "len" "xlen" "incl" "excl" "card" "ord" "chr" "ze" "ze64"
     "toU8" "toU16" "toU32" "min" "max" "setLen" "newString" "add"
@@ -405,8 +402,9 @@ Magic functions.")
   "Builtin functions copied from system.nim.
 But all those functions can not use in NimScript.")
 
-(defconst nim-operators
-  '( "`" "{." ".}" "[" "]" "{" "}" "(" ")" )
+(defconst nim-buildin-operators
+  '("+" "-" "=" "<" ">" "@" "&" "*" "/"
+    ">=" "<=" "$" ">=%" ">%" "<%" "<=%" "==" "+%" "-%" "*%" "/%" "%%")
   "Nim standard operators.")
 
 ;; Nimscript
