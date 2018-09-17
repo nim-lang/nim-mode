@@ -32,7 +32,9 @@
 (require 'nim-rx)
 
 (defvar nim-font-lock-keywords
-  `((,(nim-rx font-lock-defun)
+  `((,(nim-rx (or line-start ";") (* " ")
+              defun  (+ " ")
+              (group (or identifier quoted-chars) (* " ") (? (group "*"))))
      (1 (if (match-string 2)
             'nim-font-lock-export-face
           font-lock-function-name-face)
@@ -56,7 +58,7 @@
     ;; This only works if it’s one line
     (,(nim-rx (or line-start ";") (* " ")
               (or "var" "let" "const" "type") (+ " ")
-              (group (or identifier quoted-chars) (? " ") (? (group "*"))))
+              (group (or identifier quoted-chars) (* " ") (? (group "*"))))
      . (1 (if (match-string 2)
               'nim-font-lock-export-face
             font-lock-variable-name-face))))
@@ -133,18 +135,6 @@ set nil to this value by ‘nim-mode-init-hook’.")
       (1 font-lock-builtin-face))
      ("\\_<ScriptMode\\_>" (0 font-lock-type-face)))))
 
-(defsubst nim-syntax-count-quotes (quote-char &optional point limit)
-  "Count number of quotes around point (max is 3).
-QUOTE-CHAR is the quote char to count.  Optional argument POINT is
-the point where scan starts (defaults to current point), and LIMIT
-is used to limit the scan."
-  (let ((i 0))
-    (while (and (< i 3)
-                (or (not limit) (< (+ point i) limit))
-                (eq (char-after (+ point i)) quote-char))
-      (setq i (1+ i)))
-    i))
-
 (defconst nim-syntax-propertize-function
   (syntax-propertize-rules
    ;; single/multi line comment
@@ -162,6 +152,18 @@ is used to limit the scan."
    ;; String
    ((nim-rx string-delimiter)
     (0 (ignore (nim-syntax-stringify))))))
+
+(defsubst nim-syntax-count-quotes (quote-char &optional point limit)
+  "Count number of quotes around point (max is 3).
+QUOTE-CHAR is the quote char to count.  Optional argument POINT is
+the point where scan starts (defaults to current point), and LIMIT
+is used to limit the scan."
+  (let ((i 0))
+    (while (and (< i 3)
+                (or (not limit) (< (+ point i) limit))
+                (eq (char-after (+ point i)) quote-char))
+      (setq i (1+ i)))
+    i))
 
 (defun nim-pretty-triple-double-quotes (pbeg pend &optional close-quote)
   (when (and nim-pretty-triple-double-quotes
