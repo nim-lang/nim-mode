@@ -162,7 +162,7 @@ is used to limit the scan."
 
 (defun nim-syntax-stringify ()
   "Put `syntax-table' property correctly on single/triple double quotes."
-  (unless (nth 4 (save-excursion (syntax-ppss)))
+  (unless (nth 4 (syntax-ppss))
     (let* ((num-quotes (length (match-string-no-properties 1)))
            (ppss (prog2
                      (backward-char num-quotes)
@@ -230,7 +230,7 @@ is used to limit the scan."
                    (match-string-no-properties 3)
                    (match-string-no-properties 4)))
          (start-pos (- (point) (length hash)))
-         (ppss (save-excursion (syntax-ppss)))
+         (ppss (syntax-ppss))
          (start-len (save-excursion
                       (when (nth 8 ppss)
                         (goto-char (nth 8 ppss))
@@ -314,42 +314,43 @@ character address of the specified TYPE."
         (if (funcall pred)
             (throw 'exit nil)
           (setq data (match-data))
-          (let ((ppss (save-excursion (syntax-ppss))))
+          (let ((ppss (syntax-ppss)))
             (if (funcall pred2 ppss)
                 (setq data nil)
               ;; ensure match-data
               (set-match-data data)
               (throw 'exit data))))))))
 
-(defun nim-skip-comment-and-string ()
+(defun nim-skip-comment-and-string (&optional limit)
   (forward-comment (point-max))
-  (when (nth 3 (save-excursion (syntax-ppss)))
-    (re-search-forward "\\s|" nil t)))
+  (when (nth 3 (syntax-ppss))
+    (re-search-forward "\\s|" limit t)))
 
-(defun nim-backtick-matcher (&optional _start-pos)
+(defun nim-backtick-matcher (&optional limit)
   "Highlight matcher for ``symbol`` in comment."
   (nim-matcher-func
    (lambda ()
-     (unless (nth 4 (save-excursion (syntax-ppss)))
-       (re-search-forward "\\s<" nil t)))
+     (unless (nth 4 (syntax-ppss))
+       (re-search-forward "\\s<" limit t)))
    (lambda ()
-     (not (re-search-forward (nim-rx backticks) nil t)))
+     (not (re-search-forward (nim-rx backticks) limit t)))
    (lambda (ppss) (not (nth 4 ppss)))))
 
 (defconst nim--string-interpolation-regex
   ;; I think two digit is enough...
   (rx (group "$" (or "#" (and (in "1-9") (? num))))))
-(defun nim-format-$-matcher (&rest _args)
+
+(defun nim-format-$-matcher (&optional limit)
   "Highlight matcher for $# and $[1-9][0-9]? in string."
   (nim-matcher-func
    (lambda ()
      (forward-comment (point-max))
-     (when (not (nth 3 (save-excursion (syntax-ppss))))
-       (unless (re-search-forward "\\s|" nil t)
+     (when (not (nth 3 (syntax-ppss)))
+       (unless (re-search-forward "\\s|" limit t)
          (throw 'exit nil))))
    (lambda ()
      (let ((start (point))
-           (limit (if (re-search-forward "\\s|" nil t)
+           (limit (if (re-search-forward "\\s|" limit t)
                       (point)
                     nil)))
        (goto-char start)
@@ -364,7 +365,7 @@ character address of the specified TYPE."
                     (not (eq ?$ (char-after (- (point) 4)))))))))))
 
 (defun nim-inside-pragma-p (&optional pos)
-  (let ((ppss (save-excursion (syntax-ppss pos))))
+  (let ((ppss (syntax-ppss pos)))
     (when (not (or (nth 3 ppss) (nth 4 ppss)))
       (let ((ppss9-first (car (nth 9 ppss)))
             (ppss9-last  (car (last (nth 9 ppss)))))
@@ -387,26 +388,26 @@ character address of the specified TYPE."
                                   (group "." (eval (cons 'or (list ,@pragma))))))
                        (group (regexp ,(nim--format-keywords pragma)))))))))))
 
-(defun nim-pragma-matcher (&optional _start-pos)
+(defun nim-pragma-matcher (&optional limit)
   "Highlight pragma."
   (nim-matcher-func
    (lambda ()
-     (nim-skip-comment-and-string)
+     (nim-skip-comment-and-string limit)
      (unless (nim-inside-pragma-p)
        (while (and (not (nim-inside-pragma-p))
-                   (re-search-forward "{\\." nil t))
+                   (re-search-forward "{\\." limit t))
          (when (nim-syntax-comment-or-string-p)
-           (nim-skip-comment-and-string))))
+           (nim-skip-comment-and-string limit))))
      (unless (nim-inside-pragma-p)
        (throw 'exit nil)))
    (lambda ()
-     (not (re-search-forward nim--pragma-regex nil t)))
+     (not (re-search-forward nim--pragma-regex limit t)))
    (lambda (ppss)
      (cond
       ((nth 4 ppss)
        (forward-comment (point-max)) t)
       ((nth 3 ppss)
-       (re-search-forward "\\s|" nil t) t)
+       (re-search-forward "\\s|" limit t) t)
       ;; if deprecated pragma’s inside skip til close "]"
       ((eq ?\[ (char-after (car (last (nth 9 ppss)))))
        (unless (eq ?\] (char-after (point)))
@@ -421,24 +422,24 @@ character address of the specified TYPE."
        nil)
       (t t)))))
 
-(defun nim-type-matcher (&optional _start-pos)
+(defun nim-type-matcher (&optional limit)
   (nim-matcher-func
-   'nim-skip-comment-and-string
-   (lambda () (not (re-search-forward (nim-rx colon-type) nil t)))
+   (lambda () (nim-skip-comment-and-string limit))
+   (lambda () (not (re-search-forward (nim-rx colon-type) limit t)))
    (lambda (ppss)
      (or (eq (nth 0 ppss) 0)
          (not (eq ?\( (char-after (nth 1 ppss))))))))
 
-(defun nim-number-matcher (&optional _start-pos)
+(defun nim-number-matcher (&optional limit)
   (nim-matcher-func
-   'nim-skip-comment-and-string
-   (lambda () (not (re-search-forward (nim-rx nim-numbers) nil t)))
+   (lambda () (nim-skip-comment-and-string limit))
+   (lambda () (not (re-search-forward (nim-rx nim-numbers) limit t)))
    (lambda (ppss) (or (nth 3 ppss) (nth 4 ppss)))))
 
-(defun nim-proc-matcher (&optional _start-pos)
+(defun nim-proc-matcher (&optional limit)
   (nim-matcher-func
-   'nim-skip-comment-and-string
-   (lambda () (not (re-search-forward (nim-rx font-lock-defun) nil t)))
+   (lambda () (nim-skip-comment-and-string limit))
+   (lambda () (not (re-search-forward (nim-rx font-lock-defun) limit t)))
    (lambda (ppss) (or (nth 3 ppss) (nth 4 ppss)))))
 
 (defun nim-syntax-disable-maybe ()
