@@ -66,7 +66,17 @@
 
 (defvar nim-font-lock-keywords-extra
   `(;; export properties
-    (,(nim-rx font-lock-export) . (1 'nim-font-lock-export-face))
+    (,(nim-rx
+       line-start (1+ " ")
+       (? "case" (+ " "))
+       (group
+        (or identifier quoted-chars) "*"
+        (? (and "[" word "]"))
+        (0+ (and "," (? (0+ " "))
+                 (or identifier quoted-chars) "*")))
+       (0+ " ") (or ":" "{." "=") (0+ nonl)
+       line-end)
+     (1 'nim-font-lock-export-face))
     ;; Number literal
     (,(nim-rx nim-numbers)
      (0 'nim-font-lock-number-face))

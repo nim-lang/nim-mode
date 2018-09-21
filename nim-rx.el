@@ -199,17 +199,6 @@ This variant of `rx' supports common nim named REGEXPS."
                           (syntax open-parenthesis)
                           (syntax close-parenthesis)))))
 
-  (add-to-list 'nim-rx-constituents
-               (cons 'font-lock-export
-                     (nim-rx line-start (1+ " ")
-                             (group
-                              (or identifier quoted-chars) "*"
-                              (? (and "[" word "]"))
-                              (0+ (and "," (? (0+ " "))
-                                       (or identifier quoted-chars) "*")))
-                             (0+ " ") (or ":" "{." "=") (0+ nonl)
-                             line-end)))
-
   ) ; end of eval-and-compile
 
 (provide 'nim-rx)
