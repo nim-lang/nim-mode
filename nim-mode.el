@@ -233,6 +233,7 @@ instead.  The default regex’s matching word is [Package]."
                    (conf-mode)
                  (nimscript-mode))))))))
 
+;;; `auto-mode-alist'
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.nim\\'" . nim-mode))
 ;;;###autoload

@@ -402,11 +402,6 @@ Magic functions.")
   "Builtin functions copied from system.nim.
 But all those functions can not use in NimScript.")
 
-(defconst nim-buildin-operators
-  '("+" "-" "=" "<" ">" "@" "&" "*" "/"
-    ">=" "<=" "$" ">=%" ">%" "<%" "<=%" "==" "+%" "-%" "*%" "/%" "%%")
-  "Nim standard operators.")
-
 ;; Nimscript
 (defvar nim-nimble-ini-format-regex (rx line-start "[Package]"))
 
