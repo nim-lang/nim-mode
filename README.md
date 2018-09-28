@@ -137,8 +137,10 @@ You can copy and adjust the following configuration into your local
 (setq nimsuggest-path "path/to/nimsuggest")
 
 (defun my--init-nim-mode ()
-  "Define some settings for the nim mode.  Some ``imenu'' integration."
+  "Local init function for `nim-mode'."
 
+  ;; Just an example, by default these functions are
+  ;; already mapped to "C-c <" and "C-c >".
   (local-set-key (kbd "M->") 'nim-indent-shift-right)
   (local-set-key (kbd "M-<") 'nim-indent-shift-left)
 
@@ -146,16 +148,23 @@ You can copy and adjust the following configuration into your local
   ;; This can prevent to edit them by accident.
   (when (string-match "/\.nimble/" buffer-file-name) (read-only-mode 1))
 
-  ;; enable if you want to experiment.
+  ;; enable the following modes in Nim files, if you want to experiment.
   (nimsuggest-mode 0)
-  (eldoc-mode 0)
-  (company-mode 0)
-  ;; remember: only enable one of them at the same time.
+  ;; remember: only enable either `flycheck-mode' or `flymake-mode' at the same time.
   (flycheck-mode 0)
   (flymake-mode 0)
-  ;; turn off anything that is based on smie
+
+  ;; The following modes are disabled for Nim files just for the case
+  ;; that they are enabled globally.
+  ;; Anything that is based on smie has problems.
   (auto-fill-mode 0)
   (electric-indent-local-mode 0))
+
+  ;; `eldoc-mode' and `company-mode' can stay on, they won't start
+  ;; `nimsuggest-mode' on their own, but they won't help much either
+  ;; without `nimsuggest-mode'
+  (eldoc-mode 0)
+  (company-mode 0)
 
 (add-hook 'nim-mode-hook 'my--init-nim-mode)
 
