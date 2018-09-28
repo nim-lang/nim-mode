@@ -6,93 +6,67 @@
 
 This package provides (and requires Emacs 24.4 or higher version):
 
-- Syntax highlight for .nim, .nims, nimble, nim.cfg
-- Auto-indent
-- Outline by procedures (`hs-hide-all`, `hs-show-all` etc.)
-- nim compile command by "C-c C-c" (`nim-compile`)
-- more features with Nimsuggest:
+- Syntax highlighting for ``*.nim``, ``*.nims``, ``*.nimble`` and
+  ``nim.cfg`` files
+- `nim-compile` command (*C-c C-c*), with error matcher for the
+  compile buffer
+- Nimsuggest (alpha):
   - on the fly linter using flycheck, or flymake (from Emacs 26)
   - auto-completion with company-mode ("C-M-i" for manual completion)
-  - jump-to-definition ("M-.", and "M-," keys)
-  - find-references ("M-?" key)
+  - jump-to-definition (*M-.*, and *M-,* keys)
+  - find-references (*M-?* key)
   - eldoc or help on hover in term of LSP
-
-## TL;DR
-
-For regular emacs users, all you need is below configuration in your
-dot emacs after you installed nim-mode from MELPA and nimsuggest
-which you can make by `./koch tools` or `./koch nimsuggest`command in
-the Nim repository (or check the official document on Nim website if
-this information was outdated):
-
-``` elisp
-(add-hook 'nim-mode-hook 'nimsuggest-mode)
-```
-
-Below configuration can be optional
-
-```elisp
-;; The `nimsuggest-path' will be set the value of
-;; (executable-find "nimsuggest"), automatically.
-(setq nimsuggest-path "path/to/nimsuggest")
-
-;; You may need to install below packages if you haven't installed yet.
-
-;; -- Auto completion --
-;; You can omit if you configured company-mode on `prog-mode-hook'
-(add-hook 'nimsuggest-mode-hook 'company-mode)  ; auto complete package
-;; -- Auto lint --
-;; You can omit if you configured flycheck-mode on `prog-mode-hook'
-(add-hook 'nimsuggest-mode-hook 'flycheck-mode) ; auto linter package
-
-;; FYI:
-;; might be supproted in the future, but not for now
-;; (add-hook 'nimsuggest-mode-hook 'nimsuggest-mode)
-```
-
-Supplemental information:
-
-Note that currently nim-mode has three choices for auto linters:
-`flycheck-nimsuggest`, `flymake-nimsuggeset`, and `flycheck-nim`.
-First two linters use same backend nimsuggest whereas flycheck-nim uses
-Nim compiler's `check` command. If you prefer to configure Nim's configuration
-inside Emacs (ex. Compile option), flycheck-nim might be the best, but if not
-nimsuggest based backends are good for you probably.
-
-
-If you use Emacs 26 or higher, you can also use `flymake' package which
-Emacs' builtin standard package for auto lint (it was re written on
-Emacs 26). You can use by below config:
-
-``` elisp
-(add-hook 'nimsuggest-mode-hook 'flymake-mode) ; builtin auto linter package
-```
+- Automatic indentation and line breaking (alpha)
+- Outline by procedures (`hs-hide-all`, `hs-show-all` etc.)
 
 ## Installation
 
-* Install `nim-mode.el` via [MELPA](https://melpa.org/#/getting-started).
-  * Check the MELPA's link and add the package archive if you don't set yet
-  * `M-x package-install`
-  *  type `nim-mode` and then enter
+* ensure packages from [MELPA](https://melpa.org/#/getting-started)
+  can be installed
+* Install `nim-mode` (e.g. ``M-x package-install RET nim-mode RET``)
 
-Please take a look next `Nimsuggest` section if you interested in
-editor integration like code-completion, jump-to-definition, or linting.
+## nimsuggest (alpha)
 
-## Nimsuggest
-(if you are impatient, skip until `install nimsuggest` to install it)
+At the time of writing this it should be mentioned that both
+nimsuggest and nimsuggest-mode have problems that could cause emacs to
+be much less responsive, or even freeze.
 
-Nimsuggest is an editor agnostic tool for Nim and nim-mode provides:
+Nimsuggest is the compilation server for Nim, and ``nimsuggest-mode``
+is an emacs minor mode that comes with ``nim-mode``.  It is
+responsible to create and connect to the nimsuggest instance.
+``nimsuggest-mode`` doesn't do anything visual in emacs yet. There are
+other minor modes such as ``flycheck``,``flymake`` (linting) and
+``company`` (completion) that are responsible for editor integration.
 
-1. Completion feature -- *C-M-i* and *M-TAB* keys and auto-complete feature if
-   you install [company-mode](https://github.com/company-mode/company-mode)
-2. Asynchronous linting -- nimsuggest take care .nims files as
-   configuration file, so it's smarter than *nim check* command (1)
-3. Showing info under the cursor in minibuffer -- (1)
-4. Jump to definition feature -- *M-.* for go to def and *M-,* for
-   back to before the go to def position
-5. Show document of current position's identifier -- *C-c C-d*
+- ``flycheck`` and ``flymake`` are two alternative linting
+  engines. Before emacs version ``26.1`` ``flymake`` was pretty much
+  outdated and the recommended linting engine was the external
+  ``flycheck``.  But from version ``26.1`` onward, ``flymake`` is a
+  good linting engine that comes with emacs.  You should not use both
+  at the same time.
+- ``flycheck-nimsuggest`` is a backend for flycheck that
+  communicates with ``nimsuggest-mode`` for linting information.
+- ``flycheck-nim`` is an alternative backend for flycheck that instead
+  does not rely on ``nimsuggest`` (or ``nimsuggest-mode``) at
+  all. Instead in uses the ``nim check`` command and parses the output
+  of that command with regular expressions.
+- ``flymake-nimsuggest`` is the backend for ``flymake`` that comes
+  with ``nim-mode``.  It is activated automatically in nim files, when
+  ``flymake-mode`` is activated in nim files.
+- ``company-mode`` is a minor mode for auto completion (company - complete anything)
+- ``company-nimsuggest`` is the backend for ``company-mode`` that
+  communicates with ``nimsuggest-mode``.
+- ``eldoc-mode`` is a minor mode for emacs that is responsible to show
+  the documentation of emacs lisp symbols at point, hence the name.
+  But ``eldoc-mode`` has been extended to work more generically for
+  more programming language.  ``nimsuggest-mode`` has
+  integration for ``eldoc-mode`` so you can see documentation of nim
+  symbols at point when ``nimsuggest-mode`` is active.
 
-(1): those are automatically turned on if you turned on `nimsuggest-mode`
+For ``nimsuggest-mode`` to work, emacs needs to be able to find the nimsuggest binary, when it
+is on the path, it should just work, if not you can customize
+``nimsuggest-path``.  Since it is completely optional to use
+``nimsuggest``, you have to activate ``nimsuggest-mode`` manually.
 
 ### Install nimsuggest
 
@@ -109,6 +83,84 @@ Nimsuggest is an editor agnostic tool for Nim and nim-mode provides:
    cd /path/to/Nim_repository
    ./koch tools
    ```
+
+### Keyboard Shortcuts (with nimsuggest)
+
+1.  Completion feature -- *C-M-i* and *M-TAB*  keys and auto-complete feature if
+   you install [company-mode](https://github.com/company-mode/company-mode)
+2. Jump to Definition -- *M-.* to find the definition for symbol at
+   poisition and *M-,* to go back.
+3. Show Doc -- *C-c C-d* Show documentation of symbol at current
+   position in the dedicated `*nim-doc*` buffer.
+4. Show Short Doc -- (automatically) Shows the short documentation of the symbol at
+   point in the minibuffer
+
+## Grammar and Indentation
+
+In ``nim-smie.el`` there are nim grammar rules for ``smie``
+(Simple Minded Indentation Engine).  These rules give emacs a basic
+understanding of the Nim grammar.  They are used to calculate a "correct"
+indentation level for code, and to fill (distribute line endings at
+margin) comments, multiline strings and other parts of the code.
+
+``electric-indent-mode``, a global minor mode that is turned on by
+default, uses the rules from ``nim-smie.el`` to automatically reindent
+the current line, before a new line is started on *RET*.  The rules
+sometimes can really make the emacs behave sluggish up to freezing for
+several seconds.  The problem is most noticeable when the grammar gets
+confused with incomplete statements or the grammar becomes very
+uncommon through the usage of untyped macros for embedded domain
+language.  Just as an example writing patterns for the nim library
+``ast-pattern-matching`` really confuses smie and you might have to
+manually fix a lot of indentation that ``electric-indent-mode`` breaks
+automatically.
+
+My recommendation is to turn off electric indentation for Nim
+files.  This can be done locally with
+``(electric-indent-local-mode 0)``, or globally (not just Nim files) with
+``(electric-indent-mode 0)``.  Nim has semantic whitespace,  therefore
+it might be better if the indentation is something that is inserted manually.
+
+``auto-fill-mode``, a minor mode, uses the rules to break lines
+automatically.  At the moment it is also not recommend to enable
+``auto-fill-mode`` for Nim files.  But using `fill-paragraph` (*M-q*) on
+comments does work reliably and it is very useful.
+
+## Example Configuration
+
+You can copy and adjust the following configuration into your local
+`init.el` file.
+
+```elisp
+;; The `nimsuggest-path' will be set to the value of
+;; (executable-find "nimsuggest"), automatically.
+(setq nimsuggest-path "path/to/nimsuggest")
+
+(defun my--init-nim-mode ()
+  "Define some settings for the nim mode.  Some ``imenu'' integration."
+
+  (local-set-key (kbd "M->") 'nim-indent-shift-right)
+  (local-set-key (kbd "M-<") 'nim-indent-shift-left)
+
+  ;; Make files in the nimble folder read only by default.
+  ;; This can prevent to edit them by accident.
+  (when (string-match "/\.nimble/" buffer-file-name) (read-only-mode 1))
+
+  ;; enable if you want to experiment.
+  (nimsuggest-mode 0)
+  (eldoc-mode 0)
+  (company-mode 0)
+  ;; remember: only enable one of them at the same time.
+  (flycheck-mode 0)
+  (flymake-mode 0)
+  ;; turn off anything that is based on smie
+  (auto-fill-mode 0)
+  (electric-indent-local-mode 0))
+
+(add-hook 'nim-mode-hook 'my--init-nim-mode)
+
+```
+
 
 ## Other convenience packages for editing Nim source code
 
