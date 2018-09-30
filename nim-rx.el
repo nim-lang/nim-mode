@@ -48,8 +48,8 @@
 
                             (exponent
                              . ,(rx (group (in "eE") (? (or "+" "-")) digit (0+ (or "_" digit)))))
-                            (open-paren           . ,(rx (or "{" "[" "(")))
-                            (close-paren          . ,(rx (or "}" "]" ")")))
+                            (open-paren           . ,(rx (in "{[(")))
+                            (close-paren          . ,(rx (in "}])")))
                             ;; FIXME: Use regexp-opt.
                             (operator             . ,(rx (or (1+ (in "-=+*/<>@$~&%|!?^.:\\"))
                                                              (and
@@ -80,8 +80,7 @@
                                  (group "'")
                                  (or
                                   ;; escaped characters
-                                  (and ?\\ (or (in "a-c" "e" "f" "l" "r" "t" "v"
-                                                   "\\" "\"" "'")
+                                  (and ?\\ (or (in "abceflrtv\\\"'")
                                                (1+ digit)
                                                (and "x" (regex "[a-fA-F0-9]\\{2,2\\}"))))
                                   ;; One byte characters(except single quote and control characters)
@@ -100,30 +99,22 @@ This variant of `rx' supports common nim named REGEXPS."
       (cond ((null regexps)
              (error "No regexp"))
             ((cdr regexps)
-             (rx-to-string `(and ,@regexps) t))
+             (rx-to-string (cons 'and regexps) t))
             (t
              (rx-to-string (car regexps) t)))))
 
-  ;; based on nim manual
   (add-to-list 'nim-rx-constituents
-               ;; note rx.el already has ‘letter’
-               (cons 'nim-letter (rx (in "a-zA-Z-ÿ"))))
-
-  (add-to-list 'nim-rx-constituents
-               (cons 'identifier (nim-rx nim-letter
-                                         (0+ (or "_" nim-letter digit)))))
+               (cons 'identifier (nim-rx letter
+                                         (* (or "_" alnum)))))
 
   (add-to-list
    'nim-rx-constituents
    (cons 'quoted-chars
-         (nim-rx
-          (minimal-match
+         (rx
            (and "`"
-                (1+ (or
-                     nim-letter digit "_"
-                     "^" "*" "[" "]" "!" "$" "%" "&" "+" "-"
-                     "." "/" "<" "=" ">" "?" "@" "|" "~"))
-                "`")))))
+                (+? (char
+                     alnum "_^*[]!$%&+-./<=>?@|~"))
+                "`"))))
 
   (add-to-list 'nim-rx-constituents
                (cons 'comment
@@ -184,29 +175,6 @@ This variant of `rx' supports common nim named REGEXPS."
                (cons 'block-start (nim-rx (or decl-block block-start-defun))))
 
   (add-to-list 'nim-rx-constituents
-               (cons 'font-lock-defun
-                     (nim-rx defun
-                             (? (group (1+ " ") (or identifier quoted-chars)
-                                       (0+ " ") (? (group "*"))))
-                             (? (minimal-match
-                                 (group (0+ " ") "[" (0+ (or any "\n")) "]")))
-                             (? (minimal-match
-                                 (group (0+ " ") "(" (0+ (or any "\n")) ")")))
-                             ;; return type
-                             (? (group (0+ " ") ":" (0+ " ")
-                                       (? (group "var " (0+ " ")))
-                                       (? (group (or "ref" "ptr") " " (* " ")))
-                                       (group identifier))))))
-
-  (add-to-list 'nim-rx-constituents
-               (cons 'colon-type
-                     (nim-rx (or identifier quoted-chars) (? "*")
-                             (* " ") ":" (* " ")
-                             (? (and "var " (0+ " ")))
-                             (? (group (and (or "ref" "ptr") " " (* " "))))
-                             (group identifier))))
-
-  (add-to-list 'nim-rx-constituents
                (cons 'backquoted-chars
                      (rx
                       (syntax expression-prefix)
@@ -230,17 +198,6 @@ This variant of `rx' supports common nim named REGEXPS."
                           (syntax symbol)
                           (syntax open-parenthesis)
                           (syntax close-parenthesis)))))
-
-  (add-to-list 'nim-rx-constituents
-               (cons 'font-lock-export
-                     (nim-rx line-start (1+ " ")
-                             (group
-                              (or identifier quoted-chars) "*"
-                              (? (and "[" word "]"))
-                              (0+ (and "," (? (0+ " "))
-                                       (or identifier quoted-chars) "*")))
-                             (0+ " ") (or ":" "{." "=") (0+ nonl)
-                             line-end)))
 
   ) ; end of eval-and-compile
 

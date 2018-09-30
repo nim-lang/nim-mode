@@ -236,7 +236,7 @@ company-mode.  See also: https://github.com/company-mode/company-mode/issues/583
             nim-variables
             nim-constants
             nim-nonoverloadable-builtins
-            nim-builtins)))
+            nim-builtin-functions)))
 
 (defconst nim-capf-builtin-words
   (append (nim-capf-builtin-completion)
