@@ -156,15 +156,20 @@ You can copy and adjust the following configuration into your local
 
   ;; The following modes are disabled for Nim files just for the case
   ;; that they are enabled globally.
+
   ;; Anything that is based on smie has problems.
   (auto-fill-mode 0)
-  (electric-indent-local-mode 0))
+  (electric-indent-local-mode 0)
 
-  ;; `eldoc-mode' and `company-mode' can stay on, they won't start
-  ;; `nimsuggest-mode' on their own, but they won't help much either
-  ;; without `nimsuggest-mode'
+  ;; At the time of writing this, `eldoc-mode' will start in
+  ;; instance of nimsuggest, even when `nimsuggest-mode' is not
+  ;; started.  If you want to avoid the hickups of nimsuggest, turn
+  ;; `eldoc-mode' for Nim files.
   (eldoc-mode 0)
-  (company-mode 0)
+  ;; `company-mode' can stay on, it won't start nimsuggest. But it
+  ;; also won't have smart completion without nimsuggest.
+  ;; (company-mode 0)
+)
 
 (add-hook 'nim-mode-hook 'my--init-nim-mode)
 
