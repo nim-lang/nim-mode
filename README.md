@@ -29,7 +29,9 @@ This package provides (and requires Emacs 24.4 or higher version):
 
 At the time of writing this it should be mentioned that both
 nimsuggest and nimsuggest-mode have problems that could cause emacs to
-be much less responsive, or even freeze.
+be much less responsive, or even freeze.  Apart from that is is non
+trivial to configure nimsuggest with the right parameters so that you
+also get correct results. So you have been warned.
 
 Nimsuggest is the compilation server for Nim, and ``nimsuggest-mode``
 is an emacs minor mode that comes with ``nim-mode``.  It is
