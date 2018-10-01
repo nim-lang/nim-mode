@@ -165,8 +165,7 @@ Note that this directory is removed when you exit from Emacs."
   :type 'directory
   :group 'nim)
 
-(defvar nimsuggest-eldoc-function 'nimsuggest-eldoc--nimsuggest)
-
+(defvar nimsuggest-eldoc-function 'ignore) ; #208
 (defvar nimsuggest-ignore-dir-regex
   (rx (or "\\" "/") (in "nN") "im" (or "\\" "/") "compiler" (or "\\" "/")))
 (defvar nim--inside-compiler-dir-p nil)

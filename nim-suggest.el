@@ -281,6 +281,9 @@ Generally you can build by './koch tools' or '.koch nimsuggest'
 on Nim repo (check koch.nim file), but it's good to check README
 on Nim's official repository on yourself in case this document
 was outdated."))
+    (when (or (bound-and-true-p eldoc-mode)
+              (bound-and-true-p global-eldoc-mode))
+      (setq nimsuggest-eldoc-function 'nimsuggest-eldoc--nimsuggest))
     (when (not nimsuggest-path)
       (nimsuggest-force-stop)
       (error msg))
