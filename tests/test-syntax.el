@@ -21,7 +21,9 @@
      (expect (face-at-point-of 10 :on "string.nim")
              :to-be font-lock-string-face)
      (expect (face-at-point-of 5  :on "string.nim")
-             :to-be font-lock-variable-name-face))
+             :to-be font-lock-variable-name-face)
+     (expect (face-at-point-of 1251 :on "string.nim")
+             :to-be font-lock-comment-face))
 
  (it "should highlight inside here document"
      (assert-highlight-between 33 86 :on "string.nim"
