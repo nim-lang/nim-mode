@@ -40,3 +40,5 @@ var unbalancedDoubleQuote4 = """"enclosed double quotes""""
 
 var rawString = r"foo""bar""buzz"
 # this line should be comment face
+var rawStringIssue210 = r""
+# this line should be comment face

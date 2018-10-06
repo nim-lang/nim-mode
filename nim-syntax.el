@@ -210,7 +210,7 @@ is used to limit the scan."
              (when (eq num-quotes 3)
                (nim-pretty-triple-double-quotes
                 quote-starting-pos (+ quote-starting-pos 3))))
-            ((and string-start (< string-start (point))
+            ((and string-start (< string-start (- (point) 2)) ;; avoid r""
                   ;; Skip "" in the raw string literal
                   (eq ?r (char-before string-start))
                   (or
