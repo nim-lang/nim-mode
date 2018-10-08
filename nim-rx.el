@@ -65,7 +65,7 @@
                                                           ;; Quotes might be preceded by a escaped quote.
                                                           (and (or (not (any ?\\)) point) ?\\
                                                                (* ?\\ ?\\) (any ?\")))
-                                                      (* ?\\ ?\\)
+                                                      (or (* ?\\) (* ?\\ ?\\))
                                                       ;; Match single or triple quotes of any kind.
                                                       (group (or  "\"" "\"\"\"")))))
                             (string . ,(rx

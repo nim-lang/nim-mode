@@ -42,3 +42,22 @@ var rawString = r"foo""bar""buzz"
 # this line should be comment face
 var rawStringIssue210 = r""
 # this line should be comment face
+
+#[ #212 raw string literal with end of `\` ]#
+var rawStringWithBackslash = r"\"
+# this line should be comment face
+
+var rawStringWithBackslash2 = R2D2"\"
+# should be fontified even if identifier has number
+
+var rawStringWithBackslash3 = sql"\"
+# this line should be comment face
+
+var rawStringWithBackslash4 = """abc\"""
+# this line should be comment face
+
+var rawStringWithBackslash5 = r"a\""bc\"
+# this line should be comment face
+
+var rawStringWithBackslash6 = sql"""abc\"""
+# this line should be comment face

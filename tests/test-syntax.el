@@ -50,7 +50,14 @@
         "var escapedDoubleQuote = " "var escapedDoubleQuote2 = "
         "var unbalancedDoubleQuote = " "var unbalancedDoubleQuote2 = "
         "var unbalancedDoubleQuote3 = " "var unbalancedDoubleQuote4 = "
-        "var rawString = r" "var rawStringIssue210 = r")))
+        "var rawString = r" "var rawStringIssue210 = r"
+        ;; #212
+        "var rawStringWithBackslash = r"
+        "var rawStringWithBackslash2 = R2D2"
+        "var rawStringWithBackslash3 = sql"
+        "var rawStringWithBackslash4 = "
+        "var rawStringWithBackslash5 = r"
+        "var rawStringWithBackslash6 = sql")))
 
  (it "should highlight numbers"
      (assert-highlights-between
