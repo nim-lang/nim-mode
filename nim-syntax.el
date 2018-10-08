@@ -184,6 +184,11 @@ is used to limit the scan."
                             (car nim-pretty-triple-double-quotes))
                       (car nim-pretty-triple-double-quotes)))))
 
+(defun nim-syntax--raw-string-p (pos)
+  "Return non-nil if char of before POS is not word syntax class."
+  ;; See also #212
+  (eq ?w (char-syntax (char-before pos))))
+
 (defun nim-syntax-stringify ()
   "Put `syntax-table' property correctly on single/triple double quotes."
   (unless (nth 4 (syntax-ppss))
@@ -211,8 +216,9 @@ is used to limit the scan."
                (nim-pretty-triple-double-quotes
                 quote-starting-pos (+ quote-starting-pos 3))))
             ((and string-start (< string-start (- (point) 2)) ;; avoid r""
+                  (not (eq 3 num-closing-quotes))
                   ;; Skip "" in the raw string literal
-                  (eq ?r (char-before string-start))
+                  (nim-syntax--raw-string-p string-start)
                   (or
                    ;;  v point is here
                    ;; ""
@@ -235,6 +241,16 @@ is used to limit the scan."
                (when (eq num-quotes 3)
                  (while (eq ?\" (char-after (+ quote-ending-pos extra-quotes)))
                    (setq extra-quotes (1+ extra-quotes))))
+               ;; #212 Change syntax class of "\" before end of double quote because
+               ;; Nim support end of "\" in raw string literal.
+               ;; """str""" will be handled by regex of string delimiter on nim-rx.el
+               (when (and
+                      (eq num-closing-quotes 1)
+                      (nim-syntax--raw-string-p string-start)
+                      (eq ?\\ (char-after (- (point) 2))))
+                 (put-text-property (- (point) 2) (1- (point))
+                                    'syntax-table (string-to-syntax ".")))
+
                (let ((pbeg (+ (1- quote-ending-pos) extra-quotes))
                      (pend (+ quote-ending-pos      extra-quotes)))
                  (put-text-property
