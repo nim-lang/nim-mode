@@ -165,6 +165,20 @@ Note that this directory is removed when you exit from Emacs."
   :type 'directory
   :group 'nim)
 
+(defcustom nimsuggest-accept-process-delay 150
+  "Number of delay msec to check nimsuggest epc connection is established."
+  :type 'integer
+  :group 'nim)
+
+(defcustom nimsuggest-accept-process-timeout-count 100
+  "Number of count that Emacs can try to check nimsuggest epc connection.
+For example, if you set `nimsuggest-accept-process-delay' to 150 and this value
+was 100, the total time of timeout for nimsuggest epc connection would be about
+15sec."
+  :type 'integer
+  :group 'nim)
+
+
 (defvar nimsuggest-eldoc-function 'ignore) ; #208
 (defvar nimsuggest-ignore-dir-regex
   (rx (or "\\" "/") (in "nN") "im" (or "\\" "/") "compiler" (or "\\" "/")))
