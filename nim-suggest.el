@@ -55,6 +55,8 @@
     :prefix) ; matching state. See also prefixmatches.nim
   "Keywords for SexpNode type on nimsuggest.nim.")
 
+(defvar-local nimsuggest--state 'not-started)
+
 (cl-defstruct nim--epc
   section symkind qpath file forth line column doc quality prefix)
 
@@ -89,21 +91,13 @@ PROJECT-PATH is added as the last option."
                 ;;   '("--define:nimscript" "--define:nimconfig"))
                 (list "--epc" project-path))))
 
-(defun nimsuggest--find-or-create-epc ()
-  "Get the epc responsible for the current buffer."
-  (let ((file buffer-file-name))
-    (or (let ((old-epc (cdr (assoc file nimsuggest--epc-processes-alist))))
-          (if (eq 'run (epc:manager-status-server-process old-epc))
-              (prog1 old-epc
-                (nim-log "nimsuggest: use old EPC process\n - %s" old-epc))
-            (prog1 () (nimsuggest--kill-zombie-processes file))))
-        (let ((new-epc
-               (epc:start-epc
-                nimsuggest-path
-                (nimsuggest-get-options file))))
-          (nim-log "nimsuggest: new EPC process created\n - %s" new-epc)
-          (push (cons file new-epc) nimsuggest--epc-processes-alist)
-          new-epc))))
+(defun nimsuggest--get-epc-process (file)
+  "Get active epc process instance for FILE."
+  (let ((old-epc (cdr (assoc file nimsuggest--epc-processes-alist))))
+    (if (eq 'run (epc:manager-status-server-process old-epc))
+        (prog1 old-epc
+          (nim-log "nimsuggest: use old EPC process\n - %s" old-epc))
+      (prog1 () (nimsuggest--kill-zombie-processes file)))))
 
 ;;;###autoload
 (defun nimsuggest-available-p ()
@@ -117,29 +111,94 @@ PROJECT-PATH is added as the last option."
        (not (and (fboundp 'org-in-src-block-p)
                  (or (org-in-src-block-p)
                      (org-in-src-block-p t))))))
+
 (define-obsolete-function-alias 'nim-suggest-available-p 'nimsuggest-available-p "2017/9/02")
 
-(defun nimsuggest--call-epc (method callback)
-  "Call the nimsuggest process on point.
+(defun nimsuggest--safe-execute (file func)
+  "Execute FUNC only if FILE buffer exists."
+  (save-current-buffer
+    (let ((buf (get-file-buffer file)))
+      (when buf
+        (unless (eq buf (current-buffer)) (set-buffer buf))
+        (funcall func)))))
 
-Call the nimsuggest process responsible for the current buffer.
-All commands work with the current cursor position.  METHOD can be
-one of:
+(defun nimsuggest--set-state (state file)
+  "Set STATE for FILE's buffer."
+  (nimsuggest--safe-execute
+   file (lambda () (setq-local nimsuggest--state state))))
 
-sug: suggest a symbol
-con: suggest, but called at fun(_ <-
-def: where the symbol is defined
-use: where the symbol is used
-dus: def + use
+(defun nimsuggest--start-epc-deferred (file)
+  "Start EPC process for FILE."
+  (deferred:nextc (nimsuggest--start-server-deferred nimsuggest-path file)
+    (lambda (mngr)
+      (push (cons file mngr) nimsuggest--epc-processes-alist)
+      (nimsuggest--set-state 'ready file))))
 
-The CALLBACK is called with a list of ‘nim--epc’ structs."
-  (when (nimsuggest-available-p)
+(defun nimsuggest--start-server-deferred (server-prog file)
+  "Copied from `epc:start-server-deferred' because original function uses `lexicall-let'.
+It unable to use from this nim-suggest.el due to some error. (void-variable self or something)
+Almost structure is same, but below two values should be changed depending on
+nimsuggest's loading time:
+  - `nimsuggest-accept-process-delay'
+  - `nimsuggest-accept-process-timeout-count'"
+  ;; TODO: let EPC author knows the issue
+  (let* ((server-args (nimsuggest-get-options file))
+         (uid (epc:uid))
+         (process-name (epc:server-process-name uid))
+         (process-buffer (get-buffer-create (epc:server-buffer-name uid)))
+         (process (apply 'start-process
+                         process-name process-buffer
+                         server-prog server-args))
+         (mngr (make-epc:manager
+                :server-process process
+                :commands (cons server-prog server-args)
+                :title (mapconcat 'identity (cons server-prog server-args) " ")))
+         (cont 1) port)
+    (set-process-query-on-exit-flag process nil)
+    (deferred:$
+      (deferred:next
+        ;; self recursion during `deferred:lambda' til it gets port
+        ;; number or emits timeout error.
+        (deferred:lambda (_)
+          (accept-process-output process 0 nil t)
+          (let ((port-str (with-current-buffer process-buffer
+                            (buffer-string))))
+            (cond
+             ((string-match "^[0-9]+$" port-str)
+              (setq port (string-to-number port-str)
+                    cont nil))
+             ((< 0 (length port-str))
+              (error "Server may raise an error \
+Use \"M-x epc:pop-to-last-server-process-buffer RET\" \
+to see full traceback:\n%s" port-str))
+             ((not (eq 'run (process-status process)))
+              (setq cont nil))
+             (t
+              (incf cont)
+              (when (< nimsuggest-accept-process-timeout-count cont)
+                (nimsuggest--set-state 'no-response file)
+                ;; timeout 15 seconds (100 * 150)
+                (error "Timeout server response"))
+              (deferred:nextc (deferred:wait nimsuggest-accept-process-delay)
+                self))))))
+      (deferred:nextc it
+        (lambda (_)
+          (setf (epc:manager-port mngr) port)
+          (setf (epc:manager-connection mngr) (epc:connect "localhost" port))
+          mngr))
+      (deferred:nextc it
+        (lambda (mngr) (epc:init-epc-layer mngr))))))
+
+(defun nimsuggest--query (method callback epc-process)
+  "Query to nimsuggest of EPC-PROCESS with METHOD.
+CALLBACK function will be applied when nimsuggest returns the result."
+  (when (and (nimsuggest-available-p) epc-process)
     ;; See also compiler/modulegraphs.nim for dirty file
     (let ((temp-dirty-file (nimsuggest--save-buffer-temporarly))
           (buf (current-buffer)))
       (deferred:$
         (epc:call-deferred
-         (nimsuggest--find-or-create-epc)
+         epc-process
          (prog1 method
            (nim-log "EPC-1 %S" (symbol-name method)))
          (cl-case method
@@ -169,6 +228,51 @@ The CALLBACK is called with a list of ‘nim--epc’ structs."
             ;; what's going on only if users or I are interested.
             (nim-log "EPC(%S) ERROR %s"
                      (symbol-name method) (error-message-string err))))))))
+
+(defun nimsuggest--call-epc (method callback)
+  "Call the nimsuggest process on point.
+
+Call the nimsuggest process responsible for the current buffer.
+All commands work with the current cursor position.  METHOD can be
+one of:
+
+sug: suggest a symbol
+con: suggest, but called at fun(_ <-
+def: where the symbol is defined
+use: where the symbol is used
+dus: def + use
+
+The CALLBACK is called with a list of ‘nim--epc’ structs."
+  (let ((file (buffer-file-name)))
+    (cl-case nimsuggest--state
+      ((never connecting) nil) ; do nothing
+      (no-response
+       (nimsuggest--set-state 'never file)
+       ;; Maybe M-x `epc:pop-to-last-server-process-buffer' would be
+       ;; helpful to check the cause.
+       (message "nimsuggest-mode reached timeout (about %dsec) due to no response from server.
+This feature will be blocked on this %s."
+                (/ (* nimsuggest-accept-process-delay
+                      nimsuggest-accept-process-timeout-count)
+                      1000)
+                file))
+      (ready
+       (nimsuggest--query method callback (nimsuggest--get-epc-process file))
+       ;; Reset `nimsuggest--state' if all epc processes for the file are dead.
+       ;; Not sure if this is related to --refresh option.
+       (catch 'exit
+         (cl-loop for (f . _) in nimsuggest--epc-processes-alist
+                  if (equal file f)
+                  do (throw 'exit t)
+                  finally (nimsuggest--set-state 'not-stated file))))
+      (not-started
+       (setq-local nimsuggest--state 'connecting)
+       (deferred:$
+         (deferred:next
+           (nimsuggest--start-epc-deferred file))
+         (deferred:error it
+           (lambda (err) (nim-log "EPC(startup) ERROR %s" (error-message-string err))))))
+      (t (error "This shouldn't happen")))))
 
 (defun nimsuggest--call-sync (method callback)
   "Synchronous call for nimsuggest using METHOD.
