@@ -297,7 +297,7 @@ The CALLBACK function is called when it got the response."
 The directory name consists of `nimsuggest-dirty-directory' and current
 frame number.  The frame number is required to prevent Emacs
 crash when some emacsclients open the same file."
-  (let* ((frame-num (nth 2 (split-string (format "%s" (selected-frame)) " ")))
+  (let* ((frame-num (car (last (split-string (format "%s" (selected-frame)) " "))))
          (frame-num-str (substring frame-num 0 (1- (length frame-num)))))
     (file-name-as-directory (concat nimsuggest-dirty-directory frame-num-str))))
 
