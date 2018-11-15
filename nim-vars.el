@@ -317,8 +317,8 @@ It makes underscores and dots word constituent chars.")
     "using" "var" "when" "while" "with" "without" "xor" "yield")
   "Nim keywords.
 The above string is taken from URL
-`http://nim-lang.org/manual.html#identifiers-keywords', for easy
-updating.")
+`https://nim-lang.org/docs/manual.html#lexical-analysis-identifiers-amp-keywords' 
+for easy updating.")
 
 (defconst nim-types
   '("int" "int8" "int16" "int32" "int64" "uint" "uint8" "uint16" "uint32"
