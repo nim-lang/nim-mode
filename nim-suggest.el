@@ -127,12 +127,21 @@ PROJECT-PATH is added as the last option."
   (nimsuggest--safe-execute
    file (lambda () (setq-local nimsuggest--state state))))
 
-(defun nimsuggest--start-epc-deferred (file)
+(defun nimsuggest--start-epc-deferred (file method callback)
   "Start EPC process for FILE."
   (deferred:nextc (nimsuggest--start-server-deferred nimsuggest-path file)
     (lambda (mngr)
       (push (cons file mngr) nimsuggest--epc-processes-alist)
-      (nimsuggest--set-state 'ready file))))
+      (nimsuggest--set-state 'ready file)
+      (when (eq method 'chk)
+        (nimsuggest--query method callback (nimsuggest--get-epc-process file))
+        ;; Reset `nimsuggest--state' if all epc processes for the file are dead.
+        ;; Not sure if this is related to --refresh option.
+        (catch 'exit
+          (cl-loop for (f . _) in nimsuggest--epc-processes-alist
+                   if (equal file f)
+                   do (throw 'exit t)
+                   finally (nimsuggest--set-state 'not-started file)))))))
 
 (defun nimsuggest--start-server-deferred (server-prog file)
   "Copied from `epc:start-server-deferred' because original function uses `lexicall-let'.
@@ -264,15 +273,16 @@ This feature will be blocked on this %s."
          (cl-loop for (f . _) in nimsuggest--epc-processes-alist
                   if (equal file f)
                   do (throw 'exit t)
-                  finally (nimsuggest--set-state 'not-stated file))))
+                  finally (nimsuggest--set-state 'not-started file))))
       (not-started
        (setq-local nimsuggest--state 'connecting)
        (deferred:$
          (deferred:next
-           (nimsuggest--start-epc-deferred file))
+           (nimsuggest--start-epc-deferred file method callback))
          (deferred:error it
            (lambda (err) (nim-log "EPC(startup) ERROR %s" (error-message-string err))))))
-      (t (error "This shouldn't happen")))))
+      (t
+       (error (format "This shouldn't happen: nimsuggest--state is %s" nimsuggest--state))))))
 
 (defun nimsuggest--call-sync (method callback)
   "Synchronous call for nimsuggest using METHOD.
