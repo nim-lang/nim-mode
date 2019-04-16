@@ -33,9 +33,10 @@ be much less responsive, or even freeze.  Apart from that is is non
 trivial to configure nimsuggest with the right parameters so that you
 also get correct results. So you have been warned.
 
-Nimsuggest is the compilation server for Nim, and ``nimsuggest-mode``
+Nimsuggest is the compilation server for Nim, it runs in its own
+process, pretty much independent of emacs. ``nimsuggest-mode``
 is an emacs minor mode that comes with ``nim-mode``.  It is
-responsible to create and connect to the nimsuggest instance.
+responsible to create the nimsuggest instance and connect emacs with it.
 ``nimsuggest-mode`` doesn't do anything visual in emacs yet. There are
 other minor modes such as ``flycheck``,``flymake`` (linting) and
 ``company`` (completion) that are responsible for editor integration.
@@ -44,24 +45,24 @@ other minor modes such as ``flycheck``,``flymake`` (linting) and
   engines. Before emacs version ``26.1`` ``flymake`` was pretty much
   outdated and the recommended linting engine was the external
   ``flycheck``.  But from version ``26.1`` onward, ``flymake`` is a
-  good linting engine that comes with emacs.  You should not use both
+  good linting engine that comes with emacs.  But you should not use both
   at the same time.
-- ``flycheck-nimsuggest`` is a backend for flycheck that
-  communicates with ``nimsuggest-mode`` for linting information.
-- ``flycheck-nim`` is an alternative backend for flycheck that instead
-  does not rely on ``nimsuggest`` (or ``nimsuggest-mode``) at
-  all. Instead in uses the ``nim check`` command and parses the output
-  of that command with regular expressions.
-- ``flymake-nimsuggest`` is the backend for ``flymake`` that comes
-  with ``nim-mode``.  It is activated automatically in nim files, when
-  ``flymake-mode`` is activated in nim files.
+- ``flycheck-nimsuggest`` is a backend for flycheck. It builds the bridge
+  to ``nimsuggest-mode`` so that flycheck can visualize the linting
+  information that nimsuggest provides.
+- ``flycheck-nim`` is an alternative backend for flycheck that does
+  not interact with nimsuggest at all. Instead it uses the ``nim
+  check`` command and parses the output of that command.
+- ``flymake-nimsuggest`` is the backend for ``flymake`` to build the
+  bridge to ``nimsuggest-mode``. It comes with ``nim-mode``, and it is
+  activated automatically in nim files, when ``flymake-mode`` is on.
 - ``company-mode`` is a minor mode for auto completion (company - complete anything)
 - ``company-nimsuggest`` is the backend for ``company-mode`` that
-  communicates with ``nimsuggest-mode``.
+  builds the bridge to ``nimsuggest-mode``.
 - ``eldoc-mode`` is a minor mode for emacs that is responsible to show
   the documentation of emacs lisp symbols at point, hence the name.
-  But ``eldoc-mode`` has been extended to work more generically for
-  more programming language.  ``nimsuggest-mode`` has
+  But ``eldoc-mode`` has been extended to work for
+  other programming languages as well.  ``nimsuggest-mode`` has
   integration for ``eldoc-mode`` so you can see documentation of nim
   symbols at point when ``nimsuggest-mode`` is active.
 
