@@ -209,7 +209,8 @@ was 100, the total time of timeout for nimsuggest epc connection would be about
 
 (defvar nimsuggest-doc-mode-map
   (let ((map (make-sparse-keymap)))
-    (set-keymap-parent map (make-composed-keymap org-mode-map))
+    (when (fboundp 'org-mode-map)
+      (set-keymap-parent map (make-composed-keymap org-mode-map)))
     (define-key map (kbd ">") 'nimsuggest-doc-next)
     (define-key map (kbd "<") 'nimsuggest-doc-previous)
     (define-key map (kbd "q") 'quit-window)
