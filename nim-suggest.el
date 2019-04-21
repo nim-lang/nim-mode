@@ -408,7 +408,7 @@ was outdated."))
         (nim-log "nimsuggest-mode started")
       (nim-log "nimsuggest-mode stopped"))))
 
-
+
 ;; Utilities
 
 (defun nimsuggest--put-face (text face)
@@ -483,7 +483,7 @@ was outdated."))
             (format "%s: no doc" name)
           (format "%s: %s" name doc)))))))
 
-
+
 ;;; misc
 
 ;; work in progress
@@ -514,6 +514,32 @@ was outdated."))
                                            collect (cons (1+ i) (nth i args))))
        (nimsuggest--show-doc)))))
 
+(defun nimsuggest--format-doc (doc)
+  (mapc
+   (lambda (x) (setq doc (replace-regexp-in-string (car x) (nth 1 x) doc)))
+   `((,(concat
+        ".+::.*\n"
+        "\\(\\("
+        "\\([ ]\\{1,\\}.+\\)?\n?"
+        "\\)*\\)")
+      "#+BEGIN_SRC nim\n\\1\n#+END_SRC")     ; turn code blocks into org babel
+     ("\n*\\(\n#\\+BEGIN_SRC nim\n\\)\n*" "\n\\1") ; cleanup extra newlines
+     ("\n*\\(\n#\\+END_SRC\\)\n*" "\\1\n\n") ; cleanup extra newlines
+     ("`\\([^`]+\\)`:idx:" "\\1")            ; clean :idx: fields
+     ("``" "~")                              ; inline code highlighting
+     ("`\\([A-z0-9\\-]+\\) *`" "~\\1~")      ; inline code highlighting
+     ("`\\([^<]+[^\n ]\\)[ \n]*<[^ \n]+>`_" "~\\1~") ; turn doc links into inline code
+     ("^\\* " "- ")                          ; * bullets into -
+     ("\\*\\*\\(.+\\)\\*\\*" "*\\1*")        ; bold
+     ("^\\(.+\\)\n[=]+$" "** \\1")           ; format headers
+     ("^\\(.+\\)\n[-]+$" "*** \\1")
+     ("^\\(.+\\)\n[~]+$" "**** \\1")
+     ("^\\(~.+~\\)\\([ ]\\{2,\\}\\)" "\\1  \\2"))) ; add missing spaces to tables
+  doc)
+
+(defun nimsuggest--link-location (location)
+  (replace-regexp-in-string ".+" "[[file:\\&][\\&]]" location))
+
 (defun nimsuggest--show-doc ()
   "Internal function for `nimsuggest-show-doc'."
   (let ((def (cdar nimsuggest--doc-args)))
@@ -534,18 +560,20 @@ was outdated."))
                     ""
                   (format "%s/%s %s" nominator denominator
                           "-- < next, > previous"))))
-      (format "Signature\n#########\n%s\n"
+      (format "* Signature\n%s\n"
               (format "%s %s"
                       (nim--epc-symkind def)
                       (nim--epc-forth def)))
-      (format "Document\n########\n%s\n"
-              (nim--epc-doc def))
-      (format "Location\n########\n%s\n"
-              (nim--epc-file def))))
+      (format "* Documentation\n%s\n"
+              (nimsuggest--format-doc (nim--epc-doc def)))
+      (format "* Location\n%s\n"
+              (nimsuggest--link-location (nim--epc-file def)))))
     ;; For highlight stuff
-    (when (fboundp 'rst-mode) (rst-mode))
-    (goto-char (point-min))
+    (when (fboundp 'org-mode)
+      (org-mode)
+      (org-show-all))
     (use-local-map nimsuggest-doc-mode-map)
+    (goto-char (point-min))
     (setq buffer-read-only t)))
 
 (defun nimsuggest-doc-next ()
@@ -568,7 +596,7 @@ was outdated."))
             nimsuggest--doc-args (reverse rargs))
       (nimsuggest--show-doc))))
 
-
+
 ;;; Flymake integration
 
 ;; From Emacs 26, flymake was re-written by João Távora.
@@ -649,7 +677,7 @@ and the ERR is captured error."
     (nim-log-err "FLYMAKE(ERR): %s" err)
     (funcall report-fn :panic :explanation err)))
 
-
+
 ;;; ElDoc for nimsuggest
 
 (defvar nimsuggest-eldoc--data nil)
@@ -733,7 +761,7 @@ The EPC-RESULT can be result of both def and/or dus."
     (setq eldoc-last-message (assoc-default :str nimsuggest-eldoc--data))
     (message eldoc-last-message)))
 
-
+
 ;;; xref integration
 ;; This package likely be supported on Emacs 25.1 or later
 
@@ -879,3 +907,4 @@ binds to `M-.' in default."
 
 (provide 'nim-suggest)
 ;;; nim-suggest.el ends here
+
