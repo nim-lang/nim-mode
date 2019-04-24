@@ -445,7 +445,7 @@ was outdated."))
 
 (defun nimsuggest--format (forth symKind qpath doc)
   "Highlight returned result from nimsuggest of FORTH, SYMKIND, QPATH, and DOC."
-  (let* ((doc (mapconcat 'identity (split-string doc "\n") ""))
+  (let* ((doc (mapconcat 'identity (split-string doc "\n") " "))
          (name
           (if (eq (length (cdr qpath)) 1)
               (cadr qpath)
