@@ -178,6 +178,14 @@ was 100, the total time of timeout for nimsuggest epc connection would be about
   :type 'integer
   :group 'nim)
 
+(defcustom nimsuggest-show-doc-function 'nimsuggest--show-doc-rst
+  "The style used to display Nim documentation.
+Options available are `nimsuggest--show-doc-rst' and `nimsuggest--show-doc-org'.
+Note `nimsuggest--show-doc-org' enables syntax highlighting and section folding,
+but is experimental."
+  :type 'function
+  :group 'nim)
+
 
 (defvar nimsuggest-eldoc-function 'ignore) ; #208
 (defvar nimsuggest-ignore-dir-regex
@@ -209,9 +217,15 @@ was 100, the total time of timeout for nimsuggest epc connection would be about
 
 (defvar nimsuggest-doc-mode-map
   (let ((map (make-sparse-keymap)))
-    (set-keymap-parent map (make-composed-keymap special-mode-map))
+    (cond
+     ((and (eq nimsuggest-show-doc-function 'nimsuggest--show-doc-org)
+           (fboundp 'org-mode))
+      (set-keymap-parent map (make-composed-keymap org-mode-map))
+      (define-key map (kbd "RET") 'org-open-at-point))
+     (t (set-keymap-parent map (make-composed-keymap special-mode-map))))
     (define-key map (kbd ">") 'nimsuggest-doc-next)
     (define-key map (kbd "<") 'nimsuggest-doc-previous)
+    (define-key map (kbd "q") 'quit-window)
     map)
   "Nimsuggest doc mode keymap.")
 
