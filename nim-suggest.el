@@ -514,7 +514,7 @@ was outdated."))
                                            collect (cons (1+ i) (nth i args))))
        (nimsuggest--show-doc)))))
 
-(defun nimsuggest--format-doc (doc)
+(defun nimsuggest--format-doc-org (doc)
   (mapc
    (lambda (x) (setq doc (replace-regexp-in-string (car x) (nth 1 x) doc)))
    `((,(concat
@@ -537,8 +537,61 @@ was outdated."))
      ("^\\(~.+~\\)\\([ ]\\{2,\\}\\)" "\\1  \\2"))) ; add missing spaces to tables
   doc)
 
-(defun nimsuggest--link-location (location)
+(defun nimsuggest--link-location-org (location)
   (replace-regexp-in-string ".+" "[[file:\\&][\\&]]" location))
+
+(defun nimsuggest--doc-insert-nav (def)
+  (let ((nominator (caar nimsuggest--doc-args))
+        (denominator (length nimsuggest--doc-args)))
+    (format "%s %s\n"
+            (mapconcat 'identity (nim--epc-qpath def) " ")
+            (if (eq 1 denominator)
+                ""
+              (format "%s/%s %s" nominator denominator
+                      "-- < next, > previous")))))
+
+(defun nimsuggest--header-rst(header)
+  (format "%s\n%s" header (make-string (length header) ?#)))
+
+(defun nimsuggest--show-doc-rst (def)
+  "Display Nim docs using rst-mode."
+  (cl-mapcar
+   (lambda (x) (insert (concat x "\n")))
+   (list
+    ;; (format "debug %s\n" nimsuggest--doc-args)
+    (nimsuggest--doc-insert-nav def)
+    (format "%s\n%s %s\n"
+            (nimsuggest--header-rst "Signature")
+            (nim--epc-symkind def)
+            (nim--epc-forth def))
+    (unless (string= "" (nim--epc-doc def))
+      (format "%s\n%s\n"
+              (nimsuggest--header-rst "Documentation")
+              (nim--epc-doc def)))
+    (format "%s\n%s\n"
+            (nimsuggest--header-rst "Location")
+            (nim--epc-file def))))
+  (when (fboundp 'rst-mode)
+    (rst-mode)))
+
+(defun nimsuggest--show-doc-org (def)
+  "Display Nim docs using org-mode formatting."
+  (cl-mapcar
+   (lambda (x) (insert (concat x "\n")))
+   (list
+    ;; (format "debug %s\n" nimsuggest--doc-args)
+    (nimsuggest--doc-insert-nav def)
+    (format "* Signature\n%s %s\n"
+            (nim--epc-symkind def)
+            (nim--epc-forth def))
+    (unless (string= "" (nim--epc-doc def))
+      (format "* Documentation\n%s\n"
+              (nimsuggest--format-doc-org (nim--epc-doc def))))
+    (format "* Location\n%s\n"
+            (nimsuggest--link-location-org (nim--epc-file def)))))
+  (when (fboundp 'org-mode)
+    (org-mode)
+    (org-show-all)))
 
 (defun nimsuggest--show-doc ()
   "Internal function for `nimsuggest-show-doc'."
@@ -548,30 +601,7 @@ was outdated."))
       (switch-to-buffer-other-window "*nim-doc*"))
     (setq buffer-read-only nil)
     (erase-buffer)
-    (cl-mapcar
-     (lambda (x) (insert (concat x "\n")))
-     (list
-      ;; (format "debug %s\n" nimsuggest--doc-args)
-      (let ((nominator (caar nimsuggest--doc-args))
-            (denominator (length nimsuggest--doc-args)))
-        (format "%s %s\n"
-                (mapconcat 'identity (nim--epc-qpath def) " ")
-                (if (eq 1 denominator)
-                    ""
-                  (format "%s/%s %s" nominator denominator
-                          "-- < next, > previous"))))
-      (format "* Signature\n%s\n"
-              (format "%s %s"
-                      (nim--epc-symkind def)
-                      (nim--epc-forth def)))
-      (format "* Documentation\n%s\n"
-              (nimsuggest--format-doc (nim--epc-doc def)))
-      (format "* Location\n%s\n"
-              (nimsuggest--link-location (nim--epc-file def)))))
-    ;; For highlight stuff
-    (when (fboundp 'org-mode)
-      (org-mode)
-      (org-show-all))
+    (funcall nimsuggest-show-doc-function def)
     (when (fboundp 'evil-mode)
       (evil-make-intercept-map nimsuggest-doc-mode-map))
     (use-local-map nimsuggest-doc-mode-map)
