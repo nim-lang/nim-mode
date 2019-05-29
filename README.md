@@ -151,22 +151,18 @@ You can copy and adjust the following configuration into your local
   ;; This can prevent to edit them by accident.
   (when (string-match "/\.nimble/" buffer-file-name) (read-only-mode 1))
 
-  ;; If you want to experiment, you can enable the following modes for
-  ;; Nim files by replacing the 0 with a 1.
-  (nimsuggest-mode 0)
-  ;; remember: only enable either `flycheck-mode' or `flymake-mode' at the same time.
-  (flycheck-mode 0)
-  (flymake-mode 0)
+  ;; If you want to experiment, you can enable the following modes by
+  ;; uncommenting their line.
+  ;; (nimsuggest-mode 1)
+  ;; Remember: Only enable either `flycheck-mode' or `flymake-mode' at the same time.
+  ;; (flycheck-mode 1)
+  ;; (flymake-mode 1)
 
   ;; The following modes are disabled for Nim files just for the case
   ;; that they are enabled globally.
   ;; Anything that is based on smie can cause problems.
   (auto-fill-mode 0)
   (electric-indent-local-mode 0)
-
-  ;; `company-mode' and `eldoc-mode' can stay at the default.
-  ;; (company-mode 0)
-  ;; (eldoc-mode 0)
 )
 
 (add-hook 'nim-mode-hook 'my--init-nim-mode)
