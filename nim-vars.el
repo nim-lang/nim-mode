@@ -331,24 +331,17 @@ It makes underscores and dots word constituent chars.")
     "using" "var" "when" "while" "with" "without" "xor" "yield")
   "Nim keywords.
 The above string is taken from URL
-`https://nim-lang.org/docs/manual.html#lexical-analysis-identifiers-amp-keywords' 
+`https://nim-lang.org/docs/manual.html#lexical-analysis-identifiers-amp-keywords'
 for easy updating.")
 
 (defconst nim-types
   '("int" "int8" "int16" "int32" "int64" "uint" "uint8" "uint16" "uint32"
-    "uint64" "float" "float32" "float64" "bool" "char" "string" "cstring"
-    "pointer" "expr" "stmt" "typedesc" "void" "auto" "any"
-    "untyped" "typed" "range" "array" "openArray" "Ordinal" "seq" "set"
-    "TGenericSeq" "PGenericSeq" "NimStringDesc" "NimString" "byte" "Natural"
-    "Positive" "RootObj" "RootRef" "RootEffect" "TimeEffect" "IOEffect"
-    "ReadIOEffect" "WriteIOEffect" "ExecIOEffect"
-    "TResult" "Endianness" "ByteAddress" "BiggestInt" "BiggestFloat"
+    "uint64" "float" "float32" "float64" "bool" "char" "string"
+    "pointer" "typedesc" "void" "auto" "any" "sink" "lent"
+    "untyped" "typed" "range" "array" "openArray" "seq" "set" "byte"
+    ;; c interop types
     "cchar" "cschar" "cshort" "cint" "clong" "clonglong" "cfloat" "cdouble"
-    "clongdouble" "cstringArray" "PFloat32" "PFloat64" "PInt64" "PInt32"
-    "SomeSignedInt" "SomeUnsignedInt" "SomeInteger" "SomeOrdinal" "SomeReal"
-    "SomeNumber" "Slice" "shared" "guarded"
-    "NimNode" "GC_Strategy" "File" "FileHandle" "FileMode"
-    "TaintedString" "PFrame" "TFrame")
+    "cstring" "clongdouble" "cstringArray")
   "Nim types defined in <lib/system.nim>.")
 
 (defconst nim-exceptions
