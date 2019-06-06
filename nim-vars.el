@@ -338,7 +338,7 @@ for easy updating.")
   '("int" "int8" "int16" "int32" "int64" "uint" "uint8" "uint16" "uint32"
     "uint64" "float" "float32" "float64" "bool" "char" "string"
     "pointer" "typedesc" "void" "auto" "any" "sink" "lent"
-    "untyped" "typed" "range" "array" "openArray" "seq" "set" "byte"
+    "untyped" "typed" "range" "array" "openArray" "varargs" "seq" "set" "byte"
     ;; c interop types
     "cchar" "cschar" "cshort" "cint" "clong" "clonglong" "cfloat" "cdouble"
     "cstring" "clongdouble" "cstringArray")
