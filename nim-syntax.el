@@ -42,17 +42,10 @@
      ;; (8 font-lock-type-face keep t) TODO nim-rx needs a proper colon-type expression
      )
 
-    ;; Highlight type words
-    (,(nim-rx ;; (or identifier quoted-chars) (? "*") (* " ")
-       ;; everything behind a colon (:) is interpreted as a type
-       ":" (* " ")
-       (? (and "var " (* " ")))
-       (? (and (* (or "ref " "ptr ")) (* " ")))
-       (group identifier))
+    ;; Highlight everything that starts with a capital letter as type.
+    (,(rx symbol-start (char upper) (* (char alnum "_")) symbol-end) . (0 font-lock-type-face keep))
 
-     (1 font-lock-type-face keep))
-
-    ;; warning face for tab characters.
+    ;; Warning face for tab characters.
     ("	+" . (0 font-lock-warning-face))
 
     ;; This only works if it’s one line
