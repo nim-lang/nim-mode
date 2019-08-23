@@ -800,7 +800,8 @@ The EPC-RESULT can be result of both def and/or dus."
 (defvar nimsuggest-find-definition-function nil
   "Function for `nimsuggest-find-definition'.")
 
-;;;###autoload (add-hook 'nimsuggest-mode-hook 'nimsuggest-xref-setup)
+;;;###autoload
+(add-hook 'nimsuggest-mode-hook 'nimsuggest-xref-setup)
 ;;;###autoload
 (defun nimsuggest-xref-setup ()
   "Setup xref backend for nimsuggest."
