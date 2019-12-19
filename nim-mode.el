@@ -248,8 +248,7 @@ instead.  The default regex’s matching word is [Package]."
             (cl-typecase (or arg font-lock-maximum-decoration)
               (null (nim--get-font-lock-keywords 0))
               (list
-               (nim--set-font-lock-keywords
-                'nim-mode
+               (nim--get-font-lock-keywords
                 (or (assoc-default 'nim-mode font-lock-maximum-decoration)
                     (assoc-default t font-lock-maximum-decoration)
                     t)))
