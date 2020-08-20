@@ -199,6 +199,16 @@
   ;; Font lock
   (nim--set-font-lock-keywords 'nim-mode))
 
+;;; Nimble
+;;  -- nimbleeee
+
+;;;###autoload
+(defun nimble-run ()
+  "Run the nimble project"
+  (interactive)
+  (when (derived-mode-p 'nim-mode)
+    (call-process "nimble run")))
+
 ;;; NimScript
 ;;  -- https://nim-lang.org/docs/nims.html
 ;;  -- https://github.com/nim-lang/Nim/wiki/Using-nimscript-for-configuration
