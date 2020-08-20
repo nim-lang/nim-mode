@@ -83,6 +83,7 @@
 (require 'nim-util)
 (require 'nim-helper)
 (require 'nim-smie)
+(require 'nim-nimble)
 (require 'paren) ; for ‘show-paren-data-function’
 (require 'nim-fill)
 (require 'commenter)
