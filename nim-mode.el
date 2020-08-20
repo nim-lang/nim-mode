@@ -207,7 +207,7 @@
   "Run the nimble project"
   (interactive)
   (when (derived-mode-p 'nim-mode)
-    (call-process "nimble run")))
+    (start-process "nimble" "*nimble output*" "nimble" "run")))
 
 ;;; NimScript
 ;;  -- https://nim-lang.org/docs/nims.html
