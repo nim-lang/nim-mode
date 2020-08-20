@@ -20,9 +20,11 @@
 ;;; Code:
 
 (defun nimble-run ()
-  "Run the nimble project."
+  "Run the nimble project"
+  (interactive)
   (when (derived-mode-p 'nim-mode)
-    (funcall "nimble run")))
+    (start-process "nimble" "*nimble output*" "nimble" "run")))
+
 
 (provide 'nim-nimble)
 ;;; nim-nimble.el ends here
