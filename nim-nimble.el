@@ -19,11 +19,28 @@
 ;;
 ;;; Code:
 
+
+(require 'nim-vars)
+(require 'nim-compile)
+(require 'ansi-color)
+
+
+;;;###autoload
 (defun nimble-run ()
-  "Run the nimble project"
+  "Run the current nimble project."
   (interactive)
-  (when (derived-mode-p 'nim-mode)
-    (start-process "nimble" "*nimble output*" "nimble" "run")))
+  (setq default-directory (nim-get-project-root))
+  (let ((process
+         (start-process "nimble" "*nimble-output*" "nimble" "run")))
+    (message "Project root")
+    (message default-directory)
+    (with-current-buffer (process-buffer process)
+      (display-buffer (current-buffer))
+      (require 'shell)
+      (shell-mode)
+      (read-only-mode)
+      (set-process-filter process 'comint-output-filter))))
+
 
 
 (provide 'nim-nimble)
