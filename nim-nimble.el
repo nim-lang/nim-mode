@@ -15,8 +15,6 @@
   (setq default-directory (nim-get-project-root))
   (let ((process
          (start-process "nimble" "*nimble-output*" "nimble" "run")))
-    (message "Project root")
-    (message default-directory)
     (with-current-buffer (process-buffer process)
       (display-buffer (current-buffer))
       (require 'shell)
