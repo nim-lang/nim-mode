@@ -149,7 +149,7 @@ You can copy and adjust the following configuration into your local
 
   ;; Make files in the nimble folder read only by default.
   ;; This can prevent to edit them by accident.
-  (when (string-match "/\.nimble/" buffer-file-name) (read-only-mode 1))
+  (when (string-match "/\.nimble/" (or (buffer-file-name) "")) (read-only-mode 1))
 
   ;; If you want to experiment, you can enable the following modes by
   ;; uncommenting their line.
