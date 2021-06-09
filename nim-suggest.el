@@ -183,7 +183,7 @@ to see full traceback:\n%s" port-str))
              ((not (eq 'run (process-status process)))
               (setq cont nil))
              (t
-              (incf cont)
+              (cl-incf cont)
               (when (< nimsuggest-accept-process-timeout-count cont)
                 (nimsuggest--set-state 'no-response file)
                 ;; timeout 15 seconds (100 * 150)
@@ -940,4 +940,3 @@ binds to `M-.' in default."
 
 (provide 'nim-suggest)
 ;;; nim-suggest.el ends here
-
