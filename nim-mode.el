@@ -165,7 +165,7 @@
   (add-hook 'which-func-functions #'nim-info-current-defun nil t)
 
   ;; Workaround with org
-  (when (and (fboundp 'org-in-src-block-p) (org-in-src-block-p))
+  (when (and (eq major-mode 'org-mode) (fboundp 'org-in-src-block-p) (org-in-src-block-p))
     (modify-syntax-entry ?# "<" nim-mode-syntax-table))
 
   ;; Because indentation is not redundant, we cannot safely reindent code.
