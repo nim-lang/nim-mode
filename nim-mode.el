@@ -164,9 +164,12 @@
             #'nim-indent-post-self-insert-function 'append 'local)
   (add-hook 'which-func-functions #'nim-info-current-defun nil t)
 
-  ;; Workaround with org
-  (when (and (eq major-mode 'org-mode) (fboundp 'org-in-src-block-p) (org-in-src-block-p))
-    (modify-syntax-entry ?# "<" nim-mode-syntax-table))
+  ;; Workaround with org comments in order to properly
+  ;; detect opening #[ and closing comments ]#
+  (when (and (derived-mode-p 'org-mode)
+              (fboundp 'org-in-src-block-p) (org-in-src-block-p))
+    (modify-syntax-entry ?# ". 124b" nim-mode-syntax-table)
+    (modify-syntax-entry ?[ ". 23" nim-mode-syntax-table))
 
   ;; Because indentation is not redundant, we cannot safely reindent code.
   (setq-local electric-indent-inhibit t)
