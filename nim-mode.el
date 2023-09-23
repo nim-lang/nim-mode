@@ -167,7 +167,7 @@
   ;; Workaround with org comments in order to properly
   ;; detect opening #[ and closing comments ]#
   (when (and (derived-mode-p 'org-mode)
-              (fboundp 'org-in-src-block-p) (org-in-src-block-p))
+             (fboundp 'org-in-src-block-p) (org-in-src-block-p))
     (modify-syntax-entry ?# ". 124b" nim-mode-syntax-table)
     (modify-syntax-entry ?[ ". 23" nim-mode-syntax-table))
 
