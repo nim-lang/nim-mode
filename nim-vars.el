@@ -341,7 +341,8 @@ for easy updating.")
     "untyped" "typed" "range" "array" "openArray" "varargs" "seq" "set" "byte"
     ;; c interop types
     "cchar" "cschar" "cshort" "cint" "clong" "clonglong" "cfloat" "cdouble"
-    "cstring" "clongdouble" "cstringArray")
+    "cstring" "clongdouble" "cstringArray" "csize" "csize_t" "cuchar" "cuint"
+    "culong" "culonglong" "cushort")
   "Nim types defined in <lib/system.nim>.")
 
 (defconst nim-exceptions
