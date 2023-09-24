@@ -97,7 +97,7 @@ The config file would one of those: config.nims, PROJECT.nim.cfg, or nim.cfg."
       nim-compile--current-command
     (setq nim-compile--current-command
           (let ((file (when buffer-file-name
-                        (shell-quote-argument buffer-file-name))))
+                        buffer-file-name)))
             (when file
               (cond
                ;; WIP
