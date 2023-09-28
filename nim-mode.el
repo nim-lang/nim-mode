@@ -170,7 +170,7 @@
   (when (and (derived-mode-p 'org-mode)
              (fboundp 'org-in-src-block-p) (org-in-src-block-p))
     (modify-syntax-entry ?# ". 124b" nim-mode-syntax-table)
-    (modify-syntax-entry ?[ ". 23" nim-mode-syntax-table))
+    (modify-syntax-entry ?\[ ". 23" nim-mode-syntax-table))
 
   ;; Because indentation is not redundant, we cannot safely reindent code.
   (setq-local electric-indent-inhibit t)
@@ -183,7 +183,7 @@
   ;;   (global-set-key (kbd "C-j") #'newline-and-indent)
   (setq-local electric-indent-chars (append electric-indent-chars '(?: ?\s)))
   (when electric-indent-mode
-    (define-key nim-mode-map [remap delete-backward-char] 'nim-electric-backspace)))
+    (define-key nim-mode-map [remap delete-backward-char] #'nim-electric-backspace)))
 
 ;; add ‘nim-indent-function’ to electric-indent’s
 ;; blocklist. ‘electric-indent-inhibit’ isn’t enough for old emacs.
@@ -265,10 +265,10 @@ instead.  The default regex’s matching word is [Package]."
                     ;; Add extra keywords for NimScript
                     nimscript-keywords)))))
     (setq-local font-lock-defaults
-              `(,keywords
-                nil nil nil nil
-                (font-lock-syntactic-face-function
-                 . nim-font-lock-syntactic-face-function)))))
+                `(,keywords
+                  nil nil nil nil
+                  (font-lock-syntactic-face-function
+                   . nim-font-lock-syntactic-face-function)))))
 
 (defun nim--get-font-lock-keywords (level)
   "Return font lock keywords, according to ‘font-lock-maximum-decoration’ LEVEL.
