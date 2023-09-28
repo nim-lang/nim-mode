@@ -1,30 +1,25 @@
-CASK ?= cask
+EASK ?= eask
 EMACS ?= emacs
-
-cask_dir_exists := $(shell find ./ -type d -name ".cask")
 
 all: test
 
-test: clean-elc
-	$(if $(cask_dir_exists), $(skip), ${MAKE} install-dependencies)
-	${MAKE} unit
+ci: build compile test
+
+build:
+	${EASK} package
+	${EASK} install
+
+test:
+	${EASK} install-deps --dev
 	${MAKE} compile
 	${MAKE} unit
 	${MAKE} clean-elc
 
 compile:
-	${CASK} exec ${EMACS} -Q -batch -L . -f batch-byte-compile *.el
+	${EASK} compile
 
 unit:
-	${CASK} exec buttercup -L .
-
-install-dependencies:
-	${CASK} install
+	${EASK} exec buttercup -L .
 
 clean-elc:
-	rm -f *.elc
-
-define skip
-	@echo ".cask already exists, dependecies' installation skipped."
-	@echo "If you want to update those dependencies, execute 'make install-dependencies'."
-endef
+	${EASK} clean elc
