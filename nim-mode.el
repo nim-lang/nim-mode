@@ -4,6 +4,7 @@
 ;; Description: A major mode for the Nim programming language
 ;; Author: Simon Hafner
 ;; Maintainer: Simon Hafner <hafnersimon@gmail.com>
+;; URL: https://github.com/nim-lang/nim-mode
 ;; Version: 0.4.2
 ;; Keywords: nim languages
 ;; Compatibility: GNU Emacs 24.4

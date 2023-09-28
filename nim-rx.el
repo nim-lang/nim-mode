@@ -34,7 +34,10 @@
                                                                 "try" "except" "finally"
                                                                 "with" "block"
                                                                 "enum" "tuple" "object")))
-                     collect (cons sym (apply `((lambda () (rx symbol-start (or ,@kwd) symbol-end)))))))
+                     collect (cons sym (apply
+                                        (lambda (kwd)
+                                          (eval `(rx symbol-start (or ,@kwd) symbol-end)))
+                                        (list kwd)))))
            (constituents2 `((decl-block . ,(rx symbol-start
                                                (or "type" "const" "var" "let" "import")
                                                symbol-end
@@ -111,10 +114,10 @@ This variant of `rx' supports common nim named REGEXPS."
    'nim-rx-constituents
    (cons 'quoted-chars
          (rx
-           (and "`"
-                (+? (char
-                     alnum "_^*[]!$%&+-./<=>?@|~"))
-                "`"))))
+          (and "`"
+               (+? (char
+                    alnum "_^*[]!$%&+-./<=>?@|~"))
+               "`"))))
 
   (add-to-list 'nim-rx-constituents
                (cons 'comment
