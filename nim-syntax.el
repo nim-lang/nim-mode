@@ -180,7 +180,8 @@ is used to limit the scan."
 (defun nim-syntax--raw-string-p (pos)
   "Return non-nil if char of before POS is not word syntax class."
   ;; See also #212
-  (eq ?w (char-syntax (char-before pos))))
+  (when (> pos 1)
+    (eq ?w (char-syntax (char-before pos)))))
 
 (defun nim-syntax-stringify ()
   "Put `syntax-table' property correctly on single/triple double quotes."
