@@ -22,8 +22,15 @@ jobs:
         emacs-version:
           - 27.2
           - 28.2
-          - 29.1
+          - 29.4
+          - 30.1
         experimental: [false]
+        exclude:
+        # Emacs 26.3 and 27.3 are not available for MacOS on Apple Silicon
+        - os: macos-latest
+          emacs-version: 26.3
+        - os: macos-latest
+          emacs-version: 27.2
         include:
         - os: ubuntu-latest
           emacs-version: snapshot

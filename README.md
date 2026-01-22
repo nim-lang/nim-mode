@@ -11,8 +11,10 @@ This package provides (and requires Emacs 24.4 or higher version):
 - `nim-compile` command (*C-c C-c*), with error matcher for the
   compile buffer
 - Nimsuggest (alpha):
-  - on the fly linter using flycheck, or flymake (from Emacs 26)
-  - auto-completion with company-mode ("C-M-i" for manual completion)
+  - on the fly linting using flymake (from Emacs 26) or flycheck
+  - auto-completion support for most built-in or external Emacs
+    completion frameworks, e.g. completion-at-point or company-mode ("C-M-i" for manual
+    completion)
   - jump-to-definition (*M-.*, and *M-,* keys)
   - find-references (*M-?* key)
   - eldoc or help on hover in term of LSP
@@ -42,17 +44,20 @@ other minor modes such as ``flycheck``,``flymake`` (linting) and
 ``company`` (completion) that are responsible for editor integration.
 
 - ``flycheck`` and ``flymake`` are two alternative linting
-  engines. Before emacs version ``26.1`` ``flymake`` was pretty much
+  engines. As of Emacs ``26.1``, ``flymake`` is built into Emacs.
+  Before emacs version ``26.1`` ``flymake`` was pretty much
   outdated and the recommended linting engine was the external
   ``flycheck``.  But from version ``26.1`` onward, ``flymake`` is a
   good linting engine that comes with emacs.  But you should not use both
   at the same time.
-- ``flycheck-nimsuggest`` is a backend for flycheck. It builds the bridge
-  to ``nimsuggest-mode`` so that flycheck can visualize the linting
+- [``flycheck-nimsuggest``](https://github.com/yuutayamada/flycheck-nimsuggest)
+  is a backend for flycheck. It builds the bridge to
+  ``nimsuggest-mode`` so that flycheck can visualize the linting
   information that nimsuggest provides.
-- ``flycheck-nim`` is an alternative backend for flycheck that does
-  not interact with nimsuggest at all. Instead it uses the ``nim
-  check`` command and parses the output of that command.
+- [``flycheck-nim``](https://github.com/ALSchwalm/flycheck-nim) is an
+  alternative backend for flycheck that does not interact with
+  nimsuggest at all. Instead it uses the ``nim check`` command and
+  parses the output of that command.
 - ``flymake-nimsuggest`` is the backend for ``flymake`` to build the
   bridge to ``nimsuggest-mode``. It comes with ``nim-mode``, and it is
   activated automatically in nim files, when ``flymake-mode`` is on.

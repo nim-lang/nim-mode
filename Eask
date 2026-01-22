@@ -18,7 +18,6 @@
 (depends-on "epc" "0.1.1")
 (depends-on "let-alist" "1.0.1")
 (depends-on "commenter" "0.5.1")
-(depends-on "flycheck-nimsuggest" "0.8.1")
 
 (development
  (depends-on "buttercup"))

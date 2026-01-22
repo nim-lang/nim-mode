@@ -10,6 +10,5 @@
  (depends-on "buttercup")
  (depends-on "epc")
  (depends-on "commenter")
- (depends-on "flycheck-nimsuggest")
  (depends-on "let-alist")
  (depends-on "cl-lib"))
