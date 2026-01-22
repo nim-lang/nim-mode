@@ -14,7 +14,7 @@
 (source 'gnu)
 (source 'melpa)
 
-(depends-on "emacs" "24.4")
+(depends-on "emacs" "27.1")
 (depends-on "epc" "0.1.1")
 (depends-on "let-alist" "1.0.1")
 (depends-on "commenter" "0.5.1")

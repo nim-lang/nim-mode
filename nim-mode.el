@@ -7,8 +7,8 @@
 ;; URL: https://github.com/nim-lang/nim-mode
 ;; Version: 0.4.2
 ;; Keywords: nim languages
-;; Compatibility: GNU Emacs 24.4
-;; Package-Requires: ((emacs "24.4") (epc "0.1.1") (let-alist "1.0.1") (commenter "0.5.1") (flycheck-nimsuggest "0.8.1"))
+;; Compatibility: GNU Emacs 27.1
+;; Package-Requires: ((emacs "27.1") (epc "0.1.1") (let-alist "1.0.1") (commenter "0.5.1") (flycheck-nimsuggest "0.8.1"))
 
 ;; Taken over from James H. Fisher <jameshfisher@gmail.com>
 ;;
