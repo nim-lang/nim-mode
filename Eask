@@ -1,3 +1,5 @@
+;; -*- mode: eask; lexical-binding: t -*-
+
 (package "nim-mode"
          "0.4.2"
          "A major mode for the Nim programming language")
