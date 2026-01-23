@@ -5,16 +5,16 @@
 
 import strutils, ospaths
 
-const caskInstallCommand =
-  "curl -fsSL https://raw.githubusercontent.com/cask/cask/master/go" &
-    "| python"
+const easkInstallCommand =
+  "curl -fsSL https://raw.githubusercontent.com/emacs-eask/cli/master/webinstall/install.sh" &
+    "| sh"
 
-if "" == findExe("cask"):
-  echo "Install Cask (a package manager for Emacs)"
-  exec caskInstallCommand
+if "" == findExe("eask"):
+  echo "Install Eask (a package manager for Emacs)"
+  exec easkInstallCommand
 
-if dirExists(thisDir() / ".cask"):
-  exec "cask install"
+if dirExists(thisDir() / ".eask"):
+  exec "eask install-deps"
 
 const nimCode = """#[
 nim-mode's specific keybinds:
@@ -57,6 +57,6 @@ const emacsConfig = """"
 const scratchBuffer = emacsConfig.format("\\\"" & nimCode & "\\\"")
 
 proc startEmacs() =
-  exec "cask exec emacs -Q -L . --eval " & scratchBuffer
+  exec "eask exec emacs -Q -L . --eval " & scratchBuffer
 
 startEmacs()

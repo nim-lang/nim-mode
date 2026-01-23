@@ -1,13 +1,13 @@
 Running Tests
 =============
 
-You'll need [cask](https://github.com/cask/cask). Then run
+You'll need [eask](https://github.com/emacs-eask/cli). Then run
 
-    cask install
+    eask install-deps --dev
 
 for first time setup. For running the tests, use
 
-    cask exec buttercup -L .
+    eask exec buttercup -L .
 
 Writing Tests
 =============
